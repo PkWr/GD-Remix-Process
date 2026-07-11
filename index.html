@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GD vs/x Ai</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <main id="stage">
+    <canvas id="canvasA" width="1080" height="1920"></canvas>
+    <canvas id="canvasB" width="1080" height="1920"></canvas>
+  </main>
+
+  <audio id="bgAudio" loop autoplay preload="auto">
+    <source src="assets/audio/track.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="diagnostics">
+    <div><span class="k">source</span> <span id="diagSource">—</span></div>
+    <div><span class="k">image</span> <span id="diagImage">—</span></div>
+    <div><span class="k">effect</span> <span id="diagEffect">—</span></div>
+    <div><span class="k">hold</span> <span id="diagHold">—</span></div>
+    <div><span class="k">move</span> <span id="diagMove">—</span></div>
+    <div><span class="k">look</span> <span id="diagLook">—</span></div>
+    <div id="diagPaused" class="paused-line hidden">PAUSED (press P to resume)</div>
+    <div id="diagWarning" class="warn-line hidden"></div>
+    <div class="hint">press D to hide, S for branding, L for live photos, R to record, P to pause</div>
+  </div>
+
+  <div id="brandLockup" class="hidden" aria-hidden="true">
+    <img src="assets/branding/lockup.svg" alt="Sheffield Hallam University — BA (Hons) Graphic Design">
+  </div>
+
+  <div id="controls" class="hidden" aria-hidden="true">
+    <h2 title="Press C to hide">Controls</h2>
+
+    <!-- Always-visible global dials — these apply regardless of which
+         effect is active, so they stay out of the per-effect sections
+         below rather than being buried in a details toggle. -->
+    <label class="checkbox-row" title="Keyboard shortcut: P">
+      <input type="checkbox" id="ctrlAutoCycle" checked>
+      Auto-cycle
+    </label>
+
+    <div class="row-pair" title="Random engine picks a hold duration between these two each cycle, unless Randomize below is off">
+      <label class="mini">
+        Speed min
+        <input type="range" id="ctrlSpeedMin" min="0.1" max="20" step="0.1" value="2.5">
+        <span class="val" data-for="ctrlSpeedMin">2.5s</span>
+      </label>
+      <label class="mini">
+        Speed max
+        <input type="range" id="ctrlSpeedMax" min="0.1" max="20" step="0.1" value="9">
+        <span class="val" data-for="ctrlSpeedMax">9s</span>
+      </label>
+    </div>
+
+    <label class="checkbox-row" title="Off = constant hold at Speed min's value (Speed max ignored). On = random value between min and max each cycle.">
+      <input type="checkbox" id="ctrlSpeedRandomize" checked>
+      Randomize speed
+    </label>
+
+    <!-- Grouped by effect from here on: each section holds that effect's
+         own "in rotation" toggle plus every parameter for it, so there's
+         one place to look per effect instead of hunting across separate
+         "scale" / "options" lists. Filters act on one image; Transitions
+         (further down) act between two — same split as the workshop deck. -->
+
+    <h3 class="group-heading" title="Effects that reshape a single frame">Filters</h3>
+
+    <details open>
+      <summary>Untouched</summary>
+
+      <label class="checkbox-row" title="The unmodified source photo, no filter applied — competes in rotation like any other effect below.">
+        <input type="checkbox" id="ctrlEffectNone" checked>
+        In rotation
+      </label>
+
+      <label class="checkbox-row" title="Forces the very first image on page load to show Untouched, regardless of what the random engine would otherwise pick. Every cycle after that first one is fully random as normal. Has no effect if Untouched's own 'In rotation' box above is unchecked.">
+        <input type="checkbox" id="ctrlStartUnchanged" checked>
+        Start on Untouched
+      </label>
+    </details>
+
+    <details open>
+      <summary>Duotone</summary>
+
+      <label class="checkbox-row" title="Whole-image colour remap by luminance, using the same Highlights/Shadows palette panel as Pixelate/Halftone/ASCII below.">
+        <input type="checkbox" id="ctrlEffectDuotone">
+        In rotation
+      </label>
+    </details>
+
+    <details open>
+      <summary>Pixelate</summary>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlEffectPixelate">
+        In rotation
+      </label>
+
+      <div class="row-pair" title="Random engine picks a cell size between these two each cycle, unless Randomize below is off">
+        <label class="mini">
+          Min
+          <input type="range" id="ctrlPixelateMin" min="2" max="128" step="1" value="7">
+          <span class="val" data-for="ctrlPixelateMin">7px</span>
+        </label>
+        <label class="mini">
+          Max
+          <input type="range" id="ctrlPixelateMax" min="2" max="128" step="1" value="17">
+          <span class="val" data-for="ctrlPixelateMax">17px</span>
+        </label>
+      </div>
+
+      <label class="checkbox-row" title="Off = constant scale at Min's value (Max ignored). On = random value between min and max each cycle.">
+        <input type="checkbox" id="ctrlPixelateRandomize" checked>
+        Randomize scale
+      </label>
+
+      <label class="checkbox-row" title="Bounces cell size up/down while this frame is on screen">
+        <input type="checkbox" id="ctrlPixelateAnimate">
+        Animate scale
+      </label>
+
+      <label class="checkbox-row" title="Each block rerolls its own random size instead of every block in the grid matching one uniform size">
+        <input type="checkbox" id="ctrlPixelateRandomCellSize">
+        Random cell size
+      </label>
+    </details>
+
+    <details>
+      <summary>Halftone</summary>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlEffectHalftone">
+        In rotation
+      </label>
+
+      <div class="row-pair" title="Random engine picks a cell size between these two each cycle, unless Randomize below is off">
+        <label class="mini">
+          Min
+          <input type="range" id="ctrlHalftoneMin" min="6" max="32" step="1" value="6">
+          <span class="val" data-for="ctrlHalftoneMin">6px</span>
+        </label>
+        <label class="mini">
+          Max
+          <input type="range" id="ctrlHalftoneMax" min="6" max="32" step="1" value="11">
+          <span class="val" data-for="ctrlHalftoneMax">11px</span>
+        </label>
+      </div>
+
+      <label class="checkbox-row" title="Off = constant scale at Min's value (Max ignored). On = random value between min and max each cycle.">
+        <input type="checkbox" id="ctrlHalftoneRandomize" checked>
+        Randomize scale
+      </label>
+
+      <label class="checkbox-row" title="Each dot rerolls extra size jitter on top of its brightness, instead of dots at the same brightness always drawing at the same size">
+        <input type="checkbox" id="ctrlHalftoneRandomCellSize">
+        Random cell size
+      </label>
+    </details>
+
+    <details>
+      <summary>ASCII</summary>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlEffectAscii">
+        In rotation
+      </label>
+
+      <div class="row-pair" title="Random engine picks a cell size between these two each cycle, unless Randomize below is off">
+        <label class="mini">
+          Min
+          <input type="range" id="ctrlAsciiMin" min="8" max="40" step="1" value="12">
+          <span class="val" data-for="ctrlAsciiMin">12px</span>
+        </label>
+        <label class="mini">
+          Max
+          <input type="range" id="ctrlAsciiMax" min="8" max="40" step="1" value="24">
+          <span class="val" data-for="ctrlAsciiMax">24px</span>
+        </label>
+      </div>
+
+      <label class="checkbox-row" title="Off = constant scale at Min's value (Max ignored). On = random value between min and max each cycle.">
+        <input type="checkbox" id="ctrlAsciiRandomize" checked>
+        Randomize scale
+      </label>
+
+      <label>
+        Ramp style
+        <select id="ctrlAsciiRamp">
+          <option value="density">Density (.:-=+*#%@)</option>
+          <option value="blocks">Blocks (░▒▓█)</option>
+          <option value="binary">Binary (space/#)</option>
+        </select>
+      </label>
+
+      <label class="checkbox-row" title="Picks a random ramp style each cycle instead of using the dropdown above">
+        <input type="checkbox" id="ctrlAsciiRampRandomize">
+        Randomize ramp style
+      </label>
+
+      <label class="checkbox-row" title="Flickers glyphs in place">
+        <input type="checkbox" id="ctrlAsciiAnimate" checked>
+        Animate characters
+      </label>
+
+      <label class="checkbox-row" title="Each character rerolls its own random font size instead of every character in the grid matching one uniform size">
+        <input type="checkbox" id="ctrlAsciiRandomCellSize">
+        Random cell size
+      </label>
+    </details>
+
+    <!-- Shared/cross-cutting sections — these apply across multiple
+         effects above, so they stay separate rather than living inside
+         any one effect's section. -->
+
+    <details>
+      <summary title="Applies to Duotone + Pixelate + ASCII + Halftone">Colour</summary>
+
+      <label class="checkbox-row" title="Picks a random palette from the four below each cycle instead of always using Palette 1">
+        <input type="checkbox" id="ctrlPaletteRandomize">
+        Randomize palette
+      </label>
+
+      <label class="checkbox-row" title="Excludes any palette below whose Highlights/Shadows colours are too close in brightness to read as a proper duotone — guards against a dark-on-dark custom colour pick rendering as a muddy near-black image. Manual toggle for now, not automatic.">
+        <input type="checkbox" id="ctrlPaletteSafeMode">
+        Safe mode (skip dark-on-dark palettes)
+      </label>
+
+      <label class="checkbox-row" title="On every animation tick, each pixel/dot/character in ASCII, Halftone, and Pixelate independently rolls a random palette from below, instead of the whole frame using one fixed pair">
+        <input type="checkbox" id="ctrlAnimatePaletteColor">
+        Animate palette per cell
+      </label>
+
+      <div class="row-pair" title="Random engine picks a coverage percentage between these two on every animation tick, unless Randomize below is off">
+        <label class="mini">
+          Coverage min
+          <input type="range" id="ctrlAnimatePaletteDensityMin" min="0" max="100" step="1" value="0">
+          <span class="val" data-for="ctrlAnimatePaletteDensityMin">0%</span>
+        </label>
+        <label class="mini">
+          Coverage max
+          <input type="range" id="ctrlAnimatePaletteDensityMax" min="0" max="100" step="1" value="20">
+          <span class="val" data-for="ctrlAnimatePaletteDensityMax">20%</span>
+        </label>
+      </div>
+
+      <label class="checkbox-row" title="Off = constant coverage at Coverage min's value (Coverage max ignored). On = fresh coverage between min and max every animation tick.">
+        <input type="checkbox" id="ctrlAnimatePaletteDensityRandomize">
+        Randomize coverage
+      </label>
+
+      <label class="checkbox-row palette-label" title="Include Palette 1 in the pick (fixed default, or random draw when Randomize palette is on)">
+        <input type="checkbox" id="ctrlPalette1Enabled" checked>
+        Palette 1
+      </label>
+      <div class="row-pair" title="Colours the brightest / darkest pixels">
+        <label class="color-row mini">
+          <span>Highlights</span>
+          <input type="color" id="ctrlPalette1Fg" value="#00ff00">
+        </label>
+        <label class="color-row mini">
+          <span>Shadows</span>
+          <input type="color" id="ctrlPalette1Bg" value="#002fa7">
+        </label>
+      </div>
+
+      <label class="checkbox-row palette-label" title="Include Palette 2 in the pick (fixed default, or random draw when Randomize palette is on)">
+        <input type="checkbox" id="ctrlPalette2Enabled" checked>
+        Palette 2
+      </label>
+      <div class="row-pair" title="Colours the brightest / darkest pixels">
+        <label class="color-row mini">
+          <span>Highlights</span>
+          <input type="color" id="ctrlPalette2Fg" value="#00ffff">
+        </label>
+        <label class="color-row mini">
+          <span>Shadows</span>
+          <input type="color" id="ctrlPalette2Bg" value="#6a0dad">
+        </label>
+      </div>
+
+      <label class="checkbox-row palette-label" title="Include Palette 3 in the pick (fixed default, or random draw when Randomize palette is on)">
+        <input type="checkbox" id="ctrlPalette3Enabled" checked>
+        Palette 3
+      </label>
+      <div class="row-pair" title="Colours the brightest / darkest pixels">
+        <label class="color-row mini">
+          <span>Highlights</span>
+          <input type="color" id="ctrlPalette3Fg" value="#ffff00">
+        </label>
+        <label class="color-row mini">
+          <span>Shadows</span>
+          <input type="color" id="ctrlPalette3Bg" value="#99000d">
+        </label>
+      </div>
+
+      <label class="checkbox-row palette-label" title="Include Palette 4 in the pick (fixed default, or random draw when Randomize palette is on)">
+        <input type="checkbox" id="ctrlPalette4Enabled" checked>
+        Palette 4
+      </label>
+      <div class="row-pair" title="Colours the brightest / darkest pixels">
+        <label class="color-row mini">
+          <span>Highlights</span>
+          <input type="color" id="ctrlPalette4Fg" value="#ff00ff">
+        </label>
+        <label class="color-row mini">
+          <span>Shadows</span>
+          <input type="color" id="ctrlPalette4Bg" value="#00802b">
+        </label>
+      </div>
+    </details>
+
+    <details>
+      <summary>Move</summary>
+
+      <label title="Ken Burns-style pan across the frame while it's on screen, works on top of any effect. 0 = off. Negative = pan left, positive = pan right — magnitude sets how fast.">
+        Pan
+        <input type="range" id="ctrlMovePanSpeed" min="-100" max="100" step="1" value="0">
+        <span class="val" data-for="ctrlMovePanSpeed">off</span>
+      </label>
+
+      <label title="Vertical camera drift, works on top of any effect. 0 = off. Negative = tilt up, positive = tilt down — magnitude sets how fast.">
+        Tilt
+        <input type="range" id="ctrlMoveTiltSpeed" min="-100" max="100" step="1" value="0">
+        <span class="val" data-for="ctrlMoveTiltSpeed">off</span>
+      </label>
+
+      <label title="Camera push in/out, works on top of any effect. 0 = off. Negative = zoom out, positive = zoom in — magnitude sets how fast.">
+        Zoom
+        <input type="range" id="ctrlMoveZoomSpeed" min="-100" max="100" step="1" value="0">
+        <span class="val" data-for="ctrlMoveZoomSpeed">off</span>
+      </label>
+
+      <div class="row-pair" title="Bounds the random MAGNITUDE rolled for each axis when Randomize move is on — direction is separately 50/50, these don't affect it">
+        <label class="mini">
+          Speed min
+          <input type="range" id="ctrlMoveSpeedMin" min="0" max="100" step="1" value="20">
+          <span class="val" data-for="ctrlMoveSpeedMin">20%</span>
+        </label>
+        <label class="mini">
+          Speed max
+          <input type="range" id="ctrlMoveSpeedMax" min="0" max="100" step="1" value="80">
+          <span class="val" data-for="ctrlMoveSpeedMax">80%</span>
+        </label>
+      </div>
+
+      <label class="checkbox-row" title="Off = Pan/Tilt/Zoom use the sliders above as-is. On = every new image rolls a fresh random value for each, ignoring wherever the sliders are currently set (they stay put — this doesn't drag them around).">
+        <input type="checkbox" id="ctrlMoveRandomize">
+        Randomize move
+      </label>
+    </details>
+
+    <h3 class="group-heading" title="Effects that combine two frames">Transitions</h3>
+
+    <details open>
+      <summary>Crossfade</summary>
+
+      <label>
+        Opacity
+        <input type="range" id="ctrlOpacity" min="0.1" max="1" step="0.01" value="1">
+        <span class="val" data-for="ctrlOpacity">1.00</span>
+      </label>
+
+      <label class="checkbox-row" title="Off = hard cut between images, no fade. On = the usual eased crossfade.">
+        <input type="checkbox" id="ctrlCrossfadeEnabled" checked>
+        Crossfade
+      </label>
+    </details>
+
+    <details>
+      <summary>Blend overlay</summary>
+
+      <label class="checkbox-row" title="Layers on top of every effect, not a separate pick in the rotation">
+        <input type="checkbox" id="ctrlBlendOverlay">
+        Enabled
+      </label>
+
+      <label title="Past frames blended in — 1 is a classic 2-image blend">
+        Blend layers
+        <input type="range" id="ctrlBlendLayers" min="1" max="4" step="1" value="1">
+        <span class="val" data-for="ctrlBlendLayers">1</span>
+      </label>
+
+      <label class="checkbox-row" title="Re-rolls 1–N each cycle; the slider above sets the max">
+        <input type="checkbox" id="ctrlRandomBlendLayers">
+        Randomize layer count
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlBlendModeMultiply" checked>
+        Multiply
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlBlendModeScreen" checked>
+        Screen
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlBlendModeOverlay">
+        Overlay
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlBlendModeDarken">
+        Darken
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlBlendModeLighten">
+        Lighten
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlBlendModeDifference">
+        Difference
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlBlendModeExclusion">
+        Exclusion
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="ctrlBlendModeHardLight">
+        Hard light
+      </label>
+    </details>
+
+    <h3 class="group-heading" title="Applies to the whole screen, on top of everything else — doesn't fit neatly under either Filters (single frame) or Transitions (between two frames)">Global</h3>
+
+    <details>
+      <summary title="Applies to the whole screen — every effect, blend, and pan">Adjustments</summary>
+
+      <label>
+        Saturation
+        <input type="range" id="ctrlSaturation" min="0" max="200" step="1" value="100">
+        <span class="val" data-for="ctrlSaturation">100%</span>
+      </label>
+
+      <label>
+        Contrast
+        <input type="range" id="ctrlContrast" min="0" max="200" step="1" value="100">
+        <span class="val" data-for="ctrlContrast">100%</span>
+      </label>
+    </details>
+
+    <details>
+      <summary title="Which image pool is on screen">Source</summary>
+
+      <label class="checkbox-row" title="Off = the curated assets/demo/ folder (what the session opens on). On = the live pool — Drive if configured, otherwise assets/seeds/, the folder the Image uploader writes into. Same as pressing L.">
+        <input type="checkbox" id="ctrlLiveMode">
+        Live student photos
+      </label>
+    </details>
+
+    <details>
+      <summary title="Save/restore every slider, checkbox, and colour above in one go">Presets</summary>
+
+      <button type="button" id="saveSettingsBtn" title="Saves every control above (sliders, checkboxes, colours) to this browser, overwriting any previous save">Save current settings</button>
+      <button type="button" id="loadSettingsBtn" title="Restores the last saved settings">Load saved settings</button>
+      <button type="button" id="clearSettingsBtn" title="Deletes the saved settings — does not change what's on screen right now">Clear</button>
+      <p class="presets-status" id="settingsStatus">No settings saved yet.</p>
+    </details>
+
+    <p class="status" id="statusLine">loading&hellip;</p>
+    <p class="status">
+      <a href="controls.html" target="_blank" title="Opens in a new tab on this same device — won't reach a phone or another computer">Open remote controls ↗</a>
+    </p>
+    <p class="status">
+      <a href="seed-loader.html" target="_blank" title="Drag new photos in, auto-named and saved automatically">Open image uploader ↗</a>
+    </p>
+    <p class="status">
+      <a href="#" id="openRecordingWindowLink" title="Opens a new window sized to the 9:16 output with no letterbox bars, with your current settings applied (same pool, same effects/palette/speed) — it runs its own fresh sequence rather than a live copy of this exact image. Screen-record that window. Same as pressing R.">Open recording window ↗</a>
+    </p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+.DS_Store
+**/.DS_Store
+
+# Instagram recording exports — large binaries, not part of the deployed
+# app; GitHub also hard-rejects files over 100MB without Git LFS, and
+# gd_remix_recording_4x.mp4 (149MB) would fail a plain push anyway.
+*.mp4
