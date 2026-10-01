@@ -22,7 +22,7 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain; /* canvas content is already 9:16-cropped; this just letterboxes it in the viewport */
+  object-fit: contain; /* phone: letterboxes the 9:16 stage; desktop: stage already matches the window, so this is a no-op */
 }
 
 /* top layer starts transparent; app.js crossfades opacity between the two */
