@@ -54,5 +54,13 @@ These sliders narrow or override the random engine's min/max ranges live — the
 Live Drive fetch + offline seed-image fallback, images normalised to 1080×1920, effects 1–4 working, crossfade, parameter controls for speed/opacity/pixelate scale, static fallback audio track.
 Stretch: halftone + its scale control, working audio-reactivity in place of the static track.
 
+## Version control — fixed process, don't renegotiate
+- Repo: `https://github.com/PkWr/square-dot-ascii` (already initialised, first commit pushed).
+- `.gitignore` excludes `.DS_Store` and `*.mp4` — the Instagram recording exports are large (100–150MB) and GitHub hard-rejects anything over 100MB without Git LFS, so they stay local-only.
+- Claude's sandbox cannot run `git` here — the sandbox blocks deleting/renaming any file (even its own temp files), which breaks git's lockfile mechanism for every operation, not just init. This is a fixed platform constraint, not a bug to keep re-diagnosing.
+- Division of labour: Claude edits files directly in this folder as usual (Read/Write/Edit tools work fine — only delete/rename is blocked). The user commits and pushes locally, where git is unrestricted.
+- Helper script `push-to-github.sh` (in this folder) does `git add -A && git commit -m "<msg>" && git push` in one step. Usage: `./push-to-github.sh "commit message"`.
+- After any meaningful code change, Claude should propose a concise, accurate commit message describing what changed and remind the user to run the script — rather than attempting `git` commands itself.
+
 ## Reference
 Full rationale, schedule, and risk notes: `Generative-Photo-Remix-Roadmap.md` (same folder).

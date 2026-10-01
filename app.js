@@ -6,7 +6,9 @@
  *   1. CONFIG            — tunables, referrer-restricted API key goes here
  *   2. SEED IMAGES        — bundled offline fallback (assets/seeds/*)
  *   3. DRIVE FETCH        — files.list against the public folder
- *   4. IMAGE PIPELINE     — cover-crop normalize to 1080x1920, cached
+ *   1b. STAGE PROFILES    — phone (fixed 1080x1920) / desktop (window-sized)
+ *   4. IMAGE PIPELINE     — cover-crop normalize per layout slot size, cached
+ *   4b. LAYOUTS           — single image / row of portrait tiles
  *   5. EFFECT PALETTE     — pixelation (2), halftone (5), ascii (bonus)
  *   6. STATE / RENDER LOOP — random engine + crossfade cycle (3) + blend overlay (4)
  *   7. CONTROLS           — sliders that narrow the random engine's ranges
@@ -37,8 +39,27 @@
     DRIVE_API_KEY: "YOUR_DRIVE_API_KEY_HERE",
     DRIVE_FOLDER_ID: "YOUR_DRIVE_FOLDER_ID_HERE",
 
-    CANVAS_W: 1080,
-    CANVAS_H: 1920,
+    // Stage size is no longer hard-coded here — it comes from the active
+    // stage profile (see 1b. STAGE PROFILES below). REF_HEIGHT is the stage
+    // height every px-based effect slider (Pixelate/Halftone/ASCII cell
+    // size) is calibrated against: slider values mean "px on a 1920-tall
+    // stage" and get scaled by STAGE.h / REF_HEIGHT at draw time. So the
+    // phone profile renders exactly as it always has, and taller/shorter
+    // stages keep the same proportional look.
+    REF_HEIGHT: 1920,
+    // Cap on grid cells per frame for each per-cell effect, turned into a
+    // minimum cell size by stagePx(). Values are chosen so the phone profile
+    // (1080x1920) is never affected at any slider position (halftone's 60k
+    // is exactly the old hard 6px floor); they only kick in on big/wide
+    // stages, where relative sizing would otherwise multiply the cell count.
+    MAX_CELLS: { pixelate: 520000, halftone: 60000, ascii: 60000 },
+    // Target aspect for one tile in the "tiles" layout (9:16 portrait, same
+    // as the phone stage). Tile count = stage aspect / this, rounded.
+    TILE_ASPECT: 9 / 16,
+    // Max normalised canvases kept in memory (least-recently-used evicted).
+    // Each is one image at one slot size; the tiles layout adds a second
+    // size per image, so this bounds memory on big desktop stages.
+    NORMALIZED_CACHE_MAX: 60,
 
     // Single-slot localStorage key for the Presets section's Save/Load —
     // see saveSettingsToStorage()/loadSettingsFromStorage() below.
@@ -104,6 +125,59 @@
     // image stays on screen.
     MOVE_MAX_RATE_PER_SEC: 0.5,
   };
+
+  // ---------------------------------------------------------------------
+  // 1b. STAGE PROFILES
+  // ---------------------------------------------------------------------
+  // Picked once per page load from the URL: ?stage=desktop, default phone.
+  //   phone   — fixed 1080x1920 (9:16 Instagram Story), letterboxed into the
+  //             window by CSS object-fit: contain. Identical to v1.
+  //   desktop — sized to the window x devicePixelRatio, capped at maxWidth
+  //             (height scaled to keep the window's aspect), rebuilt on
+  //             resize / fullscreen / DPR change (see rebuildStage()).
+  // `layouts` lists which layouts the random engine may pick per cycle.
+  // Optional ?layout=single|tiles forces one (handy for testing).
+  const STAGE_PROFILES = {
+    phone: { size: "fixed", width: 1080, height: 1920, layouts: ["single"] },
+    desktop: { size: "window", maxWidth: 2560, layouts: ["single", "tiles"] },
+  };
+
+  const pageParams = new URLSearchParams(location.search);
+  const requestedProfile = (pageParams.get("stage") || "phone").toLowerCase();
+  if (!STAGE_PROFILES[requestedProfile]) {
+    console.warn(`[stage] unknown profile "${requestedProfile}", using phone`);
+  }
+  const STAGE_PROFILE_KEY = STAGE_PROFILES[requestedProfile] ? requestedProfile : "phone";
+  const STAGE_PROFILE = STAGE_PROFILES[STAGE_PROFILE_KEY];
+  const FORCED_LAYOUT = STAGE_PROFILE.layouts.includes(pageParams.get("layout"))
+    ? pageParams.get("layout")
+    : null;
+
+  function computeStageSize() {
+    if (STAGE_PROFILE.size === "fixed") {
+      return { w: STAGE_PROFILE.width, h: STAGE_PROFILE.height, dpr: 1 };
+    }
+    const dpr = window.devicePixelRatio || 1;
+    let w = Math.max(1, Math.round(window.innerWidth * dpr));
+    let h = Math.max(1, Math.round(window.innerHeight * dpr));
+    if (w > STAGE_PROFILE.maxWidth) {
+      h = Math.max(1, Math.round((h * STAGE_PROFILE.maxWidth) / w));
+      w = STAGE_PROFILE.maxWidth;
+    }
+    return { w, h, dpr };
+  }
+
+  // Live stage size — mutated in place by rebuildStage(), read everywhere
+  // that used to read STAGE.w/H.
+  const STAGE = { profile: STAGE_PROFILE_KEY, ...computeStageSize() };
+
+  // Converts a slider value ("px on a 1920-tall stage") to real stage px,
+  // then applies the per-effect cell budget floor (see CONFIG.MAX_CELLS).
+  function stagePx(sliderPx, maxCells) {
+    const scaled = sliderPx * (STAGE.h / CONFIG.REF_HEIGHT);
+    const budgetFloor = maxCells ? Math.sqrt((STAGE.w * STAGE.h) / maxCells) : 0;
+    return Math.max(1, scaled, budgetFloor);
+  }
 
   // Given a target value, return a min/max range around it — used once at
   // module init to seed sensible default Min/Max slider positions for
@@ -438,11 +512,15 @@
   }
 
   // ---------------------------------------------------------------------
-  // 4. IMAGE PIPELINE — cover-crop normalize to fixed 1080x1920 canvas
+  // 4. IMAGE PIPELINE — cover-crop normalize to the layout slot size
   // ---------------------------------------------------------------------
-  // Runs once per image on load; result is cached so effects never touch
-  // the raw source or handle variable aspect ratios.
-  const normalizedCache = new Map(); // src -> HTMLCanvasElement
+  // Runs once per image per slot size (full stage for "single", one tile
+  // for "tiles"); the result is cached so effects never touch the raw
+  // source or handle variable aspect ratios. The cache is cleared whenever
+  // the stage is rebuilt (resize/fullscreen), since every slot size changes.
+  // Stores promises, so two tiles asking for the same image at once share
+  // one load.
+  const normalizedCache = new Map(); // `${src}|${w}x${h}` -> Promise<HTMLCanvasElement>
 
   function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -486,18 +564,92 @@
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, destW, destH);
   }
 
-  async function normalizeImage(src) {
-    if (normalizedCache.has(src)) return normalizedCache.get(src);
+  function normalizeImage(src, w = STAGE.w, h = STAGE.h) {
+    const key = `${src}|${w}x${h}`;
+    const cached = normalizedCache.get(key);
+    if (cached) {
+      // Re-insert so Map order doubles as least-recently-used order.
+      normalizedCache.delete(key);
+      normalizedCache.set(key, cached);
+      return cached;
+    }
 
-    const img = await loadImage(src);
+    const promise = loadImage(src).then((img) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      drawCover(canvas.getContext("2d"), img, w, h);
+      return canvas;
+    });
+    // Don't cache failures — a later cycle should get to retry.
+    promise.catch(() => {
+      if (normalizedCache.get(key) === promise) normalizedCache.delete(key);
+    });
+    normalizedCache.set(key, promise);
+    while (normalizedCache.size > CONFIG.NORMALIZED_CACHE_MAX) {
+      normalizedCache.delete(normalizedCache.keys().next().value);
+    }
+    return promise;
+  }
+
+  // ---------------------------------------------------------------------
+  // 4b. LAYOUTS — picked randomly per cycle from the profile's list
+  // ---------------------------------------------------------------------
+  //   single — one image cover-cropped to the whole stage.
+  //   tiles  — a row of portrait (~9:16) tiles, one image each, edge to
+  //            edge. Only offered when the stage is wide enough for 2+.
+  // Either way the result is ONE stage-sized canvas, so every effect,
+  // blend and move downstream works on it exactly as before.
+  function tileCount() {
+    return Math.round(STAGE.w / STAGE.h / CONFIG.TILE_ASPECT);
+  }
+
+  function availableLayouts() {
+    return STAGE_PROFILE.layouts.filter((k) => k !== "tiles" || tileCount() >= 2);
+  }
+
+  function pickLayout() {
+    const avail = availableLayouts();
+    const kind =
+      FORCED_LAYOUT && avail.includes(FORCED_LAYOUT)
+        ? FORCED_LAYOUT
+        : avail[Math.floor(Math.random() * avail.length)] || "single";
+    if (kind === "tiles") {
+      const n = tileCount();
+      // One shared slot size for every tile (ceil, then positioned by
+      // rounding i*w/n) so they all hit the same cache entry size and
+      // never leave a 1px gap — worst case they overlap by 1px.
+      return { kind, slots: n, slotW: Math.ceil(STAGE.w / n), slotH: STAGE.h };
+    }
+    return { kind: "single", slots: 1, slotW: STAGE.w, slotH: STAGE.h };
+  }
+
+  async function buildLayoutSource(layout, srcs) {
+    if (layout.kind === "single") return normalizeImage(srcs[0], STAGE.w, STAGE.h);
+
+    const results = await Promise.allSettled(
+      srcs.map((s) => normalizeImage(s, layout.slotW, layout.slotH))
+    );
+    const ok = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
+    if (ok.length === 0) throw results[0].reason;
+
     const canvas = document.createElement("canvas");
-    canvas.width = CONFIG.CANVAS_W;
-    canvas.height = CONFIG.CANVAS_H;
+    canvas.width = STAGE.w;
+    canvas.height = STAGE.h;
     const ctx = canvas.getContext("2d");
-    drawCover(ctx, img, CONFIG.CANVAS_W, CONFIG.CANVAS_H);
-
-    normalizedCache.set(src, canvas);
+    results.forEach((r, i) => {
+      // A tile whose image failed borrows one that loaded, rather than
+      // leaving a black hole in the row.
+      const tile = r.status === "fulfilled" ? r.value : ok[i % ok.length];
+      ctx.drawImage(tile, Math.round((i * STAGE.w) / layout.slots), 0);
+    });
     return canvas;
+  }
+
+  function describeStage(layout) {
+    const dpr = STAGE.dpr !== 1 ? ` @${+STAGE.dpr.toFixed(2)}x` : "";
+    const lay = layout ? ` · ${layout.kind}${layout.slots > 1 ? ` ×${layout.slots}` : ""}` : "";
+    return `${STAGE.profile} ${STAGE.w}×${STAGE.h}${dpr}${lay}`;
   }
 
   // ---------------------------------------------------------------------
@@ -629,10 +781,12 @@
   const pixelateTempCanvas = document.createElement("canvas");
 
   function applyPixelate(ctx, sourceCanvas, { cellSize, fgColor, bgColor }) {
-    const w = CONFIG.CANVAS_W;
-    const h = CONFIG.CANVAS_H;
-    const cols = Math.max(1, Math.round(w / cellSize));
-    const rows = Math.max(1, Math.round(h / cellSize));
+    const w = STAGE.w;
+    const h = STAGE.h;
+    // cellSize is in slider units (px at REF_HEIGHT) — scale to this stage.
+    const px = stagePx(cellSize, CONFIG.MAX_CELLS.pixelate);
+    const cols = Math.max(1, Math.round(w / px));
+    const rows = Math.max(1, Math.round(h / px));
 
     pixelateTempCanvas.width = cols;
     pixelateTempCanvas.height = rows;
@@ -851,9 +1005,11 @@
     // means small cell sizes get expensive fast (see note above the min-6
     // slider limit). This backstops that even if something else ever feeds
     // a smaller value in.
-    const safeCellSize = Math.max(6, cellSize);
-    const w = CONFIG.CANVAS_W;
-    const h = CONFIG.CANVAS_H;
+    // Now expressed as a cell budget (CONFIG.MAX_CELLS.halftone) rather
+    // than a flat 6px, so it scales with stage area — same result on phone.
+    const safeCellSize = stagePx(cellSize, CONFIG.MAX_CELLS.halftone);
+    const w = STAGE.w;
+    const h = STAGE.h;
     const cols = Math.max(1, Math.round(w / safeCellSize));
     const rows = Math.max(1, Math.round(h / safeCellSize));
     const cellW = w / cols;
@@ -1003,10 +1159,11 @@
   }
 
   function applyAscii(ctx, sourceCanvas, { cellSize, rampStyle, fgColor, bgColor }) {
-    const w = CONFIG.CANVAS_W;
-    const h = CONFIG.CANVAS_H;
-    const cols = Math.max(1, Math.floor(w / cellSize));
-    const rows = Math.max(1, Math.floor(h / cellSize));
+    const w = STAGE.w;
+    const h = STAGE.h;
+    const px = stagePx(cellSize, CONFIG.MAX_CELLS.ascii);
+    const cols = Math.max(1, Math.floor(w / px));
+    const rows = Math.max(1, Math.floor(h / px));
     const cellW = w / cols;
     const cellH = h / rows;
 
@@ -1143,14 +1300,29 @@
   const canvasB = document.getElementById("canvasB");
   const ctxA = canvasA.getContext("2d");
   const ctxB = canvasB.getContext("2d");
-  canvasA.width = CONFIG.CANVAS_W;
-  canvasA.height = CONFIG.CANVAS_H;
-  canvasB.width = CONFIG.CANVAS_W;
-  canvasB.height = CONFIG.CANVAS_H;
+  // Setting width/height also clears the canvas — only call on a real
+  // size change (boot, rebuildStage()).
+  function sizeCanvases() {
+    for (const c of [canvasA, canvasB]) {
+      c.width = STAGE.w;
+      c.height = STAGE.h;
+    }
+  }
+  sizeCanvases();
+
+  // Bumped by every cycle() call. A cycle that finishes loading after a
+  // newer one has started (resize rebuild, source switch) sees a stale
+  // number and bails, so there's never two cycle chains or a frame drawn
+  // at the old stage size.
+  let cycleGeneration = 0;
 
   const state = {
     sources: [],
     currentIndex: -1,
+    // All image indices on screen this cycle (1 for single, N for tiles);
+    // currentIndex is always currentIndices[0].
+    currentIndices: [],
+    currentLayout: null,
     // Flips true after the first cycle ever runs — see startUnchanged's use
     // in cycle() below. Deliberately NOT reset on pause/resume; it's a
     // once-per-page-load thing, not a once-per-play-session thing.
@@ -1193,8 +1365,8 @@
 
   function snapshotFrame(sourceCanvas) {
     const snap = document.createElement("canvas");
-    snap.width = CONFIG.CANVAS_W;
-    snap.height = CONFIG.CANVAS_H;
+    snap.width = STAGE.w;
+    snap.height = STAGE.h;
     snap.getContext("2d").drawImage(sourceCanvas, 0, 0);
     return snap;
   }
@@ -1250,6 +1422,7 @@
 
     state.sources = sources;
     state.currentIndex = -1;
+    state.currentIndices = [];
 
     if (state.sources.length === 0) {
       setText("diagSource", "none");
@@ -1266,13 +1439,20 @@
     }
   }
 
-  function pickNextIndex() {
-    if (state.sources.length <= 1) return 0;
-    let next;
-    do {
-      next = Math.floor(Math.random() * state.sources.length);
-    } while (next === state.currentIndex);
-    return next;
+  // Picks `n` image indices for this cycle: images NOT on screen last cycle
+  // first (shuffled), then last cycle's, repeating only if the pool is
+  // smaller than n. For n=1 this is the old "no immediate repeat" rule.
+  function pickIndices(n) {
+    const all = state.sources.map((_, i) => i);
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    const prev = new Set(state.currentIndices);
+    const ordered = [...all.filter((i) => !prev.has(i)), ...all.filter((i) => prev.has(i))];
+    const out = [];
+    for (let k = 0; k < n; k++) out.push(ordered[k % ordered.length]);
+    return out;
   }
 
   function randomHold() {
@@ -1308,14 +1488,14 @@
   // just draws whatever it's given for each axis independently, so pan,
   // tilt, and zoom can all be mid-sweep at once.
   function applyMoveTransform(ctx, sourceCanvas, panProgress, tiltProgress, zoom) {
-    const scaledW = CONFIG.CANVAS_W * zoom;
-    const scaledH = CONFIG.CANVAS_H * zoom;
-    const extraX = scaledW - CONFIG.CANVAS_W;
-    const extraY = scaledH - CONFIG.CANVAS_H;
+    const scaledW = STAGE.w * zoom;
+    const scaledH = STAGE.h * zoom;
+    const extraX = scaledW - STAGE.w;
+    const extraY = scaledH - STAGE.h;
     const dx = panProgress === null ? -extraX / 2 : -extraX * (1 - Math.max(0, Math.min(1, panProgress)));
     const dy = tiltProgress === null ? -extraY / 2 : -extraY * (1 - Math.max(0, Math.min(1, tiltProgress)));
 
-    ctx.clearRect(0, 0, CONFIG.CANVAS_W, CONFIG.CANVAS_H);
+    ctx.clearRect(0, 0, STAGE.w, STAGE.h);
     ctx.drawImage(sourceCanvas, dx, dy, scaledW, scaledH);
   }
 
@@ -1446,7 +1626,7 @@
   // animation tick — so the blend layers never accidentally get transformed
   // along with the effect layer.
   function composeFrame(destCtx, moveState) {
-    destCtx.clearRect(0, 0, CONFIG.CANVAS_W, CONFIG.CANVAS_H);
+    destCtx.clearRect(0, 0, STAGE.w, STAGE.h);
     if (moveState === null) {
       destCtx.drawImage(state.lastEffectFrame, 0, 0);
     } else {
@@ -1474,7 +1654,7 @@
   // cycle's own frame is unshifted onto it — so composeFrame's blend pass
   // reads the pre-existing history, and a cycle never blends with itself.
   function renderFrame(destCtx, sourceCanvas, effect, effectParams, blendOverlay) {
-    destCtx.clearRect(0, 0, CONFIG.CANVAS_W, CONFIG.CANVAS_H);
+    destCtx.clearRect(0, 0, STAGE.w, STAGE.h);
     effect.run(destCtx, sourceCanvas, effectParams);
 
     const cleanSnapshot = snapshotFrame(destCtx.canvas);
@@ -1595,8 +1775,13 @@
     // pickRandomEffect()/pickBlendOverlay() below — so that if "Randomize
     // move" is on, even this cycle's very first (seed) frame already
     // reflects the freshly-rolled Pan/Tilt/Zoom values, not last cycle's.
+    const gen = ++cycleGeneration;
     resolveMoveSpeeds();
-    state.currentIndex = pickNextIndex();
+    const layout = pickLayout();
+    const indices = pickIndices(layout.slots);
+    state.currentIndices = indices;
+    state.currentIndex = indices[0];
+    state.currentLayout = layout;
     const src = state.sources[state.currentIndex];
     let { key: effectKey, effect, effectParams } = pickRandomEffect();
     // Start on Untouched: overrides whatever pickRandomEffect() rolled, but
@@ -1616,8 +1801,14 @@
     let renderError = null;
 
     try {
-      const normalized = await normalizeImage(src);
-      await crossfadeTo(normalized, effect, effectParams, blendOverlay);
+      const composed = await buildLayoutSource(
+        layout,
+        indices.map((i) => state.sources[i])
+      );
+      // Superseded while loading (stage rebuilt / source switched) — the
+      // newer cycle owns the screen and the schedule now.
+      if (gen !== cycleGeneration) return;
+      await crossfadeTo(composed, effect, effectParams, blendOverlay);
       // Only update this on success — a failed render leaves the previous
       // frame on screen, so the animation timer should keep treating
       // whatever's actually still visible as the "current" effect.
@@ -1630,6 +1821,8 @@
       console.error(`[cycle] effect "${effectKey}" failed, image not updated:`, err);
       renderError = err;
     }
+
+    if (gen !== cycleGeneration) return;
 
     const holdMs = randomHold();
     // Marks the start of this cycle's hold window for the Move overlay's pan
@@ -1649,10 +1842,12 @@
   function updateDiagnostics(src, holdMs, effectKey, effectParams, renderError, blendOverlay, layersAvailable) {
     const shortName = src.length > 40 ? `…${src.slice(-37)}` : src;
     setText("diagSource", state.sourceType);
+    const more = state.currentIndices.length > 1 ? ` +${state.currentIndices.length - 1} more` : "";
     setText(
       "diagImage",
-      `${shortName} (${state.currentIndex + 1}/${state.sources.length})`
+      `${shortName} (${state.currentIndex + 1}/${state.sources.length})${more}`
     );
+    setText("diagStage", describeStage(state.currentLayout));
 
     const diagEffectEl = document.getElementById("diagEffect");
     if (renderError) {
@@ -1740,7 +1935,7 @@
     if (!lockup || !stage) return;
 
     const stageRect = stage.getBoundingClientRect();
-    const contentAspect = 1080 / 1920;
+    const contentAspect = STAGE.w / STAGE.h;
     const boxAspect = stageRect.width / stageRect.height;
 
     let renderedWidth, renderedHeight, offsetX, offsetY;
@@ -1793,7 +1988,7 @@
   function openRecordingWindow() {
     saveSettingsToStorage();
 
-    const aspect = CONFIG.CANVAS_W / CONFIG.CANVAS_H; // 1080/1920 = 0.5625
+    const aspect = STAGE.w / STAGE.h; // phone: 1080/1920 = 0.5625
     const maxHeight = Math.round((window.screen.availHeight || 900) * 0.85);
     const maxWidth = Math.round((window.screen.availWidth || 1600) * 0.85);
     let targetHeight = Math.min(900, maxHeight);
@@ -2175,6 +2370,9 @@
       if (e.key === "r" || e.key === "R") {
         openRecordingWindow();
       }
+      if (e.key === "f" || e.key === "F") {
+        toggleFullscreen();
+      }
     });
 
     window.addEventListener("resize", positionBrandLockup);
@@ -2422,8 +2620,87 @@
     }
   }
 
+  // ---------------------------------------------------------------------
+  // STAGE REBUILD — resize / fullscreen / devicePixelRatio change
+  // ---------------------------------------------------------------------
+  // Recomputes the stage; if the pixel size actually changed, resizes both
+  // canvases, drops every size-specific cache (normalised images, blend
+  // history, effect animation state) and starts a fresh cycle straight away
+  // so the screen isn't left blank. The phone profile's size never changes,
+  // so for it this only ever re-positions the brand lockup.
+  let stageRebuildTimer = null;
+  function scheduleStageRebuild() {
+    clearTimeout(stageRebuildTimer);
+    stageRebuildTimer = setTimeout(rebuildStage, 150);
+  }
+
+  function rebuildStage() {
+    const next = computeStageSize();
+    STAGE.dpr = next.dpr;
+    if (next.w === STAGE.w && next.h === STAGE.h) {
+      positionBrandLockup();
+      return;
+    }
+    STAGE.w = next.w;
+    STAGE.h = next.h;
+
+    sizeCanvases();
+    normalizedCache.clear();
+    state.recentFrames = [];
+    state.lastEffectFrame = null;
+    state.lastBlendLayers = [];
+    state.lastBlendMode = null;
+    state.lastEffectKey = null; // stops the effect animation ticker until the next render
+    lastPixelateSource = null;
+    lastAsciiFrame = null;
+    lastHalftoneFrame = null;
+
+    positionBrandLockup();
+    setText("diagStage", describeStage(null));
+    console.info(`[stage] rebuilt at ${STAGE.w}x${STAGE.h}`);
+
+    if (state.sources.length === 0) return;
+    if (cycleTimeoutId) {
+      clearTimeout(cycleTimeoutId);
+      cycleTimeoutId = null;
+    }
+    // Runs even when paused (the resize just blanked both canvases); cycle()
+    // itself won't schedule a follow-up while paused.
+    cycle();
+  }
+
+  // devicePixelRatio changes (dragging the window to another monitor, zoom)
+  // don't always fire resize, so watch the current ratio and re-arm after.
+  function watchDevicePixelRatio() {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+    if (!mq.addEventListener) return;
+    mq.addEventListener(
+      "change",
+      () => {
+        scheduleStageRebuild();
+        watchDevicePixelRatio();
+      },
+      { once: true }
+    );
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      document.documentElement.requestFullscreen?.().catch((err) => {
+        console.warn("[stage] fullscreen refused:", err);
+      });
+    }
+  }
+
   async function boot() {
     wireControls();
+    window.addEventListener("resize", scheduleStageRebuild);
+    document.addEventListener("fullscreenchange", scheduleStageRebuild);
+    watchDevicePixelRatio();
+    setText("diagStage", describeStage(null));
     positionBrandLockup();
     applyLookFilter(); // sets the initial (default 100/100, no-op) CSS filter
     updateLookDiagnostic(); // so diagLook shows real defaults before the first cycle ever runs
