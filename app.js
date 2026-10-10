@@ -29,6 +29,38 @@
 (() => {
   "use strict";
 
+  // Bump on every push — shown in the info panel (D) and the console, so a
+  // cached old copy is easy to spot.
+  const APP_VERSION = "2026-10-10 · camera debug";
+  console.info(`[photo-remix] version ${APP_VERSION}`);
+
+  // Small on-screen message, top centre, independent of the info panel.
+  // kind: "info" | "ok" | "error". Used for camera debugging so pressing V
+  // always visibly does *something*.
+  let toastTimer = null;
+  function showToast(text, kind = "info", ms = 4000) {
+    let el = document.getElementById("toast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "toast";
+      el.setAttribute("role", "status");
+      Object.assign(el.style, {
+        position: "fixed", top: "16px", left: "50%", transform: "translateX(-50%)",
+        zIndex: "50", maxWidth: "min(720px, calc(100vw - 32px))", padding: "10px 16px",
+        borderRadius: "8px", font: "14px/1.4 system-ui, -apple-system, sans-serif",
+        color: "#fff", pointerEvents: "none", transition: "opacity 0.3s",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+      });
+      document.body.appendChild(el);
+    }
+    el.style.background = kind === "error" ? "rgba(170, 20, 20, 0.95)" : kind === "ok" ? "rgba(0, 110, 40, 0.95)" : "rgba(20, 20, 20, 0.9)";
+    el.textContent = text;
+    el.style.opacity = "1";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.style.opacity = "0"; }, ms);
+    console.info(`[toast] ${text}`);
+  }
+
   // ---------------------------------------------------------------------
   // 1. CONFIG
   // ---------------------------------------------------------------------
@@ -2580,6 +2612,7 @@
         toggleFullscreen();
       }
       if (e.key === "v" || e.key === "V") {
+        showToast(camera.live ? "V — switching camera off…" : "V — starting camera…");
         setCamera(!camera.live);
       }
     });
@@ -3103,14 +3136,41 @@
     if (on) {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         cameraMessage("Camera not available here — needs https (e.g. GitHub Pages) or localhost.");
+        showToast("Camera not available here — open the https GitHub Pages link (or localhost).", "error", 10000);
         if (box) box.checked = false;
         return;
       }
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
-          audio: false,
-        });
+        // Permissions API (where supported) says up front if the site is
+        // already blocked, which otherwise fails silently with no prompt.
+        try {
+          const perm = navigator.permissions && (await navigator.permissions.query({ name: "camera" }));
+          if (perm && perm.state === "denied") {
+            showToast(
+              "Camera is blocked for this site — click the icon at the left of the address bar, set Camera to Allow, then press V again.",
+              "error",
+              10000
+            );
+          } else if (perm && perm.state === "prompt") {
+            showToast("Asking for camera permission — look for the prompt near the address bar and click Allow.", "info", 8000);
+          }
+        } catch (e) {
+          /* Permissions API can't query camera in this browser — fine */
+        }
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false,
+          });
+        } catch (err) {
+          // Some cameras reject the size hint — retry with no constraints.
+          if (err && err.name === "OverconstrainedError") {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          } else {
+            throw err;
+          }
+        }
         if (token !== cameraSwitchToken) {
           stream.getTracks().forEach((t) => t.stop()); // switched off again while asking
           return;
@@ -3129,14 +3189,26 @@
         camera.frames = 0;
         camera.fpsAt = performance.now();
         cameraMessage("");
+        const track = stream.getVideoTracks()[0];
+        const set = track && track.getSettings ? track.getSettings() : {};
+        showToast(
+          `Camera on: ${(track && track.label) || "camera"} · ${video.videoWidth}×${video.videoHeight}` +
+            (set.frameRate ? ` @ ${Math.round(set.frameRate)} fps` : ""),
+          "ok"
+        );
       } catch (err) {
-        const why =
-          err && err.name === "NotAllowedError"
-            ? "permission was refused (allow the camera in the browser's address bar)"
-            : err && err.name === "NotFoundError"
-              ? "no camera found"
-              : (err && err.message) || String(err);
-        cameraMessage(`Camera unavailable: ${why}`);
+        const name = (err && err.name) || "Error";
+        const hints = {
+          NotAllowedError:
+            "permission refused — click the icon at the left of the address bar and allow Camera. On a Mac, also check System Settings → Privacy & Security → Camera for this browser.",
+          NotFoundError: "no camera found on this computer.",
+          NotReadableError: "the camera is busy — close Zoom, Teams, FaceTime or anything else using it, then press V again.",
+          SecurityError: "the browser blocked camera access here — use the https GitHub Pages link or localhost.",
+          AbortError: "the camera failed to start — try again, or restart the browser.",
+        };
+        const why = hints[name] || (err && err.message) || String(err);
+        cameraMessage(`Camera unavailable (${name}): ${why}`);
+        showToast(`Camera didn't start (${name}): ${why}`, "error", 12000);
         if (box) box.checked = false;
         return;
       }
@@ -3145,6 +3217,7 @@
       if (camera.stream) camera.stream.getTracks().forEach((t) => t.stop()); // camera light goes off
       camera.stream = null;
       if (camera.video) camera.video.srcObject = null;
+      showToast("Camera off — back to photos.");
     }
 
     if (box) box.checked = camera.live;
@@ -3159,6 +3232,7 @@
   }
 
   async function boot() {
+    setText("diagVersion", APP_VERSION);
     resetControlsToDefaults();
     wireControls();
     const cameraBox = document.getElementById("ctrlCamera");
