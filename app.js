@@ -60,6 +60,12 @@
     // Each is one image at one slot size; the tiles layout adds a second
     // size per image, so this bounds memory on big desktop stages.
     NORMALIZED_CACHE_MAX: 60,
+    // Resolution-aware layouts: a photo is only used in a layout slot if
+    // filling that slot (cover-crop) enlarges it by at most this much.
+    // 2 = the photo's pixels can be at most doubled. Stops a small portrait
+    // photo being cropped to a landscape strip and stretched across a whole
+    // Igloo wall. Lower = sharper but fewer photos qualify for big slots.
+    MAX_UPSCALE: 2,
 
     // Single-slot localStorage key for the Presets section's Save/Load —
     // see saveSettingsToStorage()/loadSettingsFromStorage() below.
@@ -150,7 +156,8 @@
   // `layouts` lists which layouts the random engine may pick per cycle.
   // Optional ?layout=single|tiles|walls forces one (handy for testing).
   const STAGE_PROFILES = {
-    phone: { size: "fixed", width: 1080, height: 1920, layouts: ["single"] },
+    // maxUpscale: Infinity — phone keeps v1 behaviour (every photo in rotation).
+    phone: { size: "fixed", width: 1080, height: 1920, layouts: ["single"], maxUpscale: Infinity },
     desktop: { size: "window", maxWidth: 2560, layouts: ["single", "tiles"] },
     igloo: {
       size: "fixed",
@@ -195,6 +202,16 @@
   // "0"/"false" turns it on, e.g. index.html?stage=igloo&preview
   const PREVIEW_PAN =
     pageParams.has("preview") && !["0", "false"].includes(pageParams.get("preview"));
+
+  // Natural pixel size of every image we've seen load (demo/seed probes,
+  // and every loadImage() — which covers Drive files once first shown).
+  // Used to keep low-res photos out of slots they'd look stretched in.
+  const imageSizes = new Map(); // src -> { w, h }
+  function rememberSize(src, img) {
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    if (w && h) imageSizes.set(src, { w, h });
+  }
 
   // Live stage size — mutated in place by rebuildStage(), read everywhere
   // that used to read STAGE.w/H.
@@ -428,7 +445,10 @@
     return new Promise((resolve) => {
       const path = `assets/seeds/seed-${String(index).padStart(2, "0")}.jpg`;
       const img = new Image();
-      img.onload = () => resolve(path);
+      img.onload = () => {
+        rememberSize(path, img);
+        resolve(path);
+      };
       img.onerror = () => resolve(null);
       img.src = path;
     });
@@ -450,13 +470,16 @@
   // seed-loader.html's read/write/delete calls only ever touch
   // assets/seeds/, whatever's in assets/demo/ is physically unreachable from
   // that tool — that's the actual protection, not a permissions flag.
-  const DEMO_MAX_PROBE = 30;
+  const DEMO_MAX_PROBE = 60; // was 30, which silently skipped demo-31.jpg
 
   function probeDemoImage(index) {
     return new Promise((resolve) => {
       const path = `assets/demo/demo-${String(index).padStart(2, "0")}.jpg`;
       const img = new Image();
-      img.onload = () => resolve(path);
+      img.onload = () => {
+        rememberSize(path, img);
+        resolve(path);
+      };
       img.onerror = () => resolve(null);
       img.src = path;
     });
@@ -560,7 +583,10 @@
       if (/^https?:\/\//i.test(src)) {
         img.crossOrigin = "anonymous";
       }
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        rememberSize(src, img);
+        resolve(img);
+      };
       img.onerror = () => reject(new Error(`failed to load ${src}`));
       img.src = src;
     });
@@ -648,12 +674,51 @@
     });
   }
 
+  // How much cover-cropping this image into a slotW x slotH slot enlarges it.
+  function upscaleFor(src, slotW, slotH) {
+    const s = imageSizes.get(src);
+    if (!s) return 1; // size not known yet (e.g. Drive file not loaded) — give it the benefit of the doubt
+    return Math.max(slotW / s.w, slotH / s.h);
+  }
+
+  // Indices of images sharp enough for this slot size (see CONFIG.MAX_UPSCALE).
+  function sharpPool(slotW, slotH) {
+    return state.sources
+      .map((_, i) => i)
+      .filter((i) => upscaleFor(state.sources[i], slotW, slotH) <= (STAGE_PROFILE.maxUpscale ?? CONFIG.MAX_UPSCALE));
+  }
+
+  // Picks this cycle's layout AND the pool of images it may draw from.
+  // A layout is only eligible if enough photos are sharp enough for its
+  // slot size: at least 2 (so consecutive cycles don't repeat one photo),
+  // and at least 3 for multi-slot layouts (so 6 walls aren't all one or
+  // two photos). If no layout qualifies — e.g. every photo is small — it
+  // falls back to the old behaviour (any layout, any photo) rather than
+  // showing nothing.
   function pickLayout() {
     const avail = availableLayouts();
-    const kind =
-      FORCED_LAYOUT && avail.includes(FORCED_LAYOUT)
-        ? FORCED_LAYOUT
-        : avail[Math.floor(Math.random() * avail.length)] || "single";
+    let candidates = (FORCED_LAYOUT && avail.includes(FORCED_LAYOUT) ? [FORCED_LAYOUT] : avail)
+      .map((kind) => {
+        const spec = layoutSpec(kind);
+        const pool = sharpPool(spec.slotW, spec.slotH);
+        const needed = Math.max(2, Math.min(spec.slots, 3));
+        return { ...spec, pool, eligible: pool.length >= Math.min(needed, state.sources.length) };
+      });
+    const eligible = candidates.filter((c) => c.eligible);
+    if (eligible.length > 0) {
+      candidates = eligible;
+    } else {
+      candidates = candidates.map((c) => ({ ...c, pool: state.sources.map((_, i) => i), lowRes: true }));
+    }
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)] || {
+      ...layoutSpec("single"),
+      pool: state.sources.map((_, i) => i),
+    };
+    delete chosen.eligible;
+    return chosen;
+  }
+
+  function layoutSpec(kind) {
     if (kind === "tiles" || kind === "walls") {
       const n = kind === "walls" ? STAGE_PROFILE.seams : tileCount();
       // One shared slot size for every tile (ceil, then positioned by
@@ -688,7 +753,10 @@
 
   function describeStage(layout) {
     const dpr = STAGE.dpr !== 1 ? ` @${+STAGE.dpr.toFixed(2)}x` : "";
-    const lay = layout ? ` · ${layout.kind}${layout.slots > 1 ? ` ×${layout.slots}` : ""}` : "";
+    const lay = layout
+      ? ` · ${layout.kind}${layout.slots > 1 ? ` ×${layout.slots}` : ""}` +
+        (layout.pool ? ` · ${layout.pool.length}/${state.sources.length} photos sharp enough${layout.lowRes ? " (none — using all)" : ""}` : "")
+      : "";
     return `${STAGE.profile} ${STAGE.w}×${STAGE.h}${dpr}${lay}`;
   }
 
@@ -1534,8 +1602,8 @@
   // Picks `n` image indices for this cycle: images NOT on screen last cycle
   // first (shuffled), then last cycle's, repeating only if the pool is
   // smaller than n. For n=1 this is the old "no immediate repeat" rule.
-  function pickIndices(n) {
-    const all = state.sources.map((_, i) => i);
+  function pickIndices(n, pool) {
+    const all = (pool && pool.length ? pool : state.sources.map((_, i) => i)).slice();
     for (let i = all.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [all[i], all[j]] = [all[j], all[i]];
@@ -1870,7 +1938,7 @@
     const gen = ++cycleGeneration;
     resolveMoveSpeeds();
     const layout = pickLayout();
-    const indices = pickIndices(layout.slots);
+    const indices = pickIndices(layout.slots, layout.pool);
     state.currentIndices = indices;
     state.currentIndex = indices[0];
     state.currentLayout = layout;
