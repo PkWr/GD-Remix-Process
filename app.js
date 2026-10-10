@@ -187,6 +187,15 @@
     return { w, h, dpr };
   }
 
+  // ?preview — laptop preview of a stage much wider than the window (the
+  // Igloo strip): the stage is shown at full browser height instead of
+  // letterboxed, and slowly pans left↔right across it, like walking along
+  // the walls. Display-only: rendering, effects and layouts are untouched.
+  // Ignored on stages that aren't wider than the window. Any value except
+  // "0"/"false" turns it on, e.g. index.html?stage=igloo&preview
+  const PREVIEW_PAN =
+    pageParams.has("preview") && !["0", "false"].includes(pageParams.get("preview"));
+
   // Live stage size — mutated in place by rebuildStage(), read everywhere
   // that used to read STAGE.w/H.
   const STAGE = { profile: STAGE_PROFILE_KEY, ...computeStageSize() };
@@ -2017,6 +2026,14 @@
     const stage = document.getElementById("stage");
     if (!lockup || !stage) return;
 
+    // While preview-panning the stage slides under the window, so just pin
+    // the lockup to the window's corner instead of the (moving) image's.
+    if (previewPanActive()) {
+      lockup.style.top = "16px";
+      lockup.style.left = "16px";
+      return;
+    }
+
     const stageRect = stage.getBoundingClientRect();
     const contentAspect = STAGE.w / STAGE.h;
     const boxAspect = stageRect.width / stageRect.height;
@@ -2778,8 +2795,53 @@
     }
   }
 
+  // ---------------------------------------------------------------------
+  // PREVIEW PAN (?preview) — see PREVIEW_PAN above
+  // ---------------------------------------------------------------------
+  // Speed: one wall section (stage height x 1920/1038 on the Igloo, i.e. a
+  // 9:16-ish slice's worth) every PREVIEW_PAN_SEC_PER_WALL seconds, eased
+  // to a stop at each end before turning back. Measured from the window
+  // size every frame, so resizing mid-pan just works.
+  const PREVIEW_PAN_SEC_PER_WALL = 8;
+
+  function previewPanActive() {
+    return PREVIEW_PAN && STAGE.w / STAGE.h > window.innerWidth / window.innerHeight;
+  }
+
+  function startPreviewPan() {
+    if (!PREVIEW_PAN) return;
+    const stageEl = document.getElementById("stage");
+    document.body.classList.add("preview-pan");
+    document.documentElement.style.setProperty("--stage-aspect", String(STAGE.w / STAGE.h));
+
+    const startedAt = performance.now();
+    function step(now) {
+      if (!previewPanActive()) {
+        stageEl.style.transform = "";
+        document.body.classList.remove("preview-pan");
+        requestAnimationFrame(step);
+        return;
+      }
+      document.body.classList.add("preview-pan");
+      const stageCssW = window.innerHeight * (STAGE.w / STAGE.h);
+      const travel = Math.max(0, stageCssW - window.innerWidth);
+      const sections = STAGE_PROFILE.seams || 1;
+      const pxPerSec = stageCssW / sections / PREVIEW_PAN_SEC_PER_WALL;
+      const legSec = Math.max(1, travel / pxPerSec);
+      // Triangle wave 0→1→0, eased with smoothstep so each end is a gentle
+      // stop-and-turn rather than a bounce.
+      const phase = ((now - startedAt) / 1000 / legSec) % 2;
+      const tri = phase < 1 ? phase : 2 - phase;
+      const eased = tri * tri * (3 - 2 * tri);
+      stageEl.style.transform = `translate3d(${-travel * eased}px, 0, 0)`;
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
   async function boot() {
     wireControls();
+    startPreviewPan();
     window.addEventListener("resize", scheduleStageRebuild);
     document.addEventListener("fullscreenchange", scheduleStageRebuild);
     watchDevicePixelRatio();
