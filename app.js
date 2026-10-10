@@ -365,7 +365,7 @@
     // plain photo before the effects kick in. Every cycle after that first
     // one goes back to fully random (including possibly landing on
     // Untouched again by chance). No-ops if enabledEffects.none is off.
-    startUnchanged: true,
+    startUnchanged: false, // v2: off — open straight into effects
     // Off by default: when on, every cycle layers the outgoing image
     // (mode randomized from enabledBlendModes below) on top of whatever
     // primary effect just rendered, instead of competing with it for a
@@ -1949,7 +1949,9 @@
     // only for the very first cycle since page load, and only if Untouched
     // is actually in rotation (respects the "In rotation" checkbox above
     // rather than forcing an effect the user explicitly turned off).
-    if (!state.hasCycled && params.startUnchanged && params.enabledEffects.none) {
+    // Independent of Untouched's own box (which is now the all-effects-off
+    // switch): ticked = the first image after page load is always plain.
+    if (!state.hasCycled && params.startUnchanged) {
       effectKey = "none";
       effect = EFFECTS.none;
       effectParams = effect.randomParams();
