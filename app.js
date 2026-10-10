@@ -346,18 +346,19 @@
     animatePaletteDensityMax: 20,
     randomizeAnimatePaletteDensity: false,
     // Which EFFECTS keys the random engine is allowed to pick — checking a
-    // box in each effect's own "In rotation" toggle turns it on here. Only
-    // Untouched starts on: the workshop opens on plain photos while students
-    // do analogue work, and the facilitator switches effects on live during
-    // the "how this was built" reveal rather than the show launching
-    // straight into random effects. Blend modes isn't in this list — it's
-    // the separate blendOverlayEnabled toggle below, not a competing pick.
+    // box in each effect's own "In rotation" toggle turns it on here. v2
+    // default: every effect on, Untouched off (v1's workshop opened on
+    // Untouched only). Untouched is exclusive — ticking it switches every
+    // effect off, see the effect toggle wiring in wireControls(). Blend
+    // modes isn't in this list — it's the separate blendOverlayEnabled
+    // toggle below, not a competing pick. Move is also off by default
+    // (movePanSpeed/TiltSpeed/ZoomSpeed = 0 below).
     enabledEffects: {
-      none: true,
-      duotone: false,
-      pixelate: false,
-      ascii: false,
-      halftone: false,
+      none: false,
+      duotone: true,
+      pixelate: true,
+      ascii: true,
+      halftone: true,
     },
     // On = the very first image on page load forces Untouched regardless of
     // what the random engine would otherwise pick, so the show opens on a
@@ -2496,10 +2497,36 @@
       params.moveRandomize = moveRandomize.checked;
     });
 
+    // Untouched is exclusive: ticking it switches every effect off (plain
+    // photos only), remembering which were on; unticking it brings those
+    // back (or all of them, if none were on). Ticking any effect while
+    // Untouched is on unticks Untouched. Changes made here in code don't
+    // fire change events, so broadcastState() keeps the remote panel in sync.
+    const effectKeys = Object.keys(effectToggles).filter((k) => k !== "none" && effectToggles[k]);
+    let effectsBeforeUntouched = null;
+    const setEffect = (key, on) => {
+      params.enabledEffects[key] = on;
+      if (effectToggles[key]) effectToggles[key].checked = on;
+    };
     for (const [key, box] of Object.entries(effectToggles)) {
       if (!box) continue;
       box.addEventListener("change", () => {
         params.enabledEffects[key] = box.checked;
+        if (key === "none") {
+          if (box.checked) {
+            effectsBeforeUntouched = effectKeys.filter((k) => params.enabledEffects[k]);
+            effectKeys.forEach((k) => setEffect(k, false));
+          } else {
+            const restore =
+              effectsBeforeUntouched && effectsBeforeUntouched.length ? effectsBeforeUntouched : effectKeys;
+            restore.forEach((k) => setEffect(k, true));
+            effectsBeforeUntouched = null;
+          }
+        } else if (box.checked && params.enabledEffects.none) {
+          setEffect("none", false);
+          effectsBeforeUntouched = null;
+        }
+        broadcastState();
       });
     }
 
