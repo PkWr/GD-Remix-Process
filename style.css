@@ -356,6 +356,9 @@ body.preview-pan #stage canvas {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
   font: 20px/32px system-ui, -apple-system, sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   pointer-events: auto;
 }
