@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GD vs/x Ai</title>
-<link rel="stylesheet" href="style.css">
+<!-- Load style.css / app.js with a timestamp so browsers (phones especially)
+     never run a cached old copy — GitHub Pages lets them cache for 10 min. -->
+<script>document.write('<link rel="stylesheet" href="style.css?t=' + Date.now() + '">');</script>
+<noscript><link rel="stylesheet" href="style.css"></noscript>
 </head>
 <body>
 
@@ -18,6 +21,7 @@
   </audio>
 
   <div id="diagnostics">
+    <button type="button" id="diagClose" class="diag-close" title="Hide (D)" aria-label="Hide info panel">×</button>
     <div><span class="k">version</span> <span id="diagVersion">—</span></div>
     <div><span class="k">stage</span> <span id="diagStage">—</span></div>
     <div><span class="k">source</span> <span id="diagSource">—</span></div>
@@ -479,6 +483,6 @@
     </p>
   </div>
 
-  <script src="app.js"></script>
+  <script>document.write('<script src="app.js?t=' + Date.now() + '"><\/script>');</script>
 </body>
 </html>

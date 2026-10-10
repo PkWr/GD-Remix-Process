@@ -337,3 +337,37 @@ body.preview-pan #stage {
 body.preview-pan #stage canvas {
   object-fit: fill;
 }
+
+/* Info panel close button — the panel itself ignores clicks, the button doesn't. */
+#diagnostics {
+  padding-right: 40px;
+  max-width: calc(100vw - 32px);
+}
+
+#diagnostics .diag-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: 20px/32px system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+#diagnostics .diag-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Touch screens: sit the info panel above the touch button bar. */
+@media (pointer: coarse) {
+  #diagnostics {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    left: 12px;
+  }
+}

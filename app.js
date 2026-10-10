@@ -31,7 +31,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-10 · phone controls";
+  const APP_VERSION = "2026-10-10 · always fresh";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3394,6 +3394,14 @@
 
   async function boot() {
     buildTouchBar();
+    const diagClose = document.getElementById("diagClose");
+    if (diagClose) {
+      diagClose.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const diag = document.getElementById("diagnostics");
+        if (diag) diag.classList.add("hidden");
+      });
+    }
     setText("diagVersion", APP_VERSION);
     resetControlsToDefaults();
     wireControls();
