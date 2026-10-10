@@ -31,7 +31,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-10 · camera debug";
+  const APP_VERSION = "2026-10-10 · phone controls";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -2034,7 +2034,7 @@
     state.currentHoldMs = holdMs;
     updateDiagnostics(src, holdMs, effectKey, effectParams, renderError, blendOverlay, layersAvailable);
     if (camera.live) {
-      setText("diagImage", "live camera (mirrored)");
+      setText("diagImage", `live camera${camera.mirror ? " (mirrored)" : " (back)"}`);
       setText("diagSource", `camera · ${camera.fps} fps`);
     }
 
@@ -3046,7 +3046,64 @@
     fps: 0,
     frames: 0,
     fpsAt: 0,
+    facing: "user", // "user" = front/selfie (laptop webcams report nothing), "environment" = back
+    mirror: true, // only the front camera is mirrored — a mirrored back camera reverses text
+    loopToken: 0, // bumped whenever a new frame loop starts, so an old one can't keep running alongside
   };
+
+  // One place that opens the camera, so start and flip ask the same way.
+  async function openCameraStream() {
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: { ideal: camera.facing } },
+        audio: false,
+      });
+    } catch (err) {
+      // Some cameras reject the size/facing hints — retry with no constraints.
+      if (err && err.name === "OverconstrainedError") {
+        return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+      throw err;
+    }
+  }
+
+  function applyTrackFacing(stream) {
+    const track = stream.getVideoTracks()[0];
+    const set = track && track.getSettings ? track.getSettings() : {};
+    camera.mirror = set.facingMode ? set.facingMode === "user" : camera.facing === "user";
+    return { track, set };
+  }
+
+  // Front ↔ back. Stops the old stream first (iPhones won't open a second
+  // camera while one is running), then swaps the new one into the same
+  // <video>, and restarts the frame loop.
+  async function flipCamera() {
+    const prev = camera.facing;
+    camera.facing = prev === "user" ? "environment" : "user";
+    const label = camera.facing === "user" ? "front" : "back";
+    if (!camera.live) {
+      showToast(`Camera will open on the ${label} camera.`);
+      updateTouchBar();
+      return;
+    }
+    showToast(`Switching to the ${label} camera…`);
+    try {
+      if (camera.stream) camera.stream.getTracks().forEach((t) => t.stop());
+      const stream = await openCameraStream();
+      camera.stream = stream;
+      camera.video.srcObject = stream;
+      await camera.video.play();
+      const { track } = applyTrackFacing(stream);
+      camera.loopToken++;
+      scheduleCameraFrame();
+      showToast(`Camera on: ${(track && track.label) || label + " camera"}`, "ok");
+    } catch (err) {
+      camera.facing = prev;
+      showToast(`Couldn't switch camera (${(err && err.name) || "Error"}) — turning camera off.`, "error", 8000);
+      setCamera(false);
+    }
+    updateTouchBar();
+  }
 
   function grabCameraFrame() {
     if (!camera.canvas) camera.canvas = document.createElement("canvas");
@@ -3057,8 +3114,10 @@
     }
     const ctx = c.getContext("2d");
     ctx.save();
-    ctx.translate(STAGE.w, 0);
-    ctx.scale(-1, 1); // mirror
+    if (camera.mirror) {
+      ctx.translate(STAGE.w, 0);
+      ctx.scale(-1, 1); // selfie mirror — front/laptop camera only
+    }
     drawCover(ctx, camera.video, STAGE.w, STAGE.h);
     ctx.restore();
     return c;
@@ -3106,12 +3165,16 @@
 
   function scheduleCameraFrame() {
     if (!camera.live) return;
+    const token = camera.loopToken;
+    const next = () => {
+      if (token === camera.loopToken) cameraLoop();
+    };
     // requestVideoFrameCallback = once per new camera frame (no wasted
     // redraws of an unchanged frame); rAF fallback for older browsers.
     if (camera.video.requestVideoFrameCallback) {
-      camera.video.requestVideoFrameCallback(() => cameraLoop());
+      camera.video.requestVideoFrameCallback(next);
     } else {
-      requestAnimationFrame(cameraLoop);
+      requestAnimationFrame(next);
     }
   }
 
@@ -3157,20 +3220,7 @@
         } catch (e) {
           /* Permissions API can't query camera in this browser — fine */
         }
-        let stream;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
-            audio: false,
-          });
-        } catch (err) {
-          // Some cameras reject the size hint — retry with no constraints.
-          if (err && err.name === "OverconstrainedError") {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-          } else {
-            throw err;
-          }
-        }
+        const stream = await openCameraStream();
         if (token !== cameraSwitchToken) {
           stream.getTracks().forEach((t) => t.stop()); // switched off again while asking
           return;
@@ -3189,8 +3239,7 @@
         camera.frames = 0;
         camera.fpsAt = performance.now();
         cameraMessage("");
-        const track = stream.getVideoTracks()[0];
-        const set = track && track.getSettings ? track.getSettings() : {};
+        const { track, set } = applyTrackFacing(stream);
         showToast(
           `Camera on: ${(track && track.label) || "camera"} · ${video.videoWidth}×${video.videoHeight}` +
             (set.frameRate ? ` @ ${Math.round(set.frameRate)} fps` : ""),
@@ -3228,10 +3277,123 @@
       cycleTimeoutId = null;
     }
     await cycle();
-    if (camera.live) scheduleCameraFrame();
+    if (camera.live) {
+      camera.loopToken++;
+      scheduleCameraFrame();
+    }
+    updateTouchBar();
   }
 
+  // ---------------------------------------------------------------------
+  // TOUCH CONTROLS (phones/tablets — no keyboard for V/C/D)
+  // ---------------------------------------------------------------------
+  // A small button bar, bottom-right: Camera on/off, Flip (front/back, only
+  // while the camera is on), Controls (= C) and Info (= D). Shown on touch
+  // screens, or anywhere with ?touch. Fades away after a few seconds so it
+  // doesn't sit on the artwork; tap the screen to bring it back.
+  const TOUCH_UI =
+    pageParams.has("touch") || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+  const TOUCH_BAR_HIDE_MS = 5000;
+  let touchBarTimer = null;
+
+  function buildTouchBar() {
+    if (!TOUCH_UI || document.getElementById("touchBar")) return;
+    const bar = document.createElement("div");
+    bar.id = "touchBar";
+    Object.assign(bar.style, {
+      position: "fixed", right: "12px", bottom: "max(12px, env(safe-area-inset-bottom))",
+      display: "flex", gap: "8px", zIndex: "40", transition: "opacity 0.4s",
+    });
+    const mk = (id, label, onTap) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.id = id;
+      b.textContent = label;
+      Object.assign(b.style, {
+        minHeight: "44px", padding: "0 16px", borderRadius: "22px",
+        border: "1px solid rgba(255,255,255,0.35)", background: "rgba(0,0,0,0.65)",
+        color: "#fff", font: "600 15px system-ui, -apple-system, sans-serif",
+        WebkitBackdropFilter: "blur(6px)", backdropFilter: "blur(6px)", touchAction: "manipulation",
+      });
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onTap();
+        showTouchBar();
+      });
+      bar.appendChild(b);
+      return b;
+    };
+    mk("tbCamera", "Camera", () => setCamera(!camera.live));
+    mk("tbFlip", "Flip", flipCamera);
+    mk("tbControls", "Controls", () => {
+      const panel = document.getElementById("controls");
+      if (panel) panel.classList.toggle("hidden");
+    });
+    mk("tbInfo", "Info", () => {
+      const diag = document.getElementById("diagnostics");
+      if (diag) diag.classList.toggle("hidden");
+    });
+    document.body.appendChild(bar);
+    updateTouchBar();
+    showTouchBar();
+  }
+
+  function updateTouchBar() {
+    const cam = document.getElementById("tbCamera");
+    if (!cam) return;
+    cam.textContent = camera.live ? "Camera off" : "Camera";
+    cam.style.background = camera.live ? "rgba(0,110,40,0.85)" : "rgba(0,0,0,0.65)";
+    cam.setAttribute("aria-pressed", String(camera.live));
+    const flip = document.getElementById("tbFlip");
+    if (flip) flip.style.display = camera.live ? "" : "none";
+  }
+
+  function showTouchBar() {
+    const bar = document.getElementById("touchBar");
+    if (!bar) return;
+    bar.style.opacity = "1";
+    bar.style.pointerEvents = "auto";
+    clearTimeout(touchBarTimer);
+    touchBarTimer = setTimeout(() => {
+      bar.style.opacity = "0";
+      bar.style.pointerEvents = "none";
+    }, TOUCH_BAR_HIDE_MS);
+  }
+
+  // Phones dim and lock while you just watch — keep the screen on while the
+  // page is open (needs a tap first, and re-taken when you come back to the
+  // tab). Quietly does nothing where unsupported.
+  let wakeLock = null;
+  let wakeLockWanted = false;
+  async function keepScreenAwake() {
+    if (!("wakeLock" in navigator) || wakeLock || document.visibilityState !== "visible") return;
+    try {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => {
+        wakeLock = null;
+      });
+    } catch (e) {
+      /* refused (low battery etc.) — not important */
+    }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (wakeLockWanted) keepScreenAwake();
+  });
+
+  // First tap anywhere: on touch screens bring back the bar, keep the
+  // screen awake, and start the background track (iPhones won't autoplay
+  // audio until the page has been touched).
+  document.addEventListener("pointerdown", (e) => {
+    const audio = document.getElementById("bgAudio");
+    if (audio && audio.paused) audio.play().catch(() => {});
+    if (!TOUCH_UI) return;
+    wakeLockWanted = true;
+    keepScreenAwake();
+    if (!e.target.closest || !e.target.closest("#touchBar")) showTouchBar();
+  });
+
   async function boot() {
+    buildTouchBar();
     setText("diagVersion", APP_VERSION);
     resetControlsToDefaults();
     wireControls();
