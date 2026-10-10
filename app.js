@@ -6,9 +6,9 @@
  *   1. CONFIG            — tunables, referrer-restricted API key goes here
  *   2. SEED IMAGES        — bundled offline fallback (assets/seeds/*)
  *   3. DRIVE FETCH        — files.list against the public folder
- *   1b. STAGE PROFILES    — phone (fixed 1080x1920) / desktop (window-sized)
+ *   1b. STAGE PROFILES    — phone (1080x1920) / desktop (window) / igloo (11520x1038)
  *   4. IMAGE PIPELINE     — cover-crop normalize per layout slot size, cached
- *   4b. LAYOUTS           — single image / row of portrait tiles
+ *   4b. LAYOUTS           — single image / row of portrait tiles / one per wall
  *   5. EFFECT PALETTE     — pixelation (2), halftone (5), ascii (bonus)
  *   6. STATE / RENDER LOOP — random engine + crossfade cycle (3) + blend overlay (4)
  *   7. CONTROLS           — sliders that narrow the random engine's ranges
@@ -135,11 +135,31 @@
   //   desktop — sized to the window x devicePixelRatio, capped at maxWidth
   //             (height scaled to keep the window's aspect), rebuilt on
   //             resize / fullscreen / DPR change (see rebuildStage()).
+  //   igloo   — fixed 11520x1038, the Immersive Suite's six 1920x1038 wall
+  //             panels as one wide page (confirmed by igloo-check.html in
+  //             the suite's software). Fixed rather than window-sized, so a
+  //             laptop preview shows the true wall framing, letterboxed.
+  //             `seams: 6` makes layouts wall-aware: tiles come in whole
+  //             numbers per wall so none ever straddles a join. No "single"
+  //             layout here — one photo cover-cropped to an 11:1 strip would
+  //             be a sliver of the image, upscaled ~10x.
+  //             `animateIntervalMs` slows the pixelate/halftone/ascii
+  //             animation ticker: at full wall size halftone/ascii redraws
+  //             take ~70ms on the suite's RTX 4070, too close to the default
+  //             180ms tick.
   // `layouts` lists which layouts the random engine may pick per cycle.
-  // Optional ?layout=single|tiles forces one (handy for testing).
+  // Optional ?layout=single|tiles|walls forces one (handy for testing).
   const STAGE_PROFILES = {
     phone: { size: "fixed", width: 1080, height: 1920, layouts: ["single"] },
     desktop: { size: "window", maxWidth: 2560, layouts: ["single", "tiles"] },
+    igloo: {
+      size: "fixed",
+      width: 11520,
+      height: 1038,
+      seams: 6,
+      layouts: ["tiles", "walls"],
+      animateIntervalMs: 360,
+    },
   };
 
   const pageParams = new URLSearchParams(location.search);
@@ -600,12 +620,23 @@
   //            edge. Only offered when the stage is wide enough for 2+.
   // Either way the result is ONE stage-sized canvas, so every effect,
   // blend and move downstream works on it exactly as before.
+  //   walls  — one image per physical wall section (profiles with `seams`).
+  // Tile count is worked out per wall section when the profile has seams
+  // (Igloo: 1920x1038 per wall -> 3 tiles of 640 -> 18 in all), so every
+  // join lands exactly between two tiles. Without seams it's the whole
+  // stage as one section, i.e. the original desktop behaviour.
   function tileCount() {
-    return Math.round(STAGE.w / STAGE.h / CONFIG.TILE_ASPECT);
+    const seams = STAGE_PROFILE.seams || 1;
+    const perSection = Math.max(1, Math.round(STAGE.w / seams / STAGE.h / CONFIG.TILE_ASPECT));
+    return perSection * seams;
   }
 
   function availableLayouts() {
-    return STAGE_PROFILE.layouts.filter((k) => k !== "tiles" || tileCount() >= 2);
+    return STAGE_PROFILE.layouts.filter((k) => {
+      if (k === "tiles") return tileCount() >= 2;
+      if (k === "walls") return (STAGE_PROFILE.seams || 1) >= 2;
+      return true;
+    });
   }
 
   function pickLayout() {
@@ -614,8 +645,8 @@
       FORCED_LAYOUT && avail.includes(FORCED_LAYOUT)
         ? FORCED_LAYOUT
         : avail[Math.floor(Math.random() * avail.length)] || "single";
-    if (kind === "tiles") {
-      const n = tileCount();
+    if (kind === "tiles" || kind === "walls") {
+      const n = kind === "walls" ? STAGE_PROFILE.seams : tileCount();
       // One shared slot size for every tile (ceil, then positioned by
       // rounding i*w/n) so they all hit the same cache entry size and
       // never leave a 1px gap — worst case they overlap by 1px.
@@ -675,6 +706,32 @@
       g: Math.round(a.g + (b.g - a.g) * t),
       b: Math.round(a.b + (b.b - a.b) * t),
     };
+  }
+
+  // Precomputed Shadows->Highlights gradient: 256 steps of the same
+  // mixHexColors() result, plus a ready-made CSS string per step. Effects
+  // index it by luminance instead of calling mixHexColors() (which
+  // re-parses both hex strings) per pixel/cell — that per-pixel parse is
+  // what made Duotone slow at Igloo size (12M pixels per frame). Cached per
+  // colour pair, so custom colour picks just add another small entry.
+  const monoLutCache = new Map();
+  function monoLut(bgHex, fgHex) {
+    const key = `${bgHex}|${fgHex}`;
+    let lut = monoLutCache.get(key);
+    if (lut) return lut;
+    const rgb = new Uint8ClampedArray(256 * 3);
+    const css = new Array(256);
+    for (let k = 0; k < 256; k++) {
+      const m = mixHexColors(bgHex, fgHex, k / 255);
+      rgb[k * 3] = m.r;
+      rgb[k * 3 + 1] = m.g;
+      rgb[k * 3 + 2] = m.b;
+      css[k] = `rgb(${m.r}, ${m.g}, ${m.b})`;
+    }
+    lut = { rgb, css };
+    if (monoLutCache.size > 64) monoLutCache.clear();
+    monoLutCache.set(key, lut);
+    return lut;
   }
 
   // Same weighting as every per-pixel luminance calc elsewhere (Duotone,
@@ -765,12 +822,13 @@
     const h = ctx.canvas.height;
     const imageData = ctx.getImageData(0, 0, w, h);
     const d = imageData.data;
+    const { rgb } = monoLut(bgColor, fgColor);
     for (let i = 0; i < d.length; i += 4) {
-      const lum = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255;
-      const mixed = mixHexColors(bgColor, fgColor, lum);
-      d[i] = mixed.r;
-      d[i + 1] = mixed.g;
-      d[i + 2] = mixed.b;
+      // Integer form of the 0.299/0.587/0.114 luminance weights (x256).
+      const k = ((77 * d[i] + 150 * d[i + 1] + 29 * d[i + 2]) >> 8) * 3;
+      d[i] = rgb[k];
+      d[i + 1] = rgb[k + 1];
+      d[i + 2] = rgb[k + 2];
     }
     ctx.putImageData(imageData, 0, 0);
   }
@@ -809,15 +867,21 @@
     // Resolved once for this whole recolour pass, not per pixel — see
     // resolveAnimatePaletteDensity's comment for why.
     const density = animatePalette ? resolveAnimatePaletteDensity() : 0;
+    const { rgb } = monoLut(bgColor || "#000000", fgColor || "#00ff00");
     for (let i = 0; i < d.length; i += 4) {
       const lum = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255;
       const rollPalette = animatePalette && Math.random() * 100 < density;
-      const mixed = rollPalette
-        ? randomPaletteMonoColor(lum)
-        : mixHexColors(bgColor || "#000000", fgColor || "#00ff00", lum);
-      d[i] = mixed.r;
-      d[i + 1] = mixed.g;
-      d[i + 2] = mixed.b;
+      if (rollPalette) {
+        const mixed = randomPaletteMonoColor(lum);
+        d[i] = mixed.r;
+        d[i + 1] = mixed.g;
+        d[i + 2] = mixed.b;
+      } else {
+        const k = Math.round(lum * 255) * 3;
+        d[i] = rgb[k];
+        d[i + 1] = rgb[k + 1];
+        d[i + 2] = rgb[k + 2];
+      }
     }
     tctx.putImageData(small, 0, 0);
 
@@ -906,7 +970,7 @@
     // or palette shimmer) would silently erase the Blend overlay until the
     // NEXT full cycle, since this redraws straight onto the canvas rather
     // than going through composeFrame() the way Move's pan ticker does.
-    state.lastEffectFrame = snapshotFrame(ctx.canvas);
+    refreshEffectSnapshot(ctx.canvas);
     if (state.lastBlendMode) {
       applyBlendOverlay(ctx, state.lastBlendMode, state.lastBlendOpacity, state.lastBlendLayers);
     }
@@ -1043,7 +1107,7 @@
     // blend overlay: this ticker redraws straight onto the canvas outside
     // composeFrame(), so without this the Blend overlay would silently drop
     // out every tick while Halftone's dot/grid scale animates.
-    state.lastEffectFrame = snapshotFrame(ctx.canvas);
+    refreshEffectSnapshot(ctx.canvas);
     if (state.lastBlendMode) {
       applyBlendOverlay(ctx, state.lastBlendMode, state.lastBlendOpacity, state.lastBlendLayers);
     }
@@ -1118,6 +1182,7 @@
     // Resolved once for this whole redraw, not per character — see
     // resolveAnimatePaletteDensity's comment for why.
     const density = animatePalette ? resolveAnimatePaletteDensity() : 0;
+    const lut = monoLut(bgColor || "#000000", fgColor || "#00ff00");
 
     ctx.fillStyle = bgColor || "#000000";
     ctx.fillRect(0, 0, w, h);
@@ -1137,10 +1202,12 @@
         // wins the animatePaletteDensity roll, in which case it gets its
         // own random palette instead of the frame's one resolved pair.
         const rollPalette = animatePalette && Math.random() * 100 < density;
-        const mixed = rollPalette
-          ? randomPaletteMonoColor(lum)
-          : mixHexColors(bgColor || "#000000", fgColor || "#00ff00", lum);
-        ctx.fillStyle = `rgb(${mixed.r}, ${mixed.g}, ${mixed.b})`;
+        if (rollPalette) {
+          const mixed = randomPaletteMonoColor(lum);
+          ctx.fillStyle = `rgb(${mixed.r}, ${mixed.g}, ${mixed.b})`;
+        } else {
+          ctx.fillStyle = lut.css[Math.round(lum * 255)];
+        }
         // "Random cell size" — jitters this character's own font size
         // around the base cellH instead of every glyph sharing one uniform
         // size. Resets ctx.font back to the base size right after so a
@@ -1194,7 +1261,7 @@
     // blend overlay: this ticker redraws straight onto the canvas outside
     // composeFrame(), so without this the Blend overlay would silently drop
     // out every tick while ASCII's glyphs/palette animate.
-    state.lastEffectFrame = snapshotFrame(ctx.canvas);
+    refreshEffectSnapshot(ctx.canvas);
     if (state.lastBlendMode) {
       applyBlendOverlay(ctx, state.lastBlendMode, state.lastBlendOpacity, state.lastBlendLayers);
     }
@@ -1362,6 +1429,22 @@
     moveResolvedTilt: 0,
     moveResolvedZoom: 0,
   };
+
+  // Animation ticks (pixelate/halftone/ascii redraws) refresh the cached
+  // effect layer several times a second. At Igloo size a fresh snapshot is a
+  // ~48MB canvas per tick, so after the first tick of a cycle this redraws
+  // into the same spare canvas instead. Never reuses recentFrames[0] — that
+  // one is this cycle's entry in the blend history and must stay as-is.
+  function refreshEffectSnapshot(sourceCanvas) {
+    const cur = state.lastEffectFrame;
+    if (cur && cur !== state.recentFrames[0] && cur.width === STAGE.w && cur.height === STAGE.h) {
+      const c = cur.getContext("2d");
+      c.clearRect(0, 0, STAGE.w, STAGE.h);
+      c.drawImage(sourceCanvas, 0, 0);
+      return;
+    }
+    state.lastEffectFrame = snapshotFrame(sourceCanvas);
+  }
 
   function snapshotFrame(sourceCanvas) {
     const snap = document.createElement("canvas");
@@ -2404,7 +2487,7 @@
   // animation axis). "Animate palette per cell" re-rolls a random palette
   // per pixel/dot/character each tick it fires on, independently of
   // whichever effect-specific animate toggle (if any) also fires it.
-  const EFFECT_ANIMATE_INTERVAL_MS = 180;
+  const EFFECT_ANIMATE_INTERVAL_MS = STAGE_PROFILE.animateIntervalMs || 180;
   setInterval(() => {
     if ((params.asciiAnimate || params.animatePaletteColor || params.asciiRandomCellSize) && state.lastEffectKey === "ascii") {
       redrawAsciiAnimationFrame();
