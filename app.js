@@ -2876,35 +2876,55 @@
     return PREVIEW_PAN && STAGE.w / STAGE.h > window.innerWidth / window.innerHeight;
   }
 
+  // Runs as a CSS animation, not a JS rAF loop: the browser's compositor
+  // thread animates CSS transforms on its own, so the pan stays smooth even
+  // while the main thread is busy redrawing a big halftone/ASCII frame
+  // (70ms+ at Igloo size), which used to freeze the pan for a few frames on
+  // every animation tick. JS only recomputes the distance/duration when the
+  // window size changes, by rewriting one small <style> rule.
+  let previewPanKey = "";
+  function applyPreviewPan() {
+    if (!PREVIEW_PAN) return;
+    let styleEl = document.getElementById("previewPanStyle");
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = "previewPanStyle";
+      document.head.appendChild(styleEl);
+    }
+    if (!previewPanActive()) {
+      document.body.classList.remove("preview-pan");
+      styleEl.textContent = "";
+      previewPanKey = "";
+      return;
+    }
+    const stageCssW = window.innerHeight * (STAGE.w / STAGE.h);
+    const travel = Math.round(Math.max(0, stageCssW - window.innerWidth));
+    const sections = STAGE_PROFILE.seams || 1;
+    const pxPerSec = stageCssW / sections / PREVIEW_PAN_SEC_PER_WALL;
+    const legSec = Math.max(1, travel / pxPerSec).toFixed(2);
+    const key = `${travel}|${legSec}`;
+    if (key === previewPanKey) return; // unchanged — don't restart the animation
+    previewPanKey = key;
+    document.documentElement.style.setProperty("--stage-aspect", String(STAGE.w / STAGE.h));
+    document.body.classList.add("preview-pan");
+    // ease-in-out + alternate = glide from wall 1 to the far end, ease to a
+    // stop, glide back — same motion as before.
+    styleEl.textContent =
+      `@keyframes previewPan { from { transform: translate3d(0, 0, 0); } ` +
+      `to { transform: translate3d(${-travel}px, 0, 0); } }\n` +
+      `body.preview-pan #stage { animation: previewPan ${legSec}s ease-in-out infinite alternate; }`;
+  }
+
   function startPreviewPan() {
     if (!PREVIEW_PAN) return;
-    const stageEl = document.getElementById("stage");
-    document.body.classList.add("preview-pan");
-    document.documentElement.style.setProperty("--stage-aspect", String(STAGE.w / STAGE.h));
-
-    const startedAt = performance.now();
-    function step(now) {
-      if (!previewPanActive()) {
-        stageEl.style.transform = "";
-        document.body.classList.remove("preview-pan");
-        requestAnimationFrame(step);
-        return;
-      }
-      document.body.classList.add("preview-pan");
-      const stageCssW = window.innerHeight * (STAGE.w / STAGE.h);
-      const travel = Math.max(0, stageCssW - window.innerWidth);
-      const sections = STAGE_PROFILE.seams || 1;
-      const pxPerSec = stageCssW / sections / PREVIEW_PAN_SEC_PER_WALL;
-      const legSec = Math.max(1, travel / pxPerSec);
-      // Triangle wave 0→1→0, eased with smoothstep so each end is a gentle
-      // stop-and-turn rather than a bounce.
-      const phase = ((now - startedAt) / 1000 / legSec) % 2;
-      const tri = phase < 1 ? phase : 2 - phase;
-      const eased = tri * tri * (3 - 2 * tri);
-      stageEl.style.transform = `translate3d(${-travel * eased}px, 0, 0)`;
-      requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
+    applyPreviewPan();
+    let t = null;
+    const onResize = () => {
+      clearTimeout(t);
+      t = setTimeout(applyPreviewPan, 150);
+    };
+    window.addEventListener("resize", onResize);
+    document.addEventListener("fullscreenchange", onResize);
   }
 
   async function boot() {
