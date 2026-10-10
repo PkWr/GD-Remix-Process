@@ -2956,7 +2956,26 @@
     document.addEventListener("fullscreenchange", onResize);
   }
 
+  // Browsers (Chrome especially) restore form-control states on reload, so
+  // checkboxes/sliders could come back showing a previous visit's settings
+  // while the engine runs from the coded defaults — or vice versa. Reset
+  // every control to its HTML default before wiring, so what's ticked is
+  // what's running. Saved presets (Load button / ?resume=1) still apply
+  // afterwards as before.
+  function resetControlsToDefaults() {
+    document.querySelectorAll("#controls input, #controls select").forEach((el) => {
+      if (el.type === "checkbox" || el.type === "radio") {
+        el.checked = el.defaultChecked;
+      } else if (el.tagName === "SELECT") {
+        for (const o of el.options) o.selected = o.defaultSelected;
+      } else {
+        el.value = el.defaultValue;
+      }
+    });
+  }
+
   async function boot() {
+    resetControlsToDefaults();
     wireControls();
     startPreviewPan();
     window.addEventListener("resize", scheduleStageRebuild);
