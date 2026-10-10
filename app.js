@@ -31,7 +31,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-10 · camera hard cuts";
+  const APP_VERSION = "2026-10-10 · line icons";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3295,6 +3295,26 @@
   // while the camera is on), Controls (= C) and Info (= D). Shown on touch
   // screens, or anywhere with ?touch. Fades away after a few seconds so it
   // doesn't sit on the artwork; tap the screen to bring it back.
+  // Google Material Symbols (Outlined, weight 300 — the light line style),
+  // Apache-2.0, from the @material-symbols/svg-300 package. Path data is
+  // inlined rather than loading Google's icon font, so the buttons still
+  // work offline (the app has to run without wifi).
+  const ICONS = {
+    videocam: "M167.31-180q-23.53 0-40.61-17.08t-17.08-40.61v-484.62q0-23.53 17.08-40.61T167.31-780h484.61q23.53 0 40.61 17.08t17.08 40.61v208.46l140.77-140.76v348.84L709.61-446.54v208.85q0 23.53-17.08 40.61T651.92-180H167.31Zm0-45.39h484.61q5.39 0 8.85-3.46t3.46-8.84v-484.62q0-5.38-3.46-8.84t-8.85-3.46H167.31q-5.39 0-8.85 3.46t-3.46 8.84v484.62q0 5.38 3.46 8.84t8.85 3.46Zm-12.31 0v-509.22 509.22Z",
+    videocam_off: "M851.54-305.77 710.77-446.54v108.31l-45.38-45.39v-338.69q0-5.38-3.47-8.84-3.46-3.46-8.84-3.46H314.39L269-780h384.08q23.53 0 40.61 17.08t17.08 40.61v208.46l140.77-140.76v348.84ZM818-74.31 70.93-821.38l31.99-32L850-106.31l-32 32Zm-325.92-483Zm-80.85 75.46ZM177.08-779.23l44.61 44.62h-53.23q-5.38 0-8.84 3.46t-3.46 8.84v484.62q0 5.38 3.46 8.84t8.84 3.46h484.62q5.38 0 8.84-3.46 3.47-3.46 3.47-8.84v-53.23L710-246.31v14q-1.92 21.22-18.43 36.77Q675.07-180 653.08-180H168.46q-23.53 0-40.61-17.08t-17.08-40.61v-484.62q0-21.99 15.31-38.49 15.31-16.51 37-18.43h14Z",
+    cameraswitch: "M327.23-310.16q-23.98 0-40.83-17.04-16.86-17.05-16.86-40.65v-224.3q0-23.6 16.86-40.65 16.85-17.04 40.83-17.04h38.85l32.69-32.7h164.69l32.69 32.7H635q23.59 0 40.64 17.04 17.05 17.05 17.05 40.65v224.3q0 23.6-17.05 40.65-17.05 17.04-40.64 17.04H327.23Zm0-45.38H635q5.38 0 8.85-3.65 3.46-3.66 3.46-8.66v-224.3q0-5-3.46-8.66-3.47-3.65-8.85-3.65H327.23q-5.38 0-8.84 3.65-3.47 3.66-3.47 8.66v224.3q0 5 3.47 8.66 3.46 3.65 8.84 3.65Zm153.56-70q22.52 0 38.09-15.75 15.58-15.76 15.58-38.27 0-22.13-15.75-37.9-15.76-15.77-38.27-15.77-22.13 0-37.9 15.95-15.77 15.94-15.77 38.07 0 22.52 15.95 38.09 15.94 15.58 38.07 15.58ZM390-931.23q22.35-5.23 44.91-7 22.55-1.77 44.94-1.77 89.15 0 169.5 31.96 80.34 31.96 142.34 88.45t101.46 133.1q39.46 76.6 47.46 164.87h-45.38q-6.38-78-40.96-145.5t-89.04-117.42q-54.46-49.92-125.04-79.27-70.58-29.34-148.96-31.8l79.85 79.84-32.62 32.62L390-931.23ZM570.61-28.77q-22.1 5.23-44.4 7Q503.9-20 481.38-20q-89.76 0-169.8-31.96t-142.15-88.35q-62.12-56.38-101.77-132.84Q28-349.62 19.39-438.38h45.9q6.86 78 41.44 145.5t88.85 117.42q54.27 49.92 124.84 79.27Q391-66.85 469.77-64.39l-80.23-79.84 32.61-32.62L570.61-28.77ZM481.62-480Z",
+    tune: "M440.46-130v-209.23h45.39V-257H830v45.38H485.85V-130h-45.39ZM130-211.62V-257h225.08v45.38H130Zm179.69-164.07v-81.62H130v-45.38h179.69v-82.85h45.39v209.85h-45.39Zm130.77-81.62v-45.38H830v45.38H440.46Zm164.46-163.84V-830h45.39v81.62H830V-703H650.31v81.85h-45.39ZM130-703v-45.38h389.54V-703H130Z",
+    info: "M459.54-290h45.38v-230h-45.38v230Zm20.44-294q11.52 0 19.39-7.56 7.86-7.57 7.86-19.05 0-11.95-7.85-19.9-7.85-7.95-19.36-7.95-11.9 0-19.58 7.95-7.67 7.95-7.67 19.9 0 11.48 7.85 19.05 7.85 7.56 19.36 7.56Zm.35 484q-78.95 0-147.89-29.92-68.95-29.92-120.76-81.71-51.81-51.79-81.75-120.78Q100-401.39 100-480.43q0-78.66 29.92-147.87 29.92-69.21 81.71-120.52 51.79-51.31 120.78-81.25Q401.39-860 480.43-860q78.66 0 147.87 29.92 69.21 29.92 120.52 81.21 51.31 51.29 81.25 120.63Q860-558.9 860-480.33q0 78.95-29.92 147.89-29.92 68.95-81.21 120.57-51.29 51.63-120.63 81.75Q558.9-100 480.33-100Zm.17-45.39q139.19 0 236.65-97.76 97.46-97.77 97.46-237.35 0-139.19-97.27-236.65-97.27-97.46-237.34-97.46-139.08 0-236.85 97.27-97.76 97.27-97.76 237.34 0 139.08 97.76 236.85 97.77 97.76 237.35 97.76ZM480-480Z",
+    close: "m250.92-218.92-32-32L448-480 218.92-709.08l32-32L480-512l229.08-229.08 32 32L512-480l229.08 229.08-32 32L480-448 250.92-218.92Z",
+  };
+
+  function iconSvg(name, size = 24) {
+    return (
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 -960 960 960" ` +
+      `fill="currentColor" aria-hidden="true" focusable="false"><path d="${ICONS[name]}"/></svg>`
+    );
+  }
+
   const TOUCH_UI =
     pageParams.has("touch") || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
   const TOUCH_BAR_HIDE_MS = 5000;
@@ -3308,15 +3328,20 @@
       position: "fixed", right: "12px", bottom: "max(12px, env(safe-area-inset-bottom))",
       display: "flex", gap: "8px", zIndex: "40", transition: "opacity 0.4s",
     });
-    const mk = (id, label, onTap) => {
+    // Icon-only round buttons: 44px is Apple's/Google's minimum comfortable
+    // tap size. Labels live in aria-label/title for screen readers & hover.
+    const mk = (id, label, icon, onTap) => {
       const b = document.createElement("button");
       b.type = "button";
       b.id = id;
-      b.textContent = label;
+      b.innerHTML = iconSvg(icon);
+      b.setAttribute("aria-label", label);
+      b.title = label;
       Object.assign(b.style, {
-        minHeight: "44px", padding: "0 16px", borderRadius: "22px",
-        border: "1px solid rgba(255,255,255,0.35)", background: "rgba(0,0,0,0.65)",
-        color: "#fff", font: "600 15px system-ui, -apple-system, sans-serif",
+        width: "44px", height: "44px", padding: "0", borderRadius: "50%",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        border: "1px solid rgba(255,255,255,0.25)", background: "rgba(0,0,0,0.45)",
+        color: "rgba(255,255,255,0.92)", transition: "background 0.2s, border-color 0.2s",
         WebkitBackdropFilter: "blur(6px)", backdropFilter: "blur(6px)", touchAction: "manipulation",
       });
       b.addEventListener("click", (e) => {
@@ -3327,13 +3352,13 @@
       bar.appendChild(b);
       return b;
     };
-    mk("tbCamera", "Camera", () => setCamera(!camera.live));
-    mk("tbFlip", "Flip", flipCamera);
-    mk("tbControls", "Controls", () => {
+    mk("tbCamera", "Camera on", "videocam", () => setCamera(!camera.live));
+    mk("tbFlip", "Switch front/back camera", "cameraswitch", flipCamera);
+    mk("tbControls", "Controls", "tune", () => {
       const panel = document.getElementById("controls");
       if (panel) panel.classList.toggle("hidden");
     });
-    mk("tbInfo", "Info", () => {
+    mk("tbInfo", "Info", "info", () => {
       const diag = document.getElementById("diagnostics");
       if (diag) diag.classList.toggle("hidden");
     });
@@ -3345,8 +3370,13 @@
   function updateTouchBar() {
     const cam = document.getElementById("tbCamera");
     if (!cam) return;
-    cam.textContent = camera.live ? "Camera off" : "Camera";
-    cam.style.background = camera.live ? "rgba(0,110,40,0.85)" : "rgba(0,0,0,0.65)";
+    // Live: crossed-out camera (= tap to turn off) on a green ring.
+    cam.innerHTML = iconSvg(camera.live ? "videocam_off" : "videocam");
+    const label = camera.live ? "Camera off" : "Camera on";
+    cam.setAttribute("aria-label", label);
+    cam.title = label;
+    cam.style.background = camera.live ? "rgba(0,110,40,0.75)" : "rgba(0,0,0,0.45)";
+    cam.style.borderColor = camera.live ? "rgba(120,255,160,0.7)" : "rgba(255,255,255,0.25)";
     cam.setAttribute("aria-pressed", String(camera.live));
     const flip = document.getElementById("tbFlip");
     if (flip) flip.style.display = camera.live ? "" : "none";
@@ -3400,6 +3430,7 @@
     buildTouchBar();
     const diagClose = document.getElementById("diagClose");
     if (diagClose) {
+      diagClose.innerHTML = iconSvg("close", 20);
       diagClose.addEventListener("click", (e) => {
         e.stopPropagation();
         const diag = document.getElementById("diagnostics");
