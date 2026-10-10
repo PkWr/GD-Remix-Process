@@ -595,8 +595,8 @@
 
   // Equivalent of CSS object-fit: cover — scale to fill, crop overflow, centred.
   function drawCover(ctx, img, destW, destH) {
-    const srcW = img.naturalWidth || img.width;
-    const srcH = img.naturalHeight || img.height;
+    const srcW = img.naturalWidth || img.videoWidth || img.width;
+    const srcH = img.naturalHeight || img.videoHeight || img.height;
 
     const srcRatio = srcW / srcH;
     const destRatio = destW / destH;
@@ -1930,7 +1930,7 @@
   }
 
   async function cycle() {
-    if (state.sources.length === 0) return;
+    if (state.sources.length === 0 && !camera.live) return;
 
     // Resolved before anything renders, same reasoning as
     // pickRandomEffect()/pickBlendOverlay() below — so that if "Randomize
@@ -1938,12 +1938,13 @@
     // reflects the freshly-rolled Pan/Tilt/Zoom values, not last cycle's.
     const gen = ++cycleGeneration;
     resolveMoveSpeeds();
-    const layout = pickLayout();
-    const indices = pickIndices(layout.slots, layout.pool);
+    // Live camera: always one full-stage view of the camera, no photo picking.
+    const layout = camera.live ? { ...layoutSpec("single"), kind: "camera" } : pickLayout();
+    const indices = camera.live ? [] : pickIndices(layout.slots, layout.pool);
     state.currentIndices = indices;
-    state.currentIndex = indices[0];
+    state.currentIndex = camera.live ? -1 : indices[0];
     state.currentLayout = layout;
-    const src = state.sources[state.currentIndex];
+    const src = camera.live ? "live camera" : state.sources[state.currentIndex];
     let { key: effectKey, effect, effectParams } = pickRandomEffect();
     // Start on Untouched: overrides whatever pickRandomEffect() rolled, but
     // only for the very first cycle since page load, and only if Untouched
@@ -1964,10 +1965,12 @@
     let renderError = null;
 
     try {
-      const composed = await buildLayoutSource(
-        layout,
-        indices.map((i) => state.sources[i])
-      );
+      const composed = camera.live
+        ? grabCameraFrame()
+        : await buildLayoutSource(
+            layout,
+            indices.map((i) => state.sources[i])
+          );
       // Superseded while loading (stage rebuilt / source switched) — the
       // newer cycle owns the screen and the schedule now.
       if (gen !== cycleGeneration) return;
@@ -1976,6 +1979,8 @@
       // frame on screen, so the animation timer should keep treating
       // whatever's actually still visible as the "current" effect.
       state.lastEffectKey = effectKey;
+      // What the live camera loop keeps re-running on every video frame.
+      state.liveEffect = { effect, effectParams };
     } catch (err) {
       // Previously this only went to console.error, so a mid-render throw
       // (e.g. getImageData on a tainted canvas) would silently freeze the
@@ -1996,6 +2001,10 @@
     state.cycleStartedAt = performance.now();
     state.currentHoldMs = holdMs;
     updateDiagnostics(src, holdMs, effectKey, effectParams, renderError, blendOverlay, layersAvailable);
+    if (camera.live) {
+      setText("diagImage", "live camera (mirrored)");
+      setText("diagSource", `camera · ${camera.fps} fps`);
+    }
 
     // Only schedule the next cycle if nothing paused us while this one was
     // in flight (e.g. user hit P while an image was still loading).
@@ -2570,6 +2579,9 @@
       if (e.key === "f" || e.key === "F") {
         toggleFullscreen();
       }
+      if (e.key === "v" || e.key === "V") {
+        setCamera(!camera.live);
+      }
     });
 
     window.addEventListener("resize", positionBrandLockup);
@@ -2603,6 +2615,9 @@
   // whichever effect-specific animate toggle (if any) also fires it.
   const EFFECT_ANIMATE_INTERVAL_MS = STAGE_PROFILE.animateIntervalMs || 180;
   setInterval(() => {
+    // Live camera redraws every video frame anyway, so these per-tick
+    // animations would only fight it for the same canvas.
+    if (camera.live) return;
     if ((params.asciiAnimate || params.animatePaletteColor || params.asciiRandomCellSize) && state.lastEffectKey === "ascii") {
       redrawAsciiAnimationFrame();
     }
@@ -2633,7 +2648,7 @@
   // visibly fight during rehearsal, the fix is to fold them into composeFrame
   // too instead of leaving them as separate bypass-redraws.
   function moveAnimationLoop() {
-    if (state.lastEffectFrame && moveIsActive()) {
+    if (!camera.live && state.lastEffectFrame && moveIsActive()) {
       const ctx = state.frontCanvas === canvasA ? ctxA : ctxB;
       composeFrame(ctx, {
         pan: computeMovePanProgress(),
@@ -2974,9 +2989,180 @@
     });
   }
 
+  // ---------------------------------------------------------------------
+  // LIVE CAMERA (V key / "Live camera" checkbox)
+  // ---------------------------------------------------------------------
+  // Feeds this computer's camera through the effects in real time instead
+  // of photos. The normal cycle keeps running — every hold it still rolls a
+  // new effect/palette/blend and crossfades to it — but instead of a photo
+  // it grabs the current camera frame, and between cycles a per-video-frame
+  // loop re-runs that same effect on each new frame. Mirrored like a
+  // selfie view. Nothing is recorded, stored or uploaded: frames only ever
+  // exist in on-page canvases. Needs https or localhost (GitHub Pages is
+  // fine) and the browser's camera permission.
+  //
+  // Frame rate depends on effect cost x stage size: pixelate/duotone run
+  // near camera rate on a laptop; halftone/ASCII are choppier, and at full
+  // Igloo size this would need the GPU (WebGL) rework to be smooth.
+  const camera = {
+    live: false,
+    stream: null,
+    video: null,
+    canvas: null, // mirrored, cover-cropped camera frame at stage size
+    layer: null, // effect output, used as state.lastEffectFrame
+    fps: 0,
+    frames: 0,
+    fpsAt: 0,
+  };
+
+  function grabCameraFrame() {
+    if (!camera.canvas) camera.canvas = document.createElement("canvas");
+    const c = camera.canvas;
+    if (c.width !== STAGE.w || c.height !== STAGE.h) {
+      c.width = STAGE.w;
+      c.height = STAGE.h;
+    }
+    const ctx = c.getContext("2d");
+    ctx.save();
+    ctx.translate(STAGE.w, 0);
+    ctx.scale(-1, 1); // mirror
+    drawCover(ctx, camera.video, STAGE.w, STAGE.h);
+    ctx.restore();
+    return c;
+  }
+
+  function cameraLoop() {
+    if (!camera.live) return;
+    const fx = state.liveEffect;
+    if (fx && camera.video.readyState >= 2) {
+      const source = grabCameraFrame();
+      if (!camera.layer || camera.layer.width !== STAGE.w || camera.layer.height !== STAGE.h) {
+        camera.layer = document.createElement("canvas");
+        camera.layer.width = STAGE.w;
+        camera.layer.height = STAGE.h;
+      }
+      const lctx = camera.layer.getContext("2d");
+      lctx.clearRect(0, 0, STAGE.w, STAGE.h);
+      try {
+        fx.effect.run(lctx, source, fx.effectParams);
+        state.lastEffectFrame = camera.layer;
+        const ctx = state.frontCanvas === canvasA ? ctxA : ctxB;
+        // Same composite as the photo path: effect layer (Move applies to
+        // it), past-frame blend layers frozen on top.
+        composeFrame(
+          ctx,
+          moveIsActive()
+            ? { pan: computeMovePanProgress(), tilt: computeMoveTiltProgress(), zoom: computeMoveZoomLevel() }
+            : null
+        );
+      } catch (err) {
+        console.warn("[camera] frame failed:", err);
+      }
+
+      camera.frames++;
+      const now = performance.now();
+      if (now - camera.fpsAt >= 1000) {
+        camera.fps = Math.round((camera.frames * 1000) / (now - camera.fpsAt));
+        camera.frames = 0;
+        camera.fpsAt = now;
+        setText("diagSource", `camera · ${camera.fps} fps`);
+      }
+    }
+    scheduleCameraFrame();
+  }
+
+  function scheduleCameraFrame() {
+    if (!camera.live) return;
+    // requestVideoFrameCallback = once per new camera frame (no wasted
+    // redraws of an unchanged frame); rAF fallback for older browsers.
+    if (camera.video.requestVideoFrameCallback) {
+      camera.video.requestVideoFrameCallback(() => cameraLoop());
+    } else {
+      requestAnimationFrame(cameraLoop);
+    }
+  }
+
+  function cameraMessage(text) {
+    const el = document.getElementById("diagWarning");
+    if (el) {
+      el.textContent = text;
+      el.classList.toggle("hidden", !text);
+    }
+    if (text) console.warn(`[camera] ${text}`);
+  }
+
+  let cameraSwitchToken = 0;
+  async function setCamera(on) {
+    const box = document.getElementById("ctrlCamera");
+    const token = ++cameraSwitchToken;
+    if (on === camera.live) {
+      if (box) box.checked = on;
+      return;
+    }
+
+    if (on) {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        cameraMessage("Camera not available here — needs https (e.g. GitHub Pages) or localhost.");
+        if (box) box.checked = false;
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: false,
+        });
+        if (token !== cameraSwitchToken) {
+          stream.getTracks().forEach((t) => t.stop()); // switched off again while asking
+          return;
+        }
+        const video = camera.video || document.createElement("video");
+        video.muted = true;
+        video.playsInline = true;
+        video.srcObject = stream;
+        await video.play();
+        if (!video.videoWidth) {
+          await new Promise((r) => video.addEventListener("loadeddata", r, { once: true }));
+        }
+        camera.video = video;
+        camera.stream = stream;
+        camera.live = true;
+        camera.frames = 0;
+        camera.fpsAt = performance.now();
+        cameraMessage("");
+      } catch (err) {
+        const why =
+          err && err.name === "NotAllowedError"
+            ? "permission was refused (allow the camera in the browser's address bar)"
+            : err && err.name === "NotFoundError"
+              ? "no camera found"
+              : (err && err.message) || String(err);
+        cameraMessage(`Camera unavailable: ${why}`);
+        if (box) box.checked = false;
+        return;
+      }
+    } else {
+      camera.live = false;
+      if (camera.stream) camera.stream.getTracks().forEach((t) => t.stop()); // camera light goes off
+      camera.stream = null;
+      if (camera.video) camera.video.srcObject = null;
+    }
+
+    if (box) box.checked = camera.live;
+    broadcastState();
+    // Switch over now rather than at the end of the current hold.
+    if (cycleTimeoutId) {
+      clearTimeout(cycleTimeoutId);
+      cycleTimeoutId = null;
+    }
+    await cycle();
+    if (camera.live) scheduleCameraFrame();
+  }
+
   async function boot() {
     resetControlsToDefaults();
     wireControls();
+    const cameraBox = document.getElementById("ctrlCamera");
+    if (cameraBox) cameraBox.addEventListener("change", () => setCamera(cameraBox.checked));
     startPreviewPan();
     window.addEventListener("resize", scheduleStageRebuild);
     document.addEventListener("fullscreenchange", scheduleStageRebuild);
