@@ -31,7 +31,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-10 · always fresh";
+  const APP_VERSION = "2026-10-10 · camera hard cuts";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -1912,7 +1912,11 @@
     // fading over CROSSFADE_MS. Both branches set transition explicitly on
     // every call, so toggling this mid-run never leaves a stale transition
     // (e.g. an in-flight ease) on either canvas.
-    const transition = params.crossfadeEnabled ? `opacity ${CONFIG.CROSSFADE_MS}ms ease-in-out` : "none";
+    // Live camera always hard-cuts between effects: a fade would show the
+    // outgoing effect frozen on an old frame over the moving video. The
+    // Crossfade setting itself is left alone and applies again for photos.
+    const fade = params.crossfadeEnabled && !camera.live;
+    const transition = fade ? `opacity ${CONFIG.CROSSFADE_MS}ms ease-in-out` : "none";
     incoming.style.transition = transition;
     incoming.style.opacity = String(params.opacity);
     outgoing.style.transition = transition;
@@ -1927,7 +1931,7 @@
     // previous reset timer had a chance to fire (e.g. Speed dialed very
     // low) — known edge case, same one flagged for the fast-Speed race.
     clearTimeout(incoming._blendResetTimer);
-    if (params.crossfadeEnabled) {
+    if (fade) {
       incoming.style.mixBlendMode = CONFIG.CROSSFADE_BLEND_MODE;
       incoming._blendResetTimer = setTimeout(() => {
         incoming.style.mixBlendMode = "normal";
@@ -2096,7 +2100,7 @@
   function updateLookDiagnostic() {
     setText(
       "diagLook",
-      `crossfade ${params.crossfadeEnabled ? "on" : "off (hard cut)"} · sat ${params.saturation}% · con ${params.contrast}%`
+      `crossfade ${params.crossfadeEnabled ? (camera.live ? "on (hard cuts while camera is on)" : "on") : "off (hard cut)"} · sat ${params.saturation}% · con ${params.contrast}%`
     );
   }
 
