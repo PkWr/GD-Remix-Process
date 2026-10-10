@@ -322,3 +322,18 @@ html, body {
   width: 100%;
   height: auto;
 }
+
+/* ?preview: stage at full window height, panned by app.js (startPreviewPan).
+   Canvas aspect already matches the stage box, so fill rather than contain. */
+body.preview-pan #stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: calc(100vh * var(--stage-aspect, 1));
+  will-change: transform;
+}
+
+body.preview-pan #stage canvas {
+  object-fit: fill;
+}
