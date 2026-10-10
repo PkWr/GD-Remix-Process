@@ -27,7 +27,7 @@
     <div><span class="k">look</span> <span id="diagLook">—</span></div>
     <div id="diagPaused" class="paused-line hidden">PAUSED (press P to resume)</div>
     <div id="diagWarning" class="warn-line hidden"></div>
-    <div class="hint">press D to hide, S for branding, L for live photos, R to record, P to pause, F for fullscreen</div>
+    <div class="hint">press D to hide, S for branding, L for live photos, R to record, P to pause, F for fullscreen, V for camera</div>
   </div>
 
   <div id="brandLockup" class="hidden" aria-hidden="true">
@@ -449,6 +449,11 @@
       <label class="checkbox-row" title="Off = the curated assets/demo/ folder (what the session opens on). On = the live pool — Drive if configured, otherwise assets/seeds/, the folder the Image uploader writes into. Same as pressing L.">
         <input type="checkbox" id="ctrlLiveMode">
         Live student photos
+      </label>
+
+      <label class="checkbox-row" title="Feeds this computer's camera live through the effects (mirrored) instead of photos. Effects still change on the normal timer. The browser asks for camera permission the first time. Nothing is recorded or uploaded. Same as pressing V.">
+        <input type="checkbox" id="ctrlCamera">
+        Live camera
       </label>
     </details>
 
