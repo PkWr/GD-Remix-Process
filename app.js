@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · info panel hidden";
+  const APP_VERSION = "2026-10-11 · move loops";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -166,6 +166,10 @@
     // duration, so it also means the same thing regardless of how long an
     // image stays on screen.
     MOVE_MAX_RATE_PER_SEC: 0.5,
+    // "At the edge: keep going" (tiled) scroll speed at a Move slider's max:
+    // this many stage-heights per second. Height-based so it feels the same
+    // on a portrait phone, a desktop window and the 11:1 Igloo strip.
+    MOVE_TILE_RATE: 0.15,
   };
 
   // ---------------------------------------------------------------------
@@ -453,6 +457,12 @@
     // and a fresh random direction for each axis instead, independent of
     // wherever the sliders are currently set.
     moveRandomize: false,
+    // What Move does when the image reaches the edge of its travel:
+    // "stop" (hold there — the original behaviour), "tile" / "mirror" (keep
+    // scrolling forever over repeated copies; mirror flips neighbours so the
+    // edges always join), or "next" (hold time = travel time, so each image
+    // arrives just as the next one comes in). Set from settings.js.
+    moveEndMode: "mirror",
     // Global look adjustments (CSS filter %, 100 = no change) — applied to
     // the whole #stage element rather than run through the effect pipeline,
     // since they should affect literally everything on screen (every
@@ -1548,6 +1558,11 @@
     moveResolvedPan: 0,
     moveResolvedTilt: 0,
     moveResolvedZoom: 0,
+    // Running scroll offset (stage px) for the tiled Move modes. Accumulates
+    // frame by frame rather than resetting each cycle, so the drift carries
+    // straight on into the next image instead of jumping back.
+    tileOffX: 0,
+    tileOffY: 0,
   };
 
   // Animation ticks (pixelate/halftone/ascii redraws) refresh the cached
@@ -1829,10 +1844,62 @@
   // now," reused by both the initial per-cycle render and every later Move
   // animation tick — so the blend layers never accidentally get transformed
   // along with the effect layer.
+  // Move "keep going": the effect frame repeated edge to edge and scrolled
+  // by the running offset, so it never runs out of image. Mirror flips every
+  // other copy (left-right and/or top-bottom) so neighbouring edges are the
+  // same pixels and there's no visible seam. Zoom still applies, centred.
+  function applyTiledMove(ctx, src, mirror) {
+    const W = STAGE.w;
+    const H = STAGE.h;
+    const zoom = state.moveResolvedZoom === 0 ? 1 : computeMoveZoomLevel();
+    const tw = W * zoom;
+    const th = H * zoom;
+    const offX = state.tileOffX + (W - tw) / 2;
+    const offY = state.tileOffY + (H - th) / 2;
+    const i0 = Math.floor(-offX / tw);
+    const j0 = Math.floor(-offY / th);
+    ctx.clearRect(0, 0, W, H);
+    for (let j = j0; offY + j * th < H; j++) {
+      for (let i = i0; offX + i * tw < W; i++) {
+        // Snap to whole pixels and overlap by 1px so no hairline gaps show.
+        const x = Math.floor(offX + i * tw);
+        const y = Math.floor(offY + j * th);
+        const w = Math.ceil(tw) + 1;
+        const h = Math.ceil(th) + 1;
+        const flipX = mirror && (i & 1) !== 0;
+        const flipY = mirror && (j & 1) !== 0;
+        if (flipX || flipY) {
+          ctx.save();
+          ctx.translate(flipX ? x + w : x, flipY ? y + h : y);
+          ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+          ctx.drawImage(src, 0, 0, w, h);
+          ctx.restore();
+        } else {
+          ctx.drawImage(src, x, y, w, h);
+        }
+      }
+    }
+  }
+
+  // Advances the tiled-scroll offset by this frame's share of the current
+  // Pan/Tilt speeds. Same directions as the stop-at-edge sweep: negative
+  // Pan moves the picture right (camera pans left), positive Tilt moves it
+  // down (camera tilts up).
+  let tileLastTick = 0;
+  function advanceTileOffsets(now) {
+    const dt = tileLastTick ? Math.min(0.1, (now - tileLastTick) / 1000) : 0;
+    tileLastTick = now;
+    const pxPerSec = CONFIG.MOVE_TILE_RATE * STAGE.h;
+    state.tileOffX += -(state.moveResolvedPan / 100) * pxPerSec * dt;
+    state.tileOffY += (state.moveResolvedTilt / 100) * pxPerSec * dt;
+  }
+
   function composeFrame(destCtx, moveState) {
     destCtx.clearRect(0, 0, STAGE.w, STAGE.h);
     if (moveState === null) {
       destCtx.drawImage(state.lastEffectFrame, 0, 0);
+    } else if (params.moveEndMode === "tile" || params.moveEndMode === "mirror") {
+      applyTiledMove(destCtx, state.lastEffectFrame, params.moveEndMode === "mirror");
     } else {
       applyMoveTransform(destCtx, state.lastEffectFrame, moveState.pan, moveState.tilt, moveState.zoom);
     }
@@ -2039,7 +2106,15 @@
 
     if (gen !== cycleGeneration) return;
 
-    const holdMs = randomHold();
+    let holdMs = randomHold();
+    // Move "Next image": hold exactly as long as the journey takes, so each
+    // image reaches its destination just as the next one comes in.
+    if (params.moveEndMode === "next" && moveIsActive()) {
+      const travelSec = moveSweepCapSec();
+      if (Number.isFinite(travelSec)) {
+        holdMs = Math.max(travelSec * 1000, params.crossfadeEnabled && !camera.live ? CONFIG.CROSSFADE_MS : 0);
+      }
+    }
     // Marks the start of this cycle's hold window for the Move overlay's pan
     // progress (elapsed / currentHoldMs, read every rAF tick — see the pan
     // loop below). Reset every cycle regardless of render success/failure,
@@ -2101,7 +2176,7 @@
     setText(
       "diagMove",
       moveIsActive()
-        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom}`
+        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}`
         : "off"
     );
 
@@ -2469,7 +2544,8 @@
   // for now (each still ends up looking right most frames), but if the two
   // visibly fight during rehearsal, the fix is to fold them into composeFrame
   // too instead of leaving them as separate bypass-redraws.
-  function moveAnimationLoop() {
+  function moveAnimationLoop(now) {
+    advanceTileOffsets(now || performance.now());
     if (!camera.live && state.lastEffectFrame && moveIsActive()) {
       const ctx = state.frontCanvas === canvasA ? ctxA : ctxB;
       composeFrame(ctx, {
