@@ -29,9 +29,13 @@
 (() => {
   "use strict";
 
+  // The one list of every control (settings.js, loaded first).
+  const PRS = window.PhotoRemixSettings;
+  const SET = PRS.byId;
+
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · new controls panel";
+  const APP_VERSION = "2026-10-11 · settings list";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -124,12 +128,12 @@
     // Full slider ranges (must match index.html's min/max attributes) —
     // used when "Randomize scale + ASCII style" is on, rolling the entire
     // range each cycle instead of the narrow band around the slider value.
-    PIXELATE_SLIDER_MIN: 2,
-    PIXELATE_SLIDER_MAX: 128,
-    HALFTONE_SLIDER_MIN: 6,
-    HALFTONE_SLIDER_MAX: 32,
-    ASCII_SLIDER_MIN: 8,
-    ASCII_SLIDER_MAX: 40,
+    PIXELATE_SLIDER_MIN: SET.ctrlPixelateMin.min, // from settings.js
+    PIXELATE_SLIDER_MAX: SET.ctrlPixelateMax.max, // from settings.js
+    HALFTONE_SLIDER_MIN: SET.ctrlHalftoneMin.min, // from settings.js
+    HALFTONE_SLIDER_MAX: SET.ctrlHalftoneMax.max, // from settings.js
+    ASCII_SLIDER_MIN: SET.ctrlAsciiMin.min, // from settings.js
+    ASCII_SLIDER_MAX: SET.ctrlAsciiMax.max, // from settings.js
 
     // Cap on how many past-frame snapshots we ever keep in memory, matching
     // the Blend layers slider's max (4). Each is a full 1080x1920 offscreen
@@ -457,6 +461,12 @@
     saturation: 100,
     contrast: 100,
   };
+
+  // Starting values come from settings.js's list — the values written in
+  // `params` above are only fallbacks / documentation of each field.
+  for (const s of PRS.SETTINGS) {
+    if (s.param && s.default !== undefined) setPath(params, s.param, s.default);
+  }
 
   // ---------------------------------------------------------------------
   // 2. SEED IMAGES (offline fallback, bundled in repo)
@@ -2263,336 +2273,101 @@
     applyControlState(values);
   }
 
+  // ---------------------------------------------------------------------
+  // SETTINGS WIRING — every control comes from settings.js's one list
+  // ---------------------------------------------------------------------
+  // Each SETTINGS entry says which value in `params` it sets (`param`) and,
+  // if it needs to do more than store a value, which named action below to
+  // run (`after`). One generic listener per control replaces the old
+  // hand-written handler per control.
+  function getPath(obj, path) {
+    return path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
+  }
+
+  function setPath(obj, path, value) {
+    const keys = path.split(".");
+    let o = obj;
+    for (let i = 0; i < keys.length - 1; i++) o = o[keys[i]];
+    o[keys[keys.length - 1]] = value;
+  }
+
+  // Remembered effect set while Untouched is on, restored when it's off.
+  let effectsBeforeUntouched = null;
+
+  const SETTING_ACTIONS = {
+    lookFilter() {
+      applyLookFilter();
+      updateLookDiagnostic();
+    },
+    lookDiagnostic() {
+      updateLookDiagnostic();
+    },
+    liveMode(on) {
+      switchSourceMode(on ? "live" : "demo");
+    },
+    autoCycle(on) {
+      togglePause(!on);
+    },
+    camera(on) {
+      setCamera(on);
+    },
+    // Untouched is exclusive: on = every effect off (remembering which
+    // were on); off = those come back (or all, if none were). Turning any
+    // effect on while Untouched is on turns Untouched off. Changes made
+    // here in code don't fire events, so broadcastState() keeps the
+    // remote page in step.
+    effectRotation(on, s) {
+      const effects = PRS.SETTINGS.filter((x) => x.after === "effectRotation" && x.id !== "ctrlEffectNone");
+      const setFx = (x, val) => {
+        setPath(params, x.param, val);
+        const el = document.getElementById(x.id);
+        if (el) el.checked = val;
+      };
+      if (s.id === "ctrlEffectNone") {
+        if (on) {
+          effectsBeforeUntouched = effects.filter((x) => getPath(params, x.param));
+          effects.forEach((x) => setFx(x, false));
+        } else {
+          const restore =
+            effectsBeforeUntouched && effectsBeforeUntouched.length ? effectsBeforeUntouched : effects;
+          restore.forEach((x) => setFx(x, true));
+          effectsBeforeUntouched = null;
+        }
+      } else if (on && params.enabledEffects.none) {
+        setFx(PRS.byId.ctrlEffectNone, false);
+        effectsBeforeUntouched = null;
+      }
+      broadcastState();
+    },
+  };
+
+  function applySetting(s, el) {
+    const v = PRS.readValue(s, el);
+    if (s.param) setPath(params, s.param, v);
+    if (s.format) {
+      const span = document.querySelector(`#controls .val[data-for="${s.id}"]`);
+      if (span) span.textContent = PRS.formatValue(s, v);
+    }
+    if (s.after && SETTING_ACTIONS[s.after]) SETTING_ACTIONS[s.after](v, s);
+  }
+
+  function wireSettings() {
+    for (const s of PRS.SETTINGS) {
+      const el = document.getElementById(s.id);
+      if (!el) {
+        console.warn(`[settings] no control on the page for ${s.id}`);
+        continue;
+      }
+      // Sliders and colour pickers update live while dragging; the rest on change.
+      const evt = s.type === "range" || s.type === "color" ? "input" : "change";
+      el.addEventListener(evt, () => applySetting(s, el));
+    }
+  }
+
   function wireControls() {
     const panel = document.getElementById("controls");
 
-    const speedMin = document.getElementById("ctrlSpeedMin");
-    const speedMax = document.getElementById("ctrlSpeedMax");
-    const speedRandomize = document.getElementById("ctrlSpeedRandomize");
-    const opacity = document.getElementById("ctrlOpacity");
-    const crossfadeEnabled = document.getElementById("ctrlCrossfadeEnabled");
-    const liveMode = document.getElementById("ctrlLiveMode");
-    const pixelateMin = document.getElementById("ctrlPixelateMin");
-    const pixelateMax = document.getElementById("ctrlPixelateMax");
-    const pixelateRandomize = document.getElementById("ctrlPixelateRandomize");
-    const halftoneMin = document.getElementById("ctrlHalftoneMin");
-    const halftoneMax = document.getElementById("ctrlHalftoneMax");
-    const halftoneRandomize = document.getElementById("ctrlHalftoneRandomize");
-    const asciiMin = document.getElementById("ctrlAsciiMin");
-    const asciiMax = document.getElementById("ctrlAsciiMax");
-    const asciiRandomize = document.getElementById("ctrlAsciiRandomize");
-    const asciiRamp = document.getElementById("ctrlAsciiRamp");
-    const asciiRampRandomize = document.getElementById("ctrlAsciiRampRandomize");
-    const asciiAnimate = document.getElementById("ctrlAsciiAnimate");
-    const pixelateAnimate = document.getElementById("ctrlPixelateAnimate");
-    const pixelateRandomCellSize = document.getElementById("ctrlPixelateRandomCellSize");
-    const halftoneRandomCellSize = document.getElementById("ctrlHalftoneRandomCellSize");
-    const asciiRandomCellSize = document.getElementById("ctrlAsciiRandomCellSize");
-    const paletteRandomize = document.getElementById("ctrlPaletteRandomize");
-    const paletteSafeMode = document.getElementById("ctrlPaletteSafeMode");
-    const animatePaletteColor = document.getElementById("ctrlAnimatePaletteColor");
-    const animatePaletteDensityMin = document.getElementById("ctrlAnimatePaletteDensityMin");
-    const animatePaletteDensityMax = document.getElementById("ctrlAnimatePaletteDensityMax");
-    const animatePaletteDensityRandomize = document.getElementById("ctrlAnimatePaletteDensityRandomize");
-    // Four {fg, bg} element pairs, index-matched to params.palettes.
-    const paletteColorInputs = [1, 2, 3, 4].map((n) => ({
-      fg: document.getElementById(`ctrlPalette${n}Fg`),
-      bg: document.getElementById(`ctrlPalette${n}Bg`),
-    }));
-    // Four "In rotation" checkboxes, index-matched to params.paletteEnabled.
-    const paletteEnabledInputs = [1, 2, 3, 4].map((n) =>
-      document.getElementById(`ctrlPalette${n}Enabled`)
-    );
-    const autoCycle = document.getElementById("ctrlAutoCycle");
-    const blendOverlay = document.getElementById("ctrlBlendOverlay");
-    const blendLayers = document.getElementById("ctrlBlendLayers");
-    const randomBlendLayers = document.getElementById("ctrlRandomBlendLayers");
-    const movePanSpeed = document.getElementById("ctrlMovePanSpeed");
-    const moveTiltSpeed = document.getElementById("ctrlMoveTiltSpeed");
-    const moveZoomSpeed = document.getElementById("ctrlMoveZoomSpeed");
-    const moveSpeedMin = document.getElementById("ctrlMoveSpeedMin");
-    const moveSpeedMax = document.getElementById("ctrlMoveSpeedMax");
-    const moveRandomize = document.getElementById("ctrlMoveRandomize");
-    const saturation = document.getElementById("ctrlSaturation");
-    const contrast = document.getElementById("ctrlContrast");
-
-    // Effect on/off checkboxes -> EFFECTS registry keys. Blend modes isn't
-    // here — it's the separate blendOverlay toggle above, not a competing
-    // pick. "none" (Untouched) IS here now — see the enabledEffects comment
-    // for why.
-    const effectToggles = {
-      none: document.getElementById("ctrlEffectNone"),
-      duotone: document.getElementById("ctrlEffectDuotone"),
-      pixelate: document.getElementById("ctrlEffectPixelate"),
-      ascii: document.getElementById("ctrlEffectAscii"),
-      halftone: document.getElementById("ctrlEffectHalftone"),
-    };
-    const startUnchanged = document.getElementById("ctrlStartUnchanged");
-
-    // Blend overlay mode checkboxes -> globalCompositeOperation values.
-    const blendModeToggles = {
-      multiply: document.getElementById("ctrlBlendModeMultiply"),
-      screen: document.getElementById("ctrlBlendModeScreen"),
-      overlay: document.getElementById("ctrlBlendModeOverlay"),
-      darken: document.getElementById("ctrlBlendModeDarken"),
-      lighten: document.getElementById("ctrlBlendModeLighten"),
-      difference: document.getElementById("ctrlBlendModeDifference"),
-      exclusion: document.getElementById("ctrlBlendModeExclusion"),
-      "hard-light": document.getElementById("ctrlBlendModeHardLight"),
-    };
-
-    const valFor = (input) =>
-      panel.querySelector(`.val[data-for="${input.id}"]`);
-
-    speedMin.addEventListener("input", () => {
-      params.holdMin = parseFloat(speedMin.value);
-      valFor(speedMin).textContent = `${params.holdMin}s`;
-    });
-
-    speedMax.addEventListener("input", () => {
-      params.holdMax = parseFloat(speedMax.value);
-      valFor(speedMax).textContent = `${params.holdMax}s`;
-    });
-
-    speedRandomize.addEventListener("change", () => {
-      params.randomizeSpeed = speedRandomize.checked;
-    });
-
-    opacity.addEventListener("input", () => {
-      params.opacity = parseFloat(opacity.value);
-      valFor(opacity).textContent = params.opacity.toFixed(2);
-    });
-
-    crossfadeEnabled.addEventListener("change", () => {
-      params.crossfadeEnabled = crossfadeEnabled.checked;
-      updateLookDiagnostic();
-    });
-
-    if (liveMode) {
-      liveMode.checked = params.sourceMode === "live";
-      liveMode.addEventListener("change", () => {
-        switchSourceMode(liveMode.checked ? "live" : "demo");
-      });
-    }
-
-    saturation.addEventListener("input", () => {
-      params.saturation = parseInt(saturation.value, 10);
-      valFor(saturation).textContent = `${params.saturation}%`;
-      applyLookFilter();
-      updateLookDiagnostic();
-    });
-
-    contrast.addEventListener("input", () => {
-      params.contrast = parseInt(contrast.value, 10);
-      valFor(contrast).textContent = `${params.contrast}%`;
-      applyLookFilter();
-      updateLookDiagnostic();
-    });
-
-    blendLayers.addEventListener("input", () => {
-      params.blendLayers = parseInt(blendLayers.value, 10);
-      valFor(blendLayers).textContent = String(params.blendLayers);
-    });
-
-    pixelateMin.addEventListener("input", () => {
-      params.pixelateMin = parseInt(pixelateMin.value, 10);
-      valFor(pixelateMin).textContent = `${params.pixelateMin}px`;
-    });
-
-    pixelateMax.addEventListener("input", () => {
-      params.pixelateMax = parseInt(pixelateMax.value, 10);
-      valFor(pixelateMax).textContent = `${params.pixelateMax}px`;
-    });
-
-    pixelateRandomize.addEventListener("change", () => {
-      params.randomizePixelateScale = pixelateRandomize.checked;
-    });
-
-    halftoneMin.addEventListener("input", () => {
-      params.halftoneMin = parseInt(halftoneMin.value, 10);
-      valFor(halftoneMin).textContent = `${params.halftoneMin}px`;
-    });
-
-    halftoneMax.addEventListener("input", () => {
-      params.halftoneMax = parseInt(halftoneMax.value, 10);
-      valFor(halftoneMax).textContent = `${params.halftoneMax}px`;
-    });
-
-    halftoneRandomize.addEventListener("change", () => {
-      params.randomizeHalftoneScale = halftoneRandomize.checked;
-    });
-
-    asciiMin.addEventListener("input", () => {
-      params.asciiMin = parseInt(asciiMin.value, 10);
-      valFor(asciiMin).textContent = `${params.asciiMin}px`;
-    });
-
-    asciiMax.addEventListener("input", () => {
-      params.asciiMax = parseInt(asciiMax.value, 10);
-      valFor(asciiMax).textContent = `${params.asciiMax}px`;
-    });
-
-    asciiRandomize.addEventListener("change", () => {
-      params.randomizeAsciiScale = asciiRandomize.checked;
-    });
-
-    asciiRamp.addEventListener("change", () => {
-      params.asciiRampStyle = asciiRamp.value;
-    });
-
-    asciiRampRandomize.addEventListener("change", () => {
-      params.randomizeAsciiRamp = asciiRampRandomize.checked;
-    });
-
-    asciiAnimate.addEventListener("change", () => {
-      params.asciiAnimate = asciiAnimate.checked;
-    });
-
-    pixelateAnimate.addEventListener("change", () => {
-      params.pixelateAnimate = pixelateAnimate.checked;
-    });
-
-    pixelateRandomCellSize.addEventListener("change", () => {
-      params.pixelateRandomCellSize = pixelateRandomCellSize.checked;
-    });
-
-    halftoneRandomCellSize.addEventListener("change", () => {
-      params.halftoneRandomCellSize = halftoneRandomCellSize.checked;
-    });
-
-    asciiRandomCellSize.addEventListener("change", () => {
-      params.asciiRandomCellSize = asciiRandomCellSize.checked;
-    });
-
-    paletteRandomize.addEventListener("change", () => {
-      params.randomizePalette = paletteRandomize.checked;
-    });
-
-    paletteSafeMode.addEventListener("change", () => {
-      params.paletteSafeMode = paletteSafeMode.checked;
-    });
-
-    animatePaletteColor.addEventListener("change", () => {
-      params.animatePaletteColor = animatePaletteColor.checked;
-    });
-
-    animatePaletteDensityMin.addEventListener("input", () => {
-      params.animatePaletteDensityMin = parseInt(animatePaletteDensityMin.value, 10);
-      valFor(animatePaletteDensityMin).textContent = `${params.animatePaletteDensityMin}%`;
-    });
-
-    animatePaletteDensityMax.addEventListener("input", () => {
-      params.animatePaletteDensityMax = parseInt(animatePaletteDensityMax.value, 10);
-      valFor(animatePaletteDensityMax).textContent = `${params.animatePaletteDensityMax}%`;
-    });
-
-    animatePaletteDensityRandomize.addEventListener("change", () => {
-      params.randomizeAnimatePaletteDensity = animatePaletteDensityRandomize.checked;
-    });
-
-    paletteColorInputs.forEach(({ fg, bg }, i) => {
-      fg.addEventListener("input", () => {
-        params.palettes[i].fg = fg.value;
-      });
-      bg.addEventListener("input", () => {
-        params.palettes[i].bg = bg.value;
-      });
-    });
-
-    paletteEnabledInputs.forEach((box, i) => {
-      if (!box) return;
-      box.addEventListener("change", () => {
-        params.paletteEnabled[i] = box.checked;
-      });
-    });
-
-    autoCycle.addEventListener("change", () => {
-      togglePause(!autoCycle.checked);
-    });
-
-    blendOverlay.addEventListener("change", () => {
-      params.blendOverlayEnabled = blendOverlay.checked;
-    });
-
-    randomBlendLayers.addEventListener("change", () => {
-      params.randomizeBlendLayers = randomBlendLayers.checked;
-    });
-
-    movePanSpeed.addEventListener("input", () => {
-      params.movePanSpeed = parseInt(movePanSpeed.value, 10);
-      const v = params.movePanSpeed;
-      valFor(movePanSpeed).textContent = v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "left" : "right"}`;
-    });
-
-    moveTiltSpeed.addEventListener("input", () => {
-      params.moveTiltSpeed = parseInt(moveTiltSpeed.value, 10);
-      const v = params.moveTiltSpeed;
-      valFor(moveTiltSpeed).textContent = v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "down" : "up"}`;
-    });
-
-    moveZoomSpeed.addEventListener("input", () => {
-      params.moveZoomSpeed = parseInt(moveZoomSpeed.value, 10);
-      const v = params.moveZoomSpeed;
-      valFor(moveZoomSpeed).textContent = v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "out" : "in"}`;
-    });
-
-    moveSpeedMin.addEventListener("input", () => {
-      params.moveSpeedMin = parseInt(moveSpeedMin.value, 10);
-      valFor(moveSpeedMin).textContent = `${params.moveSpeedMin}%`;
-    });
-
-    moveSpeedMax.addEventListener("input", () => {
-      params.moveSpeedMax = parseInt(moveSpeedMax.value, 10);
-      valFor(moveSpeedMax).textContent = `${params.moveSpeedMax}%`;
-    });
-
-    moveRandomize.addEventListener("change", () => {
-      params.moveRandomize = moveRandomize.checked;
-    });
-
-    // Untouched is exclusive: ticking it switches every effect off (plain
-    // photos only), remembering which were on; unticking it brings those
-    // back (or all of them, if none were on). Ticking any effect while
-    // Untouched is on unticks Untouched. Changes made here in code don't
-    // fire change events, so broadcastState() keeps the remote panel in sync.
-    const effectKeys = Object.keys(effectToggles).filter((k) => k !== "none" && effectToggles[k]);
-    let effectsBeforeUntouched = null;
-    const setEffect = (key, on) => {
-      params.enabledEffects[key] = on;
-      if (effectToggles[key]) effectToggles[key].checked = on;
-    };
-    for (const [key, box] of Object.entries(effectToggles)) {
-      if (!box) continue;
-      box.addEventListener("change", () => {
-        params.enabledEffects[key] = box.checked;
-        if (key === "none") {
-          if (box.checked) {
-            effectsBeforeUntouched = effectKeys.filter((k) => params.enabledEffects[k]);
-            effectKeys.forEach((k) => setEffect(k, false));
-          } else {
-            const restore =
-              effectsBeforeUntouched && effectsBeforeUntouched.length ? effectsBeforeUntouched : effectKeys;
-            restore.forEach((k) => setEffect(k, true));
-            effectsBeforeUntouched = null;
-          }
-        } else if (box.checked && params.enabledEffects.none) {
-          setEffect("none", false);
-          effectsBeforeUntouched = null;
-        }
-        broadcastState();
-      });
-    }
-
-    startUnchanged.addEventListener("change", () => {
-      params.startUnchanged = startUnchanged.checked;
-    });
-
-    for (const [mode, box] of Object.entries(blendModeToggles)) {
-      if (!box) continue;
-      box.addEventListener("change", () => {
-        params.enabledBlendModes[mode] = box.checked;
-      });
-    }
+    wireSettings();
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "c" || e.key === "C") {
@@ -3305,34 +3080,8 @@
   // while the camera is on), Controls (= C) and Info (= D). Shown on touch
   // screens, or anywhere with ?touch. Fades away after a few seconds so it
   // doesn't sit on the artwork; tap the screen to bring it back.
-  // Google Material Symbols (Outlined, weight 300 — the light line style),
-  // Apache-2.0, from the @material-symbols/svg-300 package. Path data is
-  // inlined rather than loading Google's icon font, so the buttons still
-  // work offline (the app has to run without wifi).
-  const ICONS = {
-    photo_library: "M352.31-389.31h367.15L603.23-545.69l-103 132.31L433-496.15l-80.69 106.84Zm-73.85 158.54q-23.53 0-40.61-17.08t-17.08-40.61v-513.85q0-23.53 17.08-40.61T278.46-860h513.85q23.52 0 40.61 17.08Q850-825.84 850-802.31v513.85q0 23.53-17.08 40.61-17.09 17.08-40.61 17.08H278.46Zm0-45.39h513.85q4.61 0 8.46-3.84 3.84-3.85 3.84-8.46v-513.85q0-4.61-3.84-8.46-3.85-3.84-8.46-3.84H278.46q-4.61 0-8.46 3.84-3.85 3.85-3.85 8.46v513.85q0 4.61 3.85 8.46 3.85 3.84 8.46 3.84ZM167.69-120q-23.52 0-40.61-17.08Q110-154.17 110-177.7v-559.22h45.39v559.22q0 4.62 3.84 8.47 3.85 3.84 8.46 3.84h559.23V-120H167.69Zm98.46-694.61v538.45-538.45Z",
-    blur_on: "M120.62-380.62q-8.62 0-14.62-5.94t-6-14.86q0-8.93 6-14.87 6-5.94 14.62-5.94 9 0 15 5.94t6 14.87q0 8.92-6 14.86-6 5.94-15 5.94Zm0-157.15q-8.62 0-14.62-5.94t-6-14.87q0-8.92 6-14.86 6-5.94 14.62-5.94 9 0 15 5.94t6 14.86q0 8.93-6 14.87-6 5.94-15 5.94Zm119.49 333.08q-14.97 0-25.19-10.12-10.23-10.12-10.23-25.08 0-14.97 10.12-25.19 10.12-10.23 25.08-10.23 14.97 0 25.19 10.12 10.23 10.12 10.23 25.08 0 14.97-10.12 25.19-10.12 10.23-25.08 10.23Zm0-161.23q-14.97 0-25.19-10.23-10.23-10.24-10.23-25.36 0-14.96 10.12-25.19 10.12-10.22 25.08-10.22 14.97 0 25.19 10.16 10.23 10.17 10.23 25.19 0 15.03-10.12 25.34t-25.08 10.31Zm0-157.16q-14.97 0-25.19-10.16-10.23-10.17-10.23-25.19 0-15.03 10.12-25.34t25.08-10.31q14.97 0 25.19 10.23 10.23 10.24 10.23 25.36 0 14.96-10.12 25.19-10.12 10.22-25.08 10.22Zm0-161.61q-14.97 0-25.19-10.12-10.23-10.12-10.23-25.08 0-14.97 10.12-25.19 10.12-10.23 25.08-10.23 14.97 0 25.19 10.12 10.23 10.12 10.23 25.08 0 14.97-10.12 25.19-10.12 10.23-25.08 10.23Zm161.4 332.84q-20.47 0-35.07-14.49-14.59-14.49-14.59-35.18 0-20.29 14.49-34.88 14.49-14.6 35.18-14.6 20.29 0 34.88 14.51 14.6 14.5 14.6 34.98 0 20.47-14.51 35.07-14.5 14.59-34.98 14.59Zm0-157.15q-20.47 0-35.07-14.51-14.59-14.5-14.59-34.98 0-20.47 14.49-35.07 14.49-14.59 35.18-14.59 20.29 0 34.88 14.49 14.6 14.49 14.6 35.18 0 20.29-14.51 34.88-14.5 14.6-34.98 14.6Zm.06 304.31q-15.03 0-25.34-10.12t-10.31-25.08q0-14.97 10.23-25.19 10.24-10.23 25.36-10.23 14.96 0 25.19 10.12 10.22 10.12 10.22 25.08 0 14.97-10.16 25.19-10.17 10.23-25.19 10.23Zm0-480q-15.03 0-25.34-10.12t-10.31-25.08q0-14.97 10.23-25.19 10.24-10.23 25.36-10.23 14.96 0 25.19 10.12 10.22 10.12 10.22 25.08 0 14.97-10.16 25.19-10.17 10.23-25.19 10.23Zm.05 584.69q-9 0-15-5.94t-6-14.87q0-8.92 6-14.86 6-5.95 15-5.95 8.61 0 14.61 5.95 6 5.94 6 14.86 0 8.93-6 14.87-6 5.94-14.61 5.94Zm0-718.38q-9 0-15-5.95-6-5.94-6-14.86 0-8.93 6-14.87 6-5.94 15-5.94 8.61 0 14.61 5.94t6 14.87q0 8.92-6 14.86-6 5.95-14.61 5.95Zm156.86 466.53q-20.29 0-34.88-14.49-14.6-14.49-14.6-35.18 0-20.29 14.51-34.88 14.5-14.6 34.98-14.6 20.47 0 35.07 14.51 14.59 14.5 14.59 34.98 0 20.47-14.49 35.07-14.49 14.59-35.18 14.59Zm0-157.15q-20.29 0-34.88-14.51-14.6-14.5-14.6-34.98 0-20.47 14.51-35.07 14.5-14.59 34.98-14.59 20.47 0 35.07 14.49 14.59 14.49 14.59 35.18 0 20.29-14.49 34.88-14.49 14.6-35.18 14.6Zm.01 304.31q-14.96 0-25.19-10.12-10.22-10.12-10.22-25.08 0-14.97 10.16-25.19 10.17-10.23 25.19-10.23 15.03 0 25.34 10.12t10.31 25.08q0 14.97-10.23 25.19-10.24 10.23-25.36 10.23Zm0-480q-14.96 0-25.19-10.12-10.22-10.12-10.22-25.08 0-14.97 10.16-25.19 10.17-10.23 25.19-10.23 15.03 0 25.34 10.12t10.31 25.08q0 14.97-10.23 25.19-10.24 10.23-25.36 10.23ZM562.85-100q-8.62 0-14.62-5.94t-6-14.87q0-8.92 6-14.86 6-5.95 14.62-5.95 9 0 15 5.95 6 5.94 6 14.86 0 8.93-6 14.87-6 5.94-15 5.94Zm-4.47-718.38q-8.61 0-14.61-5.95-6-5.94-6-14.86 0-8.93 6-14.87 6-5.94 14.61-5.94 9 0 15 5.94t6 14.87q0 8.92-6 14.86-6 5.95-15 5.95Zm161.73 613.69q-14.97 0-25.19-10.12-10.23-10.12-10.23-25.08 0-14.97 10.12-25.19 10.12-10.23 25.08-10.23 14.97 0 25.19 10.12 10.23 10.12 10.23 25.08 0 14.97-10.12 25.19-10.12 10.23-25.08 10.23Zm0-161.23q-14.97 0-25.19-10.23-10.23-10.24-10.23-25.36 0-14.96 10.12-25.19 10.12-10.22 25.08-10.22 14.97 0 25.19 10.16 10.23 10.17 10.23 25.19 0 15.03-10.12 25.34t-25.08 10.31Zm0-157.16q-14.97 0-25.19-10.16-10.23-10.17-10.23-25.19 0-15.03 10.12-25.34t25.08-10.31q14.97 0 25.19 10.23 10.23 10.24 10.23 25.36 0 14.96-10.12 25.19-10.12 10.22-25.08 10.22Zm0-161.61q-14.97 0-25.19-10.12-10.23-10.12-10.23-25.08 0-14.97 10.12-25.19 10.12-10.23 25.08-10.23 14.97 0 25.19 10.12 10.23 10.12 10.23 25.08 0 14.97-10.12 25.19-10.12 10.23-25.08 10.23Zm119.27 304.07q-9 0-15-5.94t-6-14.86q0-8.93 6-14.87 6-5.94 15-5.94 8.62 0 14.62 5.94t6 14.87q0 8.92-6 14.86-6 5.94-14.62 5.94Zm0-157.15q-9 0-15-5.94t-6-14.87q0-8.92 6-14.86 6-5.94 15-5.94 8.62 0 14.62 5.94t6 14.86q0 8.93-6 14.87-6 5.94-14.62 5.94Z",
-    palette: "M479.23-100q-77.77 0-146.92-29.96-69.16-29.96-120.77-81.58-51.62-51.61-81.58-120.96T100-480q0-80.38 30.46-149.73t83.27-120.65q52.81-51.31 123.85-80.46Q408.62-860 489.38-860q74.39 0 141.54 24.77 67.16 24.77 117.96 69.08 50.81 44.3 80.96 105.15Q860-600.15 860-527.77q0 98.77-56.65 158.19-56.66 59.42-156.04 59.42h-73.08q-23.77 0-41 17.66Q516-274.85 516-251.69q0 29.69 14.69 47.15 14.69 17.46 14.69 40.54 0 30.69-17.15 47.34-17.15 16.66-49 16.66Zm.77-380Zm-229.54 19.85q16.92 0 29.81-12.89 12.88-12.88 12.88-29.81 0-16.92-12.88-29.8-12.89-12.89-29.81-12.89-16.92 0-29.81 12.89-12.88 12.88-12.88 29.8 0 16.93 12.88 29.81 12.89 12.89 29.81 12.89Zm124.46-167.31q16.93 0 29.81-12.89 12.88-12.88 12.88-29.8 0-16.93-12.88-29.81-12.88-12.89-29.81-12.89-16.92 0-29.8 12.89-12.89 12.88-12.89 29.81 0 16.92 12.89 29.8 12.88 12.89 29.8 12.89Zm210.16 0q16.92 0 29.8-12.89 12.89-12.88 12.89-29.8 0-16.93-12.89-29.81-12.88-12.89-29.8-12.89-16.93 0-29.81 12.89-12.88 12.88-12.88 29.81 0 16.92 12.88 29.8 12.88 12.89 29.81 12.89ZM713-460.15q16.92 0 29.81-12.89 12.88-12.88 12.88-29.81 0-16.92-12.88-29.8-12.89-12.89-29.81-12.89-16.92 0-29.81 12.89-12.88 12.88-12.88 29.8 0 16.93 12.88 29.81 12.89 12.89 29.81 12.89ZM479.23-145.39q11 0 15.89-4.5Q500-154.39 500-164q0-14-14.69-26.39-14.69-12.38-14.69-51.84 0-45.62 29.8-79.46 29.81-33.85 74.66-33.85h72.23q77.92 0 122.61-45.84 44.69-45.85 44.69-126.39 0-129.31-98.46-208.08-98.46-78.76-226.77-78.76-144.46 0-244.23 96.96-99.76 96.96-99.76 237.65 0 138.69 97.76 236.65 97.77 97.96 236.08 97.96Z",
-    animation: "M355.54-100q-52.54 0-99.08-19.35-46.54-19.34-82.46-55.27-35.31-35.3-54.65-81.53Q100-302.39 100-355.54q0-75.38 39.58-137.92 39.58-62.54 107.04-92.23 19.23-42.39 51.65-75 32.42-32.62 76.04-52.69 30.08-68.31 91.15-107.46Q526.54-860 605.08-860q52.53 0 98.77 19.35 46.23 19.34 81.53 55.27 34.93 36.3 54.77 82.03Q860-657.61 860-605.08q0 79-37.16 138.23-37.15 59.23-109.46 92.54-19.23 44-51.15 75.73-31.92 31.73-76.54 51.96-29.69 68.31-90.96 107.46Q433.46-100 355.54-100Zm.77-45.39q47.69 0 93.42-22.57 45.73-22.58 71.35-62.27-63 10.07-120.5-8.66t-100.73-60.57Q257-342.08 238.58-399.69q-18.42-57.62-8.35-120.62-39.92 26.39-62.38 71.35-22.46 44.96-22.46 93.42 0 44.23 16 82.46t45.23 66.85q29.61 28.61 67.53 44.73 37.93 16.11 82.16 16.11ZM480-270.46q53.85 0 97.54-24.58 43.69-24.58 68.61-60.27-63 10.08-120.19-9.27-57.19-19.34-99.42-62.19-43.23-43.85-62.27-101.15-19.04-57.31-7.96-120.31-42.31 33.38-63.69 73.11-21.39 39.73-21.39 95.12 0 43.23 15.81 81.46t45.04 67.46q28.61 29 66.65 44.81 38.04 15.81 81.27 15.81Zm128.69-126.69q17.39 0 34.69-3.31 17.31-3.31 36.54-10.92 21-59.39 6.81-116.12-14.19-56.73-57.65-100.19-40.85-40.85-102.23-55.85-61.39-15-116.93 4.39-5.38 17-8.07 34.61-2.7 17.62-2.7 39.46 0 42 16 80.23 16 38.23 45.23 68.08 29.24 30.85 67.47 45.23 38.23 14.39 80.84 14.39ZM734-438.46q39.38-27.85 60-67.96 20.61-40.12 20.61-98.66 0-42.61-15.8-80.54-15.81-37.92-45.43-67.15-29.84-30.23-67.76-46.04-37.93-15.8-80.54-15.8-53.23 0-95.73 21.11-42.5 21.12-74.12 61.5 63-10.08 121.81 9.27t103.27 62.81q44.46 43.84 64.3 101.15 19.85 57.31 9.39 120.31Z",
-    slideshow: "M392.77-326.39 630.31-480 392.77-633.61v307.22ZM197.69-140q-23.53 0-40.61-17.08T140-197.69v-564.62q0-23.53 17.08-40.61T197.69-820h564.62q23.53 0 40.61 17.08T820-762.31v564.62q0 23.53-17.08 40.61T762.31-140H197.69Zm0-45.39h564.62q4.61 0 8.46-3.84 3.84-3.85 3.84-8.46v-564.62q0-4.61-3.84-8.46-3.85-3.84-8.46-3.84H197.69q-4.61 0-8.46 3.84-3.84 3.85-3.84 8.46v564.62q0 4.61 3.84 8.46 3.85 3.84 8.46 3.84Zm-12.3-589.22v589.22-589.22Z",
-    pause: "M533.85-220v-520H740v520H533.85ZM220-220v-520h206.54v520H220Zm359.23-45.39h115.38v-429.22H579.23v429.22Zm-313.84 0h115.76v-429.22H265.39v429.22Zm0-429.22v429.22-429.22Zm313.84 0v429.22-429.22Z",
-    play_arrow: "M340-238.39v-487.68l383.07 243.84L340-238.39Zm45.39-243.84Zm0 161 253.99-161-253.99-161v322Z",
-    keyboard_arrow_down: "M480-357.85 253.85-584l32.61-32.61L480-423.08l193.54-193.53L706.15-584 480-357.85Z",
-    fullscreen: "M140-140v-183.39h45.39v138h138V-140H140Zm497 0v-45.39h138v-138h45.38V-140H637ZM140-636.61V-820h183.39v45.39h-138v138H140Zm635 0v-138H637V-820h183.38v183.39H775Z",
-    videocam: "M167.31-180q-23.53 0-40.61-17.08t-17.08-40.61v-484.62q0-23.53 17.08-40.61T167.31-780h484.61q23.53 0 40.61 17.08t17.08 40.61v208.46l140.77-140.76v348.84L709.61-446.54v208.85q0 23.53-17.08 40.61T651.92-180H167.31Zm0-45.39h484.61q5.39 0 8.85-3.46t3.46-8.84v-484.62q0-5.38-3.46-8.84t-8.85-3.46H167.31q-5.39 0-8.85 3.46t-3.46 8.84v484.62q0 5.38 3.46 8.84t8.85 3.46Zm-12.31 0v-509.22 509.22Z",
-    videocam_off: "M851.54-305.77 710.77-446.54v108.31l-45.38-45.39v-338.69q0-5.38-3.47-8.84-3.46-3.46-8.84-3.46H314.39L269-780h384.08q23.53 0 40.61 17.08t17.08 40.61v208.46l140.77-140.76v348.84ZM818-74.31 70.93-821.38l31.99-32L850-106.31l-32 32Zm-325.92-483Zm-80.85 75.46ZM177.08-779.23l44.61 44.62h-53.23q-5.38 0-8.84 3.46t-3.46 8.84v484.62q0 5.38 3.46 8.84t8.84 3.46h484.62q5.38 0 8.84-3.46 3.47-3.46 3.47-8.84v-53.23L710-246.31v14q-1.92 21.22-18.43 36.77Q675.07-180 653.08-180H168.46q-23.53 0-40.61-17.08t-17.08-40.61v-484.62q0-21.99 15.31-38.49 15.31-16.51 37-18.43h14Z",
-    cameraswitch: "M327.23-310.16q-23.98 0-40.83-17.04-16.86-17.05-16.86-40.65v-224.3q0-23.6 16.86-40.65 16.85-17.04 40.83-17.04h38.85l32.69-32.7h164.69l32.69 32.7H635q23.59 0 40.64 17.04 17.05 17.05 17.05 40.65v224.3q0 23.6-17.05 40.65-17.05 17.04-40.64 17.04H327.23Zm0-45.38H635q5.38 0 8.85-3.65 3.46-3.66 3.46-8.66v-224.3q0-5-3.46-8.66-3.47-3.65-8.85-3.65H327.23q-5.38 0-8.84 3.65-3.47 3.66-3.47 8.66v224.3q0 5 3.47 8.66 3.46 3.65 8.84 3.65Zm153.56-70q22.52 0 38.09-15.75 15.58-15.76 15.58-38.27 0-22.13-15.75-37.9-15.76-15.77-38.27-15.77-22.13 0-37.9 15.95-15.77 15.94-15.77 38.07 0 22.52 15.95 38.09 15.94 15.58 38.07 15.58ZM390-931.23q22.35-5.23 44.91-7 22.55-1.77 44.94-1.77 89.15 0 169.5 31.96 80.34 31.96 142.34 88.45t101.46 133.1q39.46 76.6 47.46 164.87h-45.38q-6.38-78-40.96-145.5t-89.04-117.42q-54.46-49.92-125.04-79.27-70.58-29.34-148.96-31.8l79.85 79.84-32.62 32.62L390-931.23ZM570.61-28.77q-22.1 5.23-44.4 7Q503.9-20 481.38-20q-89.76 0-169.8-31.96t-142.15-88.35q-62.12-56.38-101.77-132.84Q28-349.62 19.39-438.38h45.9q6.86 78 41.44 145.5t88.85 117.42q54.27 49.92 124.84 79.27Q391-66.85 469.77-64.39l-80.23-79.84 32.61-32.62L570.61-28.77ZM481.62-480Z",
-    tune: "M440.46-130v-209.23h45.39V-257H830v45.38H485.85V-130h-45.39ZM130-211.62V-257h225.08v45.38H130Zm179.69-164.07v-81.62H130v-45.38h179.69v-82.85h45.39v209.85h-45.39Zm130.77-81.62v-45.38H830v45.38H440.46Zm164.46-163.84V-830h45.39v81.62H830V-703H650.31v81.85h-45.39ZM130-703v-45.38h389.54V-703H130Z",
-    info: "M459.54-290h45.38v-230h-45.38v230Zm20.44-294q11.52 0 19.39-7.56 7.86-7.57 7.86-19.05 0-11.95-7.85-19.9-7.85-7.95-19.36-7.95-11.9 0-19.58 7.95-7.67 7.95-7.67 19.9 0 11.48 7.85 19.05 7.85 7.56 19.36 7.56Zm.35 484q-78.95 0-147.89-29.92-68.95-29.92-120.76-81.71-51.81-51.79-81.75-120.78Q100-401.39 100-480.43q0-78.66 29.92-147.87 29.92-69.21 81.71-120.52 51.79-51.31 120.78-81.25Q401.39-860 480.43-860q78.66 0 147.87 29.92 69.21 29.92 120.52 81.21 51.31 51.29 81.25 120.63Q860-558.9 860-480.33q0 78.95-29.92 147.89-29.92 68.95-81.21 120.57-51.29 51.63-120.63 81.75Q558.9-100 480.33-100Zm.17-45.39q139.19 0 236.65-97.76 97.46-97.77 97.46-237.35 0-139.19-97.27-236.65-97.27-97.46-237.34-97.46-139.08 0-236.85 97.27-97.76 97.27-97.76 237.34 0 139.08 97.76 236.85 97.77 97.76 237.35 97.76ZM480-480Z",
-    close: "m250.92-218.92-32-32L448-480 218.92-709.08l32-32L480-512l229.08-229.08 32 32L512-480l229.08 229.08-32 32L480-448 250.92-218.92Z",
-  };
-
-  function iconSvg(name, size = 24) {
-    return (
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 -960 960 960" ` +
-      `fill="currentColor" aria-hidden="true" focusable="false"><path d="${ICONS[name]}"/></svg>`
-    );
-  }
+  // Icons + iconSvg() live in settings.js, shared with the remote page.
+  const { iconSvg } = PRS;
 
   const TOUCH_UI =
     pageParams.has("touch") || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
@@ -3453,7 +3202,6 @@
   // element that wireControls() wires up, so presets, ?resume and the
   // remote page keep working. This just arranges and decorates them.
   const PROFILE_CARRY_KEY = "photoRemixProfileCarry";
-  const PANEL_TAB_KEY = "photoRemixPanelTab";
   const PROFILE_HINTS = {
     phone: "Instagram Story size, letterboxed in the window. The workshop setup.",
     desktop: "Window size × screen sharpness, up to 2560 wide. Rebuilds on resize.",
@@ -3488,58 +3236,15 @@
   }
 
   function setPanelTab(tab) {
-    const panel = document.getElementById("controls");
-    if (!panel) return;
-    panel.querySelectorAll(".cp-tabs [data-tab]").forEach((b) => {
-      b.setAttribute("aria-current", b.dataset.tab === tab ? "page" : "false");
-    });
-    panel.querySelectorAll(".cp-tab").forEach((t) => t.classList.toggle("is-active", t.dataset.tab === tab));
-    try {
-      localStorage.setItem(PANEL_TAB_KEY, tab);
-    } catch (e) {
-      /* remembering the tab is only a convenience */
-    }
+    PRS.setTab(document.getElementById("controls"), tab);
   }
 
-  function rangePct(el) {
-    const min = parseFloat(el.min);
-    const max = parseFloat(el.max);
-    return ((parseFloat(el.value) - min) / (max - min)) * 100;
-  }
-
-  // Track fill for a single slider; data-centre sliders (Move) fill from
-  // the middle, since 0 = off and the sign is the direction.
-  function rangeFill(input) {
-    const p = rangePct(input);
-    const centre = input.hasAttribute("data-centre");
-    input.style.setProperty("--from", `${centre ? Math.min(50, p) : 0}%`);
-    input.style.setProperty("--to", `${centre ? Math.max(50, p) : p}%`);
-  }
-
-  function dualFill(box) {
-    const [lo, hi] = box.querySelectorAll('input[type="range"]');
-    const a = rangePct(lo);
-    const b = rangePct(hi);
-    box.style.setProperty("--from", `${Math.min(a, b)}%`);
-    box.style.setProperty("--to", `${Math.max(a, b)}%`);
-    // Both handles parked at the top end: lift the lower one so it can
-    // still be dragged back down.
-    lo.style.zIndex = a > 90 ? "2" : "";
-  }
-
-  // Re-derives everything visual from the real inputs + app state.
-  // Cheap; called on any panel input/change and on pause/camera changes.
+  // App-side half of the panel's visual state; settings.js's syncPanel()
+  // does the generic half (chip highlights, slider fills).
   function panelSync() {
     const panel = document.getElementById("controls");
     if (!panel) return;
-    panel.querySelectorAll(".cp-chip[data-for]").forEach((chip) => {
-      const input = document.getElementById(chip.dataset.for);
-      chip.setAttribute("aria-pressed", String(!!(input && input.checked)));
-    });
-    panel.querySelectorAll('input[type="range"]').forEach((r) => {
-      if (!r.closest(".cp-dual")) rangeFill(r);
-    });
-    panel.querySelectorAll(".cp-dual").forEach(dualFill);
+    PRS.syncPanel(panel);
 
     const flip = document.getElementById("cpFlip");
     if (flip) flip.hidden = !camera.live;
@@ -3557,71 +3262,15 @@
     if (stageEl) stageEl.textContent = describeStage(state.currentLayout);
   }
 
+  // Display-page extras on top of the generic panel settings.js builds:
+  // header buttons, camera flip, profile dropdown, Show-tab buttons.
   function initPanel() {
     const panel = document.getElementById("controls");
     if (!panel) return;
 
-    panel.querySelectorAll("[data-icon]").forEach((el) => {
-      el.innerHTML = iconSvg(el.dataset.icon, el.closest(".cp-tabs") ? 22 : 20);
-    });
-
-    // Tabs (last-used tab remembered per browser)
-    panel.querySelectorAll(".cp-tabs [data-tab]").forEach((b) => {
-      b.addEventListener("click", () => setPanelTab(b.dataset.tab));
-    });
-    let tab = "effects";
-    try {
-      tab = localStorage.getItem(PANEL_TAB_KEY) || tab;
-    } catch (e) {
-      /* default tab */
-    }
-    if (!panel.querySelector(`.cp-tab[data-tab="${tab}"]`)) tab = "effects";
-    setPanelTab(tab);
-
-    // Expandable cards (effects, Move, Blend)
-    panel.querySelectorAll(".cp-card").forEach((card) => {
-      const toggle = card.querySelector(".cp-card-toggle");
-      if (!toggle) return;
-      toggle.addEventListener("click", () => {
-        const open = !card.classList.contains("is-open");
-        card.classList.toggle("is-open", open);
-        toggle.setAttribute("aria-expanded", String(open));
-      });
-    });
-
-    // Chips that drive an input elsewhere (the "In rotation" row drives
-    // the switches on each effect card, so both always agree).
-    panel.querySelectorAll(".cp-chip[data-for]").forEach((chip) => {
-      chip.addEventListener("click", () => {
-        const input = document.getElementById(chip.dataset.for);
-        if (!input) return;
-        input.checked = !input.checked;
-        input.dispatchEvent(new Event("change", { bubbles: true }));
-      });
-    });
-
-    // Two-handle sliders: handles can't cross — pushing one past the
-    // other drags the other along.
-    panel.querySelectorAll(".cp-dual").forEach((box) => {
-      const [lo, hi] = box.querySelectorAll('input[type="range"]');
-      lo.addEventListener("input", () => {
-        if (parseFloat(lo.value) > parseFloat(hi.value)) {
-          hi.value = lo.value;
-          hi.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      });
-      hi.addEventListener("input", () => {
-        if (parseFloat(hi.value) < parseFloat(lo.value)) {
-          lo.value = hi.value;
-          lo.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      });
-    });
-
     panel.addEventListener("input", panelSync);
     panel.addEventListener("change", panelSync);
 
-    // Header + Show-tab buttons
     const hide = () => panel.classList.add("hidden");
     const on = (id, fn) => {
       const el = document.getElementById(id);
@@ -3669,6 +3318,9 @@
   }
 
   async function boot() {
+    // Build the controls panel from settings.js before anything looks for
+    // its inputs.
+    PRS.buildPanel(document.getElementById("controls"), { mode: "display" });
     buildTouchBar();
     const diagClose = document.getElementById("diagClose");
     if (diagClose) {
@@ -3683,8 +3335,6 @@
     resetControlsToDefaults();
     wireControls();
     initPanel();
-    const cameraBox = document.getElementById("ctrlCamera");
-    if (cameraBox) cameraBox.addEventListener("change", () => setCamera(cameraBox.checked));
     startPreviewPan();
     window.addEventListener("resize", scheduleStageRebuild);
     document.addEventListener("fullscreenchange", scheduleStageRebuild);

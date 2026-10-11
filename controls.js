@@ -51,6 +51,9 @@
         if (span) span.textContent = info.display;
       }
     }
+    // Values were set directly (no events), so refresh the panel's chip
+    // highlights and slider fills to match.
+    if (window.PhotoRemixSettings) window.PhotoRemixSettings.syncPanel(panel);
   }
 
   channel.onmessage = (evt) => {
