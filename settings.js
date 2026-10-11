@@ -129,6 +129,9 @@
     { id: "ctrlMoveZoomSpeed", type: "range", label: "Zoom", min: -100, max: 100, step: 1, default: 0, int: true, format: "moveZ", centre: true, param: "moveZoomSpeed" },
     { id: "ctrlMoveRandomize", type: "switch", label: "Random move each image", default: false, param: "moveRandomize",
       help: "Every image rolls its own random direction and speed per axis, leaving the sliders where they are" },
+    { id: "ctrlMoveEnd", type: "select", label: "At the edge", default: "mirror", param: "moveEndMode",
+      help: "What happens when the picture reaches the end of its travel",
+      options: [["mirror", "Keep going — mirrored repeat"], ["tile", "Keep going — repeat"], ["next", "Next image arrives"], ["stop", "Stop"]] },
     { id: "ctrlMoveSpeedMin", type: "range", label: "Random move strength minimum", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "moveSpeedMin" },
     { id: "ctrlMoveSpeedMax", type: "range", label: "Random move strength maximum", min: 0, max: 100, step: 1, default: 80, int: true, format: "percent", param: "moveSpeedMax" },
 
@@ -212,7 +215,7 @@
       ] },
       { section: "Transitions", items: ["ctrlCrossfadeEnabled", "ctrlOpacity", { note: "The camera always hard-cuts." }] },
       { card: "Move", summary: "pan · tilt · zoom", items: [
-        "ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed", "ctrlMoveRandomize",
+        "ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed", "ctrlMoveEnd", "ctrlMoveRandomize",
         { dual: ["ctrlMoveSpeedMin", "ctrlMoveSpeedMax"], label: "Random strength" },
       ] },
       { card: "Blend overlay", summary: "past frames on top", switch: "ctrlBlendOverlay", items: [
