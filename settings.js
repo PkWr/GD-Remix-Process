@@ -146,6 +146,9 @@
       options: [["off", "Off"], ["smear", "Smooth smear"], ["even", "Even echoes"], ["ragged", "Ragged — dry brush"]] },
     { id: "ctrlEchoLength", type: "range", label: "Trail length", min: 0, max: 100, step: 1, default: 60, int: true, format: "percent", param: "echoLength" },
     { id: "ctrlEchoStrength", type: "range", label: "Trail strength", min: 0, max: 100, step: 1, default: 60, int: true, format: "percent", param: "echoStrength" },
+    { id: "ctrlEchoBlend", type: "select", label: "Trail blend", default: "lighten", param: "echoBlend",
+      help: "How the echoes sit over the picture",
+      options: [["lighten", "Lighten — gaps and shadows only"], ["screen", "Screen — glow over everything"], ["source-over", "Normal — see-through ghost"], ["difference", "Difference — inverted edges"]] },
     { id: "ctrlMoveSpeedMin", type: "range", label: "Random move strength minimum", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "moveSpeedMin" },
     { id: "ctrlMoveSpeedMax", type: "range", label: "Random move strength maximum", min: 0, max: 100, step: 1, default: 80, int: true, format: "percent", param: "moveSpeedMax" },
 
@@ -233,7 +236,7 @@
         { note: "Strip only — run several strips over each other:" },
         "ctrlStripLayers", "ctrlStripRelation", "ctrlStripBlend", "ctrlStripOpacity", "ctrlStripGap",
         { note: "Echo trail — any move mode:" },
-        "ctrlEchoMode", "ctrlEchoLength", "ctrlEchoStrength",
+        "ctrlEchoMode", "ctrlEchoLength", "ctrlEchoStrength", "ctrlEchoBlend",
         "ctrlMoveRandomize",
         { dual: ["ctrlMoveSpeedMin", "ctrlMoveSpeedMax"], label: "Random strength" },
       ] },
