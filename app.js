@@ -31,7 +31,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-10 · line icons";
+  const APP_VERSION = "2026-10-11 · new controls panel";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -1578,6 +1578,7 @@
 
     const autoCycleBox = document.getElementById("ctrlAutoCycle");
     if (autoCycleBox) autoCycleBox.checked = !state.paused;
+    panelSync();
 
     if (state.paused) {
       if (cycleTimeoutId) {
@@ -2074,6 +2075,11 @@
       if (diagEffectEl) diagEffectEl.classList.remove("error");
     }
     setText("diagHold", `${(holdMs / 1000).toFixed(1)}s`);
+    const nowBits = [camera.live ? `camera · ${effectKey}` : effectKey];
+    if (!renderError && effectParams && effectParams.paletteIndex) nowBits.push(`palette ${effectParams.paletteIndex}`);
+    nowBits.push(`${(holdMs / 1000).toFixed(1)} s`);
+    setText("cpNow", (renderError ? "render error · " : "") + nowBits.join(" · "));
+    panelSync();
 
     // Resolved once per cycle (see resolveMoveSpeeds(), called at the very
     // top of cycle() before this runs) — reflects what's ACTUALLY driving
@@ -2231,10 +2237,10 @@
   // right after this runs, and potentially double-scheduling cycle(). So
   // params.sourceMode is set directly here instead, and boot()'s existing
   // fetch is left as the one and only source load for this fresh page.
-  function applyResumeSettings() {
+  function applyResumeSettings(storageKey = CONFIG.SETTINGS_STORAGE_KEY) {
     let raw;
     try {
-      raw = localStorage.getItem(CONFIG.SETTINGS_STORAGE_KEY);
+      raw = localStorage.getItem(storageKey);
     } catch (err) {
       return;
     }
@@ -2614,6 +2620,10 @@
       }
       if (e.key === "f" || e.key === "F") {
         toggleFullscreen();
+      }
+      if (e.key === "?") {
+        panel.classList.remove("hidden");
+        setPanelTab("show");
       }
       if (e.key === "v" || e.key === "V") {
         showToast(camera.live ? "V — switching camera off…" : "V — starting camera…");
@@ -3300,6 +3310,15 @@
   // inlined rather than loading Google's icon font, so the buttons still
   // work offline (the app has to run without wifi).
   const ICONS = {
+    photo_library: "M352.31-389.31h367.15L603.23-545.69l-103 132.31L433-496.15l-80.69 106.84Zm-73.85 158.54q-23.53 0-40.61-17.08t-17.08-40.61v-513.85q0-23.53 17.08-40.61T278.46-860h513.85q23.52 0 40.61 17.08Q850-825.84 850-802.31v513.85q0 23.53-17.08 40.61-17.09 17.08-40.61 17.08H278.46Zm0-45.39h513.85q4.61 0 8.46-3.84 3.84-3.85 3.84-8.46v-513.85q0-4.61-3.84-8.46-3.85-3.84-8.46-3.84H278.46q-4.61 0-8.46 3.84-3.85 3.85-3.85 8.46v513.85q0 4.61 3.85 8.46 3.85 3.84 8.46 3.84ZM167.69-120q-23.52 0-40.61-17.08Q110-154.17 110-177.7v-559.22h45.39v559.22q0 4.62 3.84 8.47 3.85 3.84 8.46 3.84h559.23V-120H167.69Zm98.46-694.61v538.45-538.45Z",
+    blur_on: "M120.62-380.62q-8.62 0-14.62-5.94t-6-14.86q0-8.93 6-14.87 6-5.94 14.62-5.94 9 0 15 5.94t6 14.87q0 8.92-6 14.86-6 5.94-15 5.94Zm0-157.15q-8.62 0-14.62-5.94t-6-14.87q0-8.92 6-14.86 6-5.94 14.62-5.94 9 0 15 5.94t6 14.86q0 8.93-6 14.87-6 5.94-15 5.94Zm119.49 333.08q-14.97 0-25.19-10.12-10.23-10.12-10.23-25.08 0-14.97 10.12-25.19 10.12-10.23 25.08-10.23 14.97 0 25.19 10.12 10.23 10.12 10.23 25.08 0 14.97-10.12 25.19-10.12 10.23-25.08 10.23Zm0-161.23q-14.97 0-25.19-10.23-10.23-10.24-10.23-25.36 0-14.96 10.12-25.19 10.12-10.22 25.08-10.22 14.97 0 25.19 10.16 10.23 10.17 10.23 25.19 0 15.03-10.12 25.34t-25.08 10.31Zm0-157.16q-14.97 0-25.19-10.16-10.23-10.17-10.23-25.19 0-15.03 10.12-25.34t25.08-10.31q14.97 0 25.19 10.23 10.23 10.24 10.23 25.36 0 14.96-10.12 25.19-10.12 10.22-25.08 10.22Zm0-161.61q-14.97 0-25.19-10.12-10.23-10.12-10.23-25.08 0-14.97 10.12-25.19 10.12-10.23 25.08-10.23 14.97 0 25.19 10.12 10.23 10.12 10.23 25.08 0 14.97-10.12 25.19-10.12 10.23-25.08 10.23Zm161.4 332.84q-20.47 0-35.07-14.49-14.59-14.49-14.59-35.18 0-20.29 14.49-34.88 14.49-14.6 35.18-14.6 20.29 0 34.88 14.51 14.6 14.5 14.6 34.98 0 20.47-14.51 35.07-14.5 14.59-34.98 14.59Zm0-157.15q-20.47 0-35.07-14.51-14.59-14.5-14.59-34.98 0-20.47 14.49-35.07 14.49-14.59 35.18-14.59 20.29 0 34.88 14.49 14.6 14.49 14.6 35.18 0 20.29-14.51 34.88-14.5 14.6-34.98 14.6Zm.06 304.31q-15.03 0-25.34-10.12t-10.31-25.08q0-14.97 10.23-25.19 10.24-10.23 25.36-10.23 14.96 0 25.19 10.12 10.22 10.12 10.22 25.08 0 14.97-10.16 25.19-10.17 10.23-25.19 10.23Zm0-480q-15.03 0-25.34-10.12t-10.31-25.08q0-14.97 10.23-25.19 10.24-10.23 25.36-10.23 14.96 0 25.19 10.12 10.22 10.12 10.22 25.08 0 14.97-10.16 25.19-10.17 10.23-25.19 10.23Zm.05 584.69q-9 0-15-5.94t-6-14.87q0-8.92 6-14.86 6-5.95 15-5.95 8.61 0 14.61 5.95 6 5.94 6 14.86 0 8.93-6 14.87-6 5.94-14.61 5.94Zm0-718.38q-9 0-15-5.95-6-5.94-6-14.86 0-8.93 6-14.87 6-5.94 15-5.94 8.61 0 14.61 5.94t6 14.87q0 8.92-6 14.86-6 5.95-14.61 5.95Zm156.86 466.53q-20.29 0-34.88-14.49-14.6-14.49-14.6-35.18 0-20.29 14.51-34.88 14.5-14.6 34.98-14.6 20.47 0 35.07 14.51 14.59 14.5 14.59 34.98 0 20.47-14.49 35.07-14.49 14.59-35.18 14.59Zm0-157.15q-20.29 0-34.88-14.51-14.6-14.5-14.6-34.98 0-20.47 14.51-35.07 14.5-14.59 34.98-14.59 20.47 0 35.07 14.49 14.59 14.49 14.59 35.18 0 20.29-14.49 34.88-14.49 14.6-35.18 14.6Zm.01 304.31q-14.96 0-25.19-10.12-10.22-10.12-10.22-25.08 0-14.97 10.16-25.19 10.17-10.23 25.19-10.23 15.03 0 25.34 10.12t10.31 25.08q0 14.97-10.23 25.19-10.24 10.23-25.36 10.23Zm0-480q-14.96 0-25.19-10.12-10.22-10.12-10.22-25.08 0-14.97 10.16-25.19 10.17-10.23 25.19-10.23 15.03 0 25.34 10.12t10.31 25.08q0 14.97-10.23 25.19-10.24 10.23-25.36 10.23ZM562.85-100q-8.62 0-14.62-5.94t-6-14.87q0-8.92 6-14.86 6-5.95 14.62-5.95 9 0 15 5.95 6 5.94 6 14.86 0 8.93-6 14.87-6 5.94-15 5.94Zm-4.47-718.38q-8.61 0-14.61-5.95-6-5.94-6-14.86 0-8.93 6-14.87 6-5.94 14.61-5.94 9 0 15 5.94t6 14.87q0 8.92-6 14.86-6 5.95-15 5.95Zm161.73 613.69q-14.97 0-25.19-10.12-10.23-10.12-10.23-25.08 0-14.97 10.12-25.19 10.12-10.23 25.08-10.23 14.97 0 25.19 10.12 10.23 10.12 10.23 25.08 0 14.97-10.12 25.19-10.12 10.23-25.08 10.23Zm0-161.23q-14.97 0-25.19-10.23-10.23-10.24-10.23-25.36 0-14.96 10.12-25.19 10.12-10.22 25.08-10.22 14.97 0 25.19 10.16 10.23 10.17 10.23 25.19 0 15.03-10.12 25.34t-25.08 10.31Zm0-157.16q-14.97 0-25.19-10.16-10.23-10.17-10.23-25.19 0-15.03 10.12-25.34t25.08-10.31q14.97 0 25.19 10.23 10.23 10.24 10.23 25.36 0 14.96-10.12 25.19-10.12 10.22-25.08 10.22Zm0-161.61q-14.97 0-25.19-10.12-10.23-10.12-10.23-25.08 0-14.97 10.12-25.19 10.12-10.23 25.08-10.23 14.97 0 25.19 10.12 10.23 10.12 10.23 25.08 0 14.97-10.12 25.19-10.12 10.23-25.08 10.23Zm119.27 304.07q-9 0-15-5.94t-6-14.86q0-8.93 6-14.87 6-5.94 15-5.94 8.62 0 14.62 5.94t6 14.87q0 8.92-6 14.86-6 5.94-14.62 5.94Zm0-157.15q-9 0-15-5.94t-6-14.87q0-8.92 6-14.86 6-5.94 15-5.94 8.62 0 14.62 5.94t6 14.86q0 8.93-6 14.87-6 5.94-14.62 5.94Z",
+    palette: "M479.23-100q-77.77 0-146.92-29.96-69.16-29.96-120.77-81.58-51.62-51.61-81.58-120.96T100-480q0-80.38 30.46-149.73t83.27-120.65q52.81-51.31 123.85-80.46Q408.62-860 489.38-860q74.39 0 141.54 24.77 67.16 24.77 117.96 69.08 50.81 44.3 80.96 105.15Q860-600.15 860-527.77q0 98.77-56.65 158.19-56.66 59.42-156.04 59.42h-73.08q-23.77 0-41 17.66Q516-274.85 516-251.69q0 29.69 14.69 47.15 14.69 17.46 14.69 40.54 0 30.69-17.15 47.34-17.15 16.66-49 16.66Zm.77-380Zm-229.54 19.85q16.92 0 29.81-12.89 12.88-12.88 12.88-29.81 0-16.92-12.88-29.8-12.89-12.89-29.81-12.89-16.92 0-29.81 12.89-12.88 12.88-12.88 29.8 0 16.93 12.88 29.81 12.89 12.89 29.81 12.89Zm124.46-167.31q16.93 0 29.81-12.89 12.88-12.88 12.88-29.8 0-16.93-12.88-29.81-12.88-12.89-29.81-12.89-16.92 0-29.8 12.89-12.89 12.88-12.89 29.81 0 16.92 12.89 29.8 12.88 12.89 29.8 12.89Zm210.16 0q16.92 0 29.8-12.89 12.89-12.88 12.89-29.8 0-16.93-12.89-29.81-12.88-12.89-29.8-12.89-16.93 0-29.81 12.89-12.88 12.88-12.88 29.81 0 16.92 12.88 29.8 12.88 12.89 29.81 12.89ZM713-460.15q16.92 0 29.81-12.89 12.88-12.88 12.88-29.81 0-16.92-12.88-29.8-12.89-12.89-29.81-12.89-16.92 0-29.81 12.89-12.88 12.88-12.88 29.8 0 16.93 12.88 29.81 12.89 12.89 29.81 12.89ZM479.23-145.39q11 0 15.89-4.5Q500-154.39 500-164q0-14-14.69-26.39-14.69-12.38-14.69-51.84 0-45.62 29.8-79.46 29.81-33.85 74.66-33.85h72.23q77.92 0 122.61-45.84 44.69-45.85 44.69-126.39 0-129.31-98.46-208.08-98.46-78.76-226.77-78.76-144.46 0-244.23 96.96-99.76 96.96-99.76 237.65 0 138.69 97.76 236.65 97.77 97.96 236.08 97.96Z",
+    animation: "M355.54-100q-52.54 0-99.08-19.35-46.54-19.34-82.46-55.27-35.31-35.3-54.65-81.53Q100-302.39 100-355.54q0-75.38 39.58-137.92 39.58-62.54 107.04-92.23 19.23-42.39 51.65-75 32.42-32.62 76.04-52.69 30.08-68.31 91.15-107.46Q526.54-860 605.08-860q52.53 0 98.77 19.35 46.23 19.34 81.53 55.27 34.93 36.3 54.77 82.03Q860-657.61 860-605.08q0 79-37.16 138.23-37.15 59.23-109.46 92.54-19.23 44-51.15 75.73-31.92 31.73-76.54 51.96-29.69 68.31-90.96 107.46Q433.46-100 355.54-100Zm.77-45.39q47.69 0 93.42-22.57 45.73-22.58 71.35-62.27-63 10.07-120.5-8.66t-100.73-60.57Q257-342.08 238.58-399.69q-18.42-57.62-8.35-120.62-39.92 26.39-62.38 71.35-22.46 44.96-22.46 93.42 0 44.23 16 82.46t45.23 66.85q29.61 28.61 67.53 44.73 37.93 16.11 82.16 16.11ZM480-270.46q53.85 0 97.54-24.58 43.69-24.58 68.61-60.27-63 10.08-120.19-9.27-57.19-19.34-99.42-62.19-43.23-43.85-62.27-101.15-19.04-57.31-7.96-120.31-42.31 33.38-63.69 73.11-21.39 39.73-21.39 95.12 0 43.23 15.81 81.46t45.04 67.46q28.61 29 66.65 44.81 38.04 15.81 81.27 15.81Zm128.69-126.69q17.39 0 34.69-3.31 17.31-3.31 36.54-10.92 21-59.39 6.81-116.12-14.19-56.73-57.65-100.19-40.85-40.85-102.23-55.85-61.39-15-116.93 4.39-5.38 17-8.07 34.61-2.7 17.62-2.7 39.46 0 42 16 80.23 16 38.23 45.23 68.08 29.24 30.85 67.47 45.23 38.23 14.39 80.84 14.39ZM734-438.46q39.38-27.85 60-67.96 20.61-40.12 20.61-98.66 0-42.61-15.8-80.54-15.81-37.92-45.43-67.15-29.84-30.23-67.76-46.04-37.93-15.8-80.54-15.8-53.23 0-95.73 21.11-42.5 21.12-74.12 61.5 63-10.08 121.81 9.27t103.27 62.81q44.46 43.84 64.3 101.15 19.85 57.31 9.39 120.31Z",
+    slideshow: "M392.77-326.39 630.31-480 392.77-633.61v307.22ZM197.69-140q-23.53 0-40.61-17.08T140-197.69v-564.62q0-23.53 17.08-40.61T197.69-820h564.62q23.53 0 40.61 17.08T820-762.31v564.62q0 23.53-17.08 40.61T762.31-140H197.69Zm0-45.39h564.62q4.61 0 8.46-3.84 3.84-3.85 3.84-8.46v-564.62q0-4.61-3.84-8.46-3.85-3.84-8.46-3.84H197.69q-4.61 0-8.46 3.84-3.84 3.85-3.84 8.46v564.62q0 4.61 3.84 8.46 3.85 3.84 8.46 3.84Zm-12.3-589.22v589.22-589.22Z",
+    pause: "M533.85-220v-520H740v520H533.85ZM220-220v-520h206.54v520H220Zm359.23-45.39h115.38v-429.22H579.23v429.22Zm-313.84 0h115.76v-429.22H265.39v429.22Zm0-429.22v429.22-429.22Zm313.84 0v429.22-429.22Z",
+    play_arrow: "M340-238.39v-487.68l383.07 243.84L340-238.39Zm45.39-243.84Zm0 161 253.99-161-253.99-161v322Z",
+    keyboard_arrow_down: "M480-357.85 253.85-584l32.61-32.61L480-423.08l193.54-193.53L706.15-584 480-357.85Z",
+    fullscreen: "M140-140v-183.39h45.39v138h138V-140H140Zm497 0v-45.39h138v-138h45.38V-140H637ZM140-636.61V-820h183.39v45.39h-138v138H140Zm635 0v-138H637V-820h183.38v183.39H775Z",
     videocam: "M167.31-180q-23.53 0-40.61-17.08t-17.08-40.61v-484.62q0-23.53 17.08-40.61T167.31-780h484.61q23.53 0 40.61 17.08t17.08 40.61v208.46l140.77-140.76v348.84L709.61-446.54v208.85q0 23.53-17.08 40.61T651.92-180H167.31Zm0-45.39h484.61q5.39 0 8.85-3.46t3.46-8.84v-484.62q0-5.38-3.46-8.84t-8.85-3.46H167.31q-5.39 0-8.85 3.46t-3.46 8.84v484.62q0 5.38 3.46 8.84t8.85 3.46Zm-12.31 0v-509.22 509.22Z",
     videocam_off: "M851.54-305.77 710.77-446.54v108.31l-45.38-45.39v-338.69q0-5.38-3.47-8.84-3.46-3.46-8.84-3.46H314.39L269-780h384.08q23.53 0 40.61 17.08t17.08 40.61v208.46l140.77-140.76v348.84ZM818-74.31 70.93-821.38l31.99-32L850-106.31l-32 32Zm-325.92-483Zm-80.85 75.46ZM177.08-779.23l44.61 44.62h-53.23q-5.38 0-8.84 3.46t-3.46 8.84v484.62q0 5.38 3.46 8.84t8.84 3.46h484.62q5.38 0 8.84-3.46 3.47-3.46 3.47-8.84v-53.23L710-246.31v14q-1.92 21.22-18.43 36.77Q675.07-180 653.08-180H168.46q-23.53 0-40.61-17.08t-17.08-40.61v-484.62q0-21.99 15.31-38.49 15.31-16.51 37-18.43h14Z",
     cameraswitch: "M327.23-310.16q-23.98 0-40.83-17.04-16.86-17.05-16.86-40.65v-224.3q0-23.6 16.86-40.65 16.85-17.04 40.83-17.04h38.85l32.69-32.7h164.69l32.69 32.7H635q23.59 0 40.64 17.04 17.05 17.05 17.05 40.65v224.3q0 23.6-17.05 40.65-17.05 17.04-40.64 17.04H327.23Zm0-45.38H635q5.38 0 8.85-3.65 3.46-3.66 3.46-8.66v-224.3q0-5-3.46-8.66-3.47-3.65-8.85-3.65H327.23q-5.38 0-8.84 3.65-3.47 3.66-3.47 8.66v224.3q0 5 3.47 8.66 3.46 3.65 8.84 3.65Zm153.56-70q22.52 0 38.09-15.75 15.58-15.76 15.58-38.27 0-22.13-15.75-37.9-15.76-15.77-38.27-15.77-22.13 0-37.9 15.95-15.77 15.94-15.77 38.07 0 22.52 15.95 38.09 15.94 15.58 38.07 15.58ZM390-931.23q22.35-5.23 44.91-7 22.55-1.77 44.94-1.77 89.15 0 169.5 31.96 80.34 31.96 142.34 88.45t101.46 133.1q39.46 76.6 47.46 164.87h-45.38q-6.38-78-40.96-145.5t-89.04-117.42q-54.46-49.92-125.04-79.27-70.58-29.34-148.96-31.8l79.85 79.84-32.62 32.62L390-931.23ZM570.61-28.77q-22.1 5.23-44.4 7Q503.9-20 481.38-20q-89.76 0-169.8-31.96t-142.15-88.35q-62.12-56.38-101.77-132.84Q28-349.62 19.39-438.38h45.9q6.86 78 41.44 145.5t88.85 117.42q54.27 49.92 124.84 79.27Q391-66.85 469.77-64.39l-80.23-79.84 32.61-32.62L570.61-28.77ZM481.62-480Z",
@@ -3368,6 +3387,7 @@
   }
 
   function updateTouchBar() {
+    panelSync();
     const cam = document.getElementById("tbCamera");
     if (!cam) return;
     // Live: crossed-out camera (= tap to turn off) on a green ring.
@@ -3426,6 +3446,228 @@
     if (!e.target.closest || !e.target.closest("#touchBar")) showTouchBar();
   });
 
+  // ---------------------------------------------------------------------
+  // CONTROLS PANEL UI (v2) — tabs, cards, chips, slider fills, profile.
+  // ---------------------------------------------------------------------
+  // Layout only: every input in the panel is still the original ctrl*
+  // element that wireControls() wires up, so presets, ?resume and the
+  // remote page keep working. This just arranges and decorates them.
+  const PROFILE_CARRY_KEY = "photoRemixProfileCarry";
+  const PANEL_TAB_KEY = "photoRemixPanelTab";
+  const PROFILE_HINTS = {
+    phone: "Instagram Story size, letterboxed in the window. The workshop setup.",
+    desktop: "Window size × screen sharpness, up to 2560 wide. Rebuilds on resize.",
+    igloo: "Six 1920-wide walls as one strip. Tiles never cross a join.",
+    "igloo-preview": "The Igloo strip at full window height, gliding wall to wall. For laptops.",
+  };
+
+  function currentProfileChoice() {
+    return STAGE_PROFILE_KEY === "igloo" && PREVIEW_PAN ? "igloo-preview" : STAGE_PROFILE_KEY;
+  }
+
+  // The stage size is fixed when the page loads, so switching profile
+  // reloads the page — carrying the current settings across via the same
+  // mechanism as the recording window (applyResumeSettings), but in a
+  // separate storage slot so it never overwrites the user's saved preset.
+  function switchProfile(choice) {
+    if (choice === currentProfileChoice()) return;
+    const values = gatherControlState();
+    delete values.ctrlCamera; // don't reopen the camera (and its permission prompt) on the new page
+    try {
+      localStorage.setItem(PROFILE_CARRY_KEY, JSON.stringify({ savedAt: Date.now(), values }));
+    } catch (e) {
+      /* settings just won't carry over */
+    }
+    const url = new URL(location.href);
+    ["stage", "preview", "resume", "layout"].forEach((k) => url.searchParams.delete(k));
+    const stage = choice === "igloo-preview" ? "igloo" : choice;
+    if (stage !== "phone") url.searchParams.set("stage", stage);
+    if (choice === "igloo-preview") url.searchParams.set("preview", "1");
+    url.searchParams.set("resume", "profile");
+    location.href = url.toString();
+  }
+
+  function setPanelTab(tab) {
+    const panel = document.getElementById("controls");
+    if (!panel) return;
+    panel.querySelectorAll(".cp-tabs [data-tab]").forEach((b) => {
+      b.setAttribute("aria-current", b.dataset.tab === tab ? "page" : "false");
+    });
+    panel.querySelectorAll(".cp-tab").forEach((t) => t.classList.toggle("is-active", t.dataset.tab === tab));
+    try {
+      localStorage.setItem(PANEL_TAB_KEY, tab);
+    } catch (e) {
+      /* remembering the tab is only a convenience */
+    }
+  }
+
+  function rangePct(el) {
+    const min = parseFloat(el.min);
+    const max = parseFloat(el.max);
+    return ((parseFloat(el.value) - min) / (max - min)) * 100;
+  }
+
+  // Track fill for a single slider; data-centre sliders (Move) fill from
+  // the middle, since 0 = off and the sign is the direction.
+  function rangeFill(input) {
+    const p = rangePct(input);
+    const centre = input.hasAttribute("data-centre");
+    input.style.setProperty("--from", `${centre ? Math.min(50, p) : 0}%`);
+    input.style.setProperty("--to", `${centre ? Math.max(50, p) : p}%`);
+  }
+
+  function dualFill(box) {
+    const [lo, hi] = box.querySelectorAll('input[type="range"]');
+    const a = rangePct(lo);
+    const b = rangePct(hi);
+    box.style.setProperty("--from", `${Math.min(a, b)}%`);
+    box.style.setProperty("--to", `${Math.max(a, b)}%`);
+    // Both handles parked at the top end: lift the lower one so it can
+    // still be dragged back down.
+    lo.style.zIndex = a > 90 ? "2" : "";
+  }
+
+  // Re-derives everything visual from the real inputs + app state.
+  // Cheap; called on any panel input/change and on pause/camera changes.
+  function panelSync() {
+    const panel = document.getElementById("controls");
+    if (!panel) return;
+    panel.querySelectorAll(".cp-chip[data-for]").forEach((chip) => {
+      const input = document.getElementById(chip.dataset.for);
+      chip.setAttribute("aria-pressed", String(!!(input && input.checked)));
+    });
+    panel.querySelectorAll('input[type="range"]').forEach((r) => {
+      if (!r.closest(".cp-dual")) rangeFill(r);
+    });
+    panel.querySelectorAll(".cp-dual").forEach(dualFill);
+
+    const flip = document.getElementById("cpFlip");
+    if (flip) flip.hidden = !camera.live;
+
+    const pause = document.getElementById("cpPause");
+    if (pause) {
+      const label = state.paused ? "Resume (P)" : "Pause (P)";
+      pause.innerHTML = iconSvg(state.paused ? "play_arrow" : "pause", 22);
+      pause.setAttribute("aria-label", label);
+      pause.title = label;
+      pause.setAttribute("aria-pressed", String(state.paused));
+    }
+
+    const stageEl = document.getElementById("cpStage");
+    if (stageEl) stageEl.textContent = describeStage(state.currentLayout);
+  }
+
+  function initPanel() {
+    const panel = document.getElementById("controls");
+    if (!panel) return;
+
+    panel.querySelectorAll("[data-icon]").forEach((el) => {
+      el.innerHTML = iconSvg(el.dataset.icon, el.closest(".cp-tabs") ? 22 : 20);
+    });
+
+    // Tabs (last-used tab remembered per browser)
+    panel.querySelectorAll(".cp-tabs [data-tab]").forEach((b) => {
+      b.addEventListener("click", () => setPanelTab(b.dataset.tab));
+    });
+    let tab = "effects";
+    try {
+      tab = localStorage.getItem(PANEL_TAB_KEY) || tab;
+    } catch (e) {
+      /* default tab */
+    }
+    if (!panel.querySelector(`.cp-tab[data-tab="${tab}"]`)) tab = "effects";
+    setPanelTab(tab);
+
+    // Expandable cards (effects, Move, Blend)
+    panel.querySelectorAll(".cp-card").forEach((card) => {
+      const toggle = card.querySelector(".cp-card-toggle");
+      if (!toggle) return;
+      toggle.addEventListener("click", () => {
+        const open = !card.classList.contains("is-open");
+        card.classList.toggle("is-open", open);
+        toggle.setAttribute("aria-expanded", String(open));
+      });
+    });
+
+    // Chips that drive an input elsewhere (the "In rotation" row drives
+    // the switches on each effect card, so both always agree).
+    panel.querySelectorAll(".cp-chip[data-for]").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const input = document.getElementById(chip.dataset.for);
+        if (!input) return;
+        input.checked = !input.checked;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    });
+
+    // Two-handle sliders: handles can't cross — pushing one past the
+    // other drags the other along.
+    panel.querySelectorAll(".cp-dual").forEach((box) => {
+      const [lo, hi] = box.querySelectorAll('input[type="range"]');
+      lo.addEventListener("input", () => {
+        if (parseFloat(lo.value) > parseFloat(hi.value)) {
+          hi.value = lo.value;
+          hi.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      });
+      hi.addEventListener("input", () => {
+        if (parseFloat(hi.value) < parseFloat(lo.value)) {
+          lo.value = hi.value;
+          lo.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      });
+    });
+
+    panel.addEventListener("input", panelSync);
+    panel.addEventListener("change", panelSync);
+
+    // Header + Show-tab buttons
+    const hide = () => panel.classList.add("hidden");
+    const on = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("click", fn);
+    };
+    on("cpPause", () => togglePause());
+    on("cpClose", hide);
+    on("cpGrab", hide);
+    on("cpFlip", () => flipCamera());
+    on("cpFullscreen", toggleFullscreen);
+    on("cpInfoBtn", () => {
+      const diag = document.getElementById("diagnostics");
+      if (diag) diag.classList.toggle("hidden");
+    });
+    on("cpBrandBtn", () => {
+      const lockup = document.getElementById("brandLockup");
+      if (lockup) {
+        lockup.classList.toggle("hidden");
+        positionBrandLockup();
+      }
+    });
+
+    // Stage profile dropdown
+    const sel = document.getElementById("cpProfile");
+    if (sel) {
+      sel.value = currentProfileChoice();
+      const hint = document.getElementById("cpProfileHint");
+      const showHint = () => {
+        if (hint) hint.textContent = PROFILE_HINTS[sel.value] || "";
+      };
+      showHint();
+      sel.addEventListener("change", () => {
+        showHint();
+        switchProfile(sel.value);
+      });
+    }
+
+    // body.panel-open mirrors the panel's visibility, so the phone bottom
+    // sheet can hide the touch buttons it would otherwise cover.
+    const syncOpen = () => document.body.classList.toggle("panel-open", !panel.classList.contains("hidden"));
+    new MutationObserver(syncOpen).observe(panel, { attributes: true, attributeFilter: ["class"] });
+    syncOpen();
+
+    panelSync();
+  }
+
   async function boot() {
     buildTouchBar();
     const diagClose = document.getElementById("diagClose");
@@ -3440,6 +3682,7 @@
     setText("diagVersion", APP_VERSION);
     resetControlsToDefaults();
     wireControls();
+    initPanel();
     const cameraBox = document.getElementById("ctrlCamera");
     if (cameraBox) cameraBox.addEventListener("change", () => setCamera(cameraBox.checked));
     startPreviewPan();
@@ -3474,8 +3717,20 @@
     // instance below starts with the same pool/effects/palette/speed
     // rather than plain defaults. See applyResumeSettings()'s own comment
     // for why the Live/Demo pool is special-cased there.
-    if (new URLSearchParams(location.search).get("resume") === "1") {
+    const resumeMode = new URLSearchParams(location.search).get("resume");
+    if (resumeMode === "1") {
       applyResumeSettings();
+    } else if (resumeMode === "profile") {
+      // Arrived from the panel's Profile dropdown — carry settings over once.
+      applyResumeSettings(PROFILE_CARRY_KEY);
+      try {
+        localStorage.removeItem(PROFILE_CARRY_KEY);
+      } catch (e) {
+        /* nothing to clean up */
+      }
+      const cleanUrl = new URL(location.href);
+      cleanUrl.searchParams.delete("resume");
+      history.replaceState(null, "", cleanUrl.toString());
     }
 
     try {

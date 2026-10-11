@@ -30,221 +30,6 @@ html, body {
   opacity: 0;
 }
 
-#controls {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  width: 260px;
-  max-height: calc(100vh - 32px);
-  overflow-y: auto;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  border-radius: 8px;
-  font-size: 14px;
-  z-index: 10;
-}
-
-#controls.hidden {
-  display: none;
-}
-
-#controls h2 {
-  margin: 0 0 12px;
-  font-size: 15px;
-}
-
-#controls details {
-  margin: 12px 0;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-/* Top-level group labels ("Filters", "Transitions") — a plain heading, not
-   a collapsible <details>, since these just sort the sections below into
-   the same two categories the workshop deck uses; they don't hide/show
-   anything themselves. The details right after one skips its own top
-   border/spacing so the group heading's rule is the only line shown. */
-#controls .group-heading {
-  margin: 20px 0 8px;
-  padding-top: 16px;
-  border-top: 2px solid rgba(255, 255, 255, 0.3);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.55;
-  cursor: help;
-}
-
-#controls .group-heading:first-of-type {
-  margin-top: 12px;
-}
-
-#controls .group-heading + details {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-
-#controls details[open] summary {
-  margin-bottom: 10px;
-}
-
-#controls summary {
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  user-select: none;
-}
-
-#controls summary::marker {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-#controls details label:last-child {
-  margin-bottom: 0;
-}
-
-#controls .hint {
-  font-weight: normal;
-  opacity: 0.6;
-  font-size: 11px;
-}
-
-/* Descriptions that used to sit inline as `.hint` text now live in native
-   `title` attributes (hover tooltips) to save vertical space. `cursor: help`
-   is the affordance — kept to a cursor change only (no underline) since
-   several of these titles sit on labels that also contain a full-width
-   range slider, and any border/inline-block styling on the label would
-   distort that slider's layout. */
-#controls [title] {
-  cursor: help;
-}
-
-#controls label {
-  display: block;
-  margin-bottom: 12px;
-}
-
-/* Two sliders side by side on one line (e.g. Speed min/max) instead of each
-   taking a full-width row — .mini labels are the same as a normal label,
-   just half-width and inside a flex row. */
-#controls .row-pair {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-#controls .row-pair label.mini {
-  flex: 1;
-  margin-bottom: 0;
-  min-width: 0; /* lets the slider shrink below its content size in a flex item */
-}
-
-/* Small sub-heading above each palette's Highlights/Shadows row-pair, so
-   four colour-pair presets read as distinct groups instead of one long
-   run of color-row labels. Doubles as a checkbox-row (see markup) with its
-   own "In rotation" toggle, so opacity is a touch higher than a plain
-   sub-heading would need, to keep the checkbox legible. */
-#controls .palette-label {
-  font-size: 11px;
-  font-weight: 600;
-  opacity: 0.75;
-  margin: 10px 0 4px;
-}
-
-#controls .palette-label:first-of-type {
-  margin-top: 4px;
-}
-
-#controls input[type="range"] {
-  width: 100%;
-  display: block;
-  margin-top: 4px;
-}
-
-#controls select {
-  width: 100%;
-  display: block;
-  margin-top: 4px;
-  background: #222;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  padding: 4px;
-  font-size: 13px;
-}
-
-#controls label.checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-#controls label.checkbox-row input[type="checkbox"] {
-  margin: 0;
-}
-
-#controls label.color-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-#controls input[type="color"] {
-  width: 36px;
-  height: 24px;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  background: none;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-#controls .val {
-  float: right;
-  opacity: 0.7;
-}
-
-#controls .status {
-  margin: 12px 0 0;
-  font-size: 12px;
-  opacity: 0.6;
-}
-
-#controls a {
-  color: #9cf;
-}
-
-#controls a:hover {
-  color: #cef;
-}
-
-#controls button {
-  font: inherit;
-  font-size: 12px;
-  padding: 5px 10px;
-  margin: 0 6px 6px 0;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  cursor: pointer;
-}
-
-#controls button:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-#controls .presets-status {
-  margin: 4px 0 0;
-  font-size: 12px;
-  opacity: 0.6;
-}
-
 #diagnostics {
   position: fixed;
   bottom: 16px;
@@ -373,4 +158,508 @@ body.preview-pan #stage canvas {
     bottom: calc(72px + env(safe-area-inset-bottom));
     left: 12px;
   }
+}
+
+/* ===================================================================
+   Controls panel (v2) — tabs, cards, switches, chips, two-handle ranges.
+   Desktop: floating side panel. Touch / narrow: bottom sheet (below).
+   =================================================================== */
+#controls {
+  --cp-bg: #121315;
+  --cp-surface: #17191c;
+  --cp-sunk: #0e0f11;
+  --cp-line: #2a2d31;
+  --cp-line-strong: #3a3d42;
+  --cp-text: #ececec;
+  --cp-muted: #a3a3a3;
+  --cp-accent: #7cff8a;
+  --cp-accent-bg: #2c3a2f;
+  --cp-accent-line: #4e8f58;
+
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  border: 1px solid var(--cp-line);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  z-index: 30;
+  overflow: hidden;
+}
+
+#controls.hidden { display: none; }
+
+#controls [hidden] { display: none !important; }
+
+#controls svg { display: block; }
+
+/* --- header ------------------------------------------------------ */
+#controls .cp-grab { display: none; }
+
+#controls .cp-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px 8px 16px;
+}
+
+#controls .cp-title { flex: 1; min-width: 0; }
+
+#controls h2 { margin: 0; font-size: 15px; font-weight: 600; }
+
+#controls .cp-now {
+  font: 12px/1.4 "SF Mono", Menlo, Consolas, monospace;
+  color: var(--cp-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#controls .cp-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cp-line);
+  border-radius: 22px;
+  background: none;
+  color: var(--cp-text);
+  cursor: pointer;
+}
+
+#controls .cp-icon.cp-close { border-color: transparent; color: var(--cp-muted); }
+#controls .cp-icon:hover { background: rgba(255, 255, 255, 0.06); }
+#controls .cp-icon[aria-pressed="true"] { background: var(--cp-accent-bg); border-color: var(--cp-accent-line); color: var(--cp-accent); }
+
+/* --- tabs -------------------------------------------------------- */
+#controls .cp-tabs {
+  display: flex;
+  padding: 0 4px;
+  border-bottom: 1px solid var(--cp-line);
+}
+
+#controls .cp-tabs button {
+  flex: 1;
+  min-width: 0;
+  min-height: 56px;
+  padding: 6px 2px 8px;
+  border: 0;
+  background: none;
+  color: var(--cp-muted);
+  font: 500 11px/1.2 system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+#controls .cp-tabs button:hover { color: var(--cp-text); }
+
+#controls .cp-tabs button[aria-current="page"] {
+  color: var(--cp-accent);
+  box-shadow: inset 0 -2px 0 var(--cp-accent);
+}
+
+/* --- body / sections -------------------------------------------- */
+#controls .cp-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 12px 20px;
+  overscroll-behavior: contain;
+}
+
+#controls .cp-tab { display: none; }
+#controls .cp-tab.is-active { display: block; }
+
+#controls .cp-sec,
+#controls .cp-card {
+  margin-top: 12px;
+  border: 1px solid #24272b;
+  border-radius: 12px;
+  background: var(--cp-surface);
+}
+
+#controls .cp-sec { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+#controls .cp-sec h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cp-muted);
+}
+
+#controls .cp-card:has(.cp-card-head .cp-switch:checked) { border-color: #355a3b; }
+
+#controls .cp-card-head { display: flex; align-items: center; gap: 4px; padding: 0 4px 0 6px; }
+
+#controls .cp-card-toggle {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--cp-text);
+  font: 500 15px/1.2 system-ui, -apple-system, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+#controls .cp-card-toggle b { font-weight: 500; flex: none; }
+
+#controls .cp-card-toggle small {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--cp-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#controls .cp-card-toggle [data-icon] { color: var(--cp-muted); transform: rotate(-90deg); transition: transform 0.15s; }
+#controls .cp-card-toggle[aria-expanded="true"] [data-icon] { transform: none; }
+
+#controls .cp-card-body { display: none; padding: 4px 12px 12px; flex-direction: column; gap: 8px; }
+#controls .cp-card.is-open .cp-card-body { display: flex; }
+
+#controls .cp-note { margin: 0; font-size: 12px; line-height: 1.45; color: var(--cp-muted); }
+
+#controls .cp-field { display: block; margin: 4px 0 0; font-size: 14px; color: var(--cp-text); }
+
+#controls .cp-stat { margin: 0; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+#controls .cp-stat span:last-child { font-family: "SF Mono", Menlo, Consolas, monospace; text-align: right; }
+
+#controls a { color: var(--cp-accent); }
+#controls a:hover { color: #b6ffbf; }
+#controls .cp-links { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; }
+
+/* --- switch rows -------------------------------------------------- */
+#controls .cp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+#controls input.cp-switch {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: 40px;
+  height: 24px;
+  margin: 10px 6px;
+  border-radius: 12px;
+  background: var(--cp-line-strong);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#controls input.cp-switch::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: #d6d6d6;
+  transition: left 0.15s, background 0.15s;
+}
+
+#controls input.cp-switch:checked { background: var(--cp-accent); }
+#controls input.cp-switch:checked::before { left: 19px; background: #0b0b0b; }
+#controls input.cp-switch:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
+
+#controls .cp-hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* --- chips ------------------------------------------------------- */
+#controls .cp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+#controls .cp-chip {
+  position: relative;
+  min-height: 36px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #33363b;
+  border-radius: 18px;
+  background: var(--cp-sunk);
+  color: #cfcfcf;
+  font: 500 13px/1 system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+}
+
+#controls .cp-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+
+#controls .cp-chip[aria-pressed="true"],
+#controls .cp-chip:has(input:checked) {
+  background: var(--cp-accent-bg);
+  border-color: var(--cp-accent-line);
+  color: var(--cp-accent);
+}
+
+#controls .cp-chip:has(input:focus-visible) { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
+
+/* --- buttons & selects -------------------------------------------- */
+#controls .cp-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+
+#controls .cp-btn {
+  flex: 1 1 auto;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--cp-line-strong);
+  border-radius: 8px;
+  background: var(--cp-sunk);
+  color: var(--cp-text);
+  font: 500 13px/1 system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+}
+
+#controls .cp-btn:hover { border-color: #5a5e64; }
+
+#controls .cp-select { position: relative; }
+
+#controls .cp-select select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 40px 0 12px;
+  border: 1px solid var(--cp-line-strong);
+  border-radius: 10px;
+  background: var(--cp-sunk);
+  color: var(--cp-text);
+  font: 500 14px/1 system-ui, -apple-system, sans-serif;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+#controls .cp-select [data-icon] { position: absolute; right: 12px; top: 12px; color: var(--cp-muted); pointer-events: none; }
+
+/* --- ranges ------------------------------------------------------ */
+#controls .cp-range-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+#controls .cp-range-head .val,
+#controls .cp-range-head > span:last-child { font: 13px/1.4 "SF Mono", Menlo, Consolas, monospace; color: var(--cp-text); }
+
+/* Single slider: the filled part of the track comes from --from/--to,
+   set by app.js (centred sliders fill from the middle). */
+#controls input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  --from: 0%;
+  --to: 0%;
+}
+
+#controls input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #33363b 0 var(--from), var(--cp-accent) var(--from) var(--to), #33363b var(--to) 100%);
+}
+
+#controls input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #33363b 0 var(--from), var(--cp-accent) var(--from) var(--to), #33363b var(--to) 100%);
+}
+
+#controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  border: 0;
+  border-radius: 10px;
+  background: #f4f4f4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+#controls input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #f4f4f4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+#controls input[type="range"]:focus-visible { outline: none; }
+#controls input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--cp-accent); }
+#controls input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--cp-accent); }
+
+/* Two-handle slider: the original min & max inputs stacked on one track.
+   Only the thumbs take pointer input, so either can be dragged. */
+#controls .cp-dual { position: relative; height: 32px; --from: 0%; --to: 100%; }
+
+#controls .cp-dual::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #33363b 0 var(--from), var(--cp-accent) var(--from) var(--to), #33363b var(--to) 100%);
+}
+
+#controls .cp-dual input[type="range"] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#controls .cp-dual input[type="range"]::-webkit-slider-runnable-track { background: transparent; }
+#controls .cp-dual input[type="range"]::-moz-range-track { background: transparent; }
+#controls .cp-dual input[type="range"]::-webkit-slider-thumb { pointer-events: auto; cursor: grab; }
+#controls .cp-dual input[type="range"]::-moz-range-thumb { pointer-events: auto; cursor: grab; }
+
+/* --- palettes ---------------------------------------------------- */
+#controls .cp-palettes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+
+#controls .cp-pal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 1px solid #33363b;
+  border-radius: 10px;
+  background: var(--cp-sunk);
+}
+
+#controls .cp-pal:has(.cp-pal-on input:checked) { border-color: var(--cp-accent-line); }
+#controls .cp-pal:not(:has(.cp-pal-on input:checked)) .cp-pal-swatch { opacity: 0.45; }
+
+#controls .cp-pal-swatch { display: block; width: 40px; height: 22px; cursor: pointer; }
+#controls .cp-pal-swatch:first-child input { border-radius: 11px 11px 0 0; }
+#controls .cp-pal-swatch:nth-child(2) input { border-radius: 0 0 11px 11px; }
+
+#controls .cp-pal-swatch input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+#controls .cp-pal-swatch input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+#controls .cp-pal-swatch input[type="color"]::-webkit-color-swatch { border: 0; border-radius: inherit; }
+#controls .cp-pal-swatch input[type="color"]::-moz-color-swatch { border: 0; border-radius: inherit; }
+
+#controls .cp-pal-on {
+  min-width: 44px;
+  min-height: 32px;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  font: 500 13px/1 "SF Mono", Menlo, Consolas, monospace;
+  color: var(--cp-muted);
+  cursor: pointer;
+}
+
+#controls .cp-pal-on input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+#controls .cp-pal-on:has(input:checked) { color: var(--cp-accent); background: var(--cp-accent-bg); }
+#controls .cp-pal-on:has(input:focus-visible) { outline: 2px solid var(--cp-accent); }
+
+/* --- keyboard list ---------------------------------------------- */
+#controls .cp-keys { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 6px 10px; margin: 0; align-items: center; font-size: 13px; }
+#controls .cp-keys dt, #controls .cp-keys dd { margin: 0; }
+#controls .cp-keys dd { color: #cfcfcf; }
+
+#controls kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 2px 6px;
+  border: 1px solid var(--cp-line-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--cp-sunk);
+  font: 500 12px/1.4 "SF Mono", Menlo, Consolas, monospace;
+  text-align: center;
+}
+
+/* --- phone / tablet / narrow window: bottom sheet -------------------- */
+@media (pointer: coarse), (max-width: 600px) {
+  #controls {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-width: none;
+    height: min(64vh, 600px);
+    border-width: 1px 0 0;
+    border-radius: 20px 20px 0 0;
+  }
+
+  #controls .cp-grab {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  #controls .cp-grab span { display: block; width: 40px; height: 5px; border-radius: 3px; background: #4a4d52; }
+
+  #controls .cp-head { padding-top: 0; }
+  #controls .cp-close { display: none; }
+  #controls .cp-keys-sec { display: none; }
+
+  /* Tabs move to the bottom, within thumb reach. */
+  #controls .cp-tabs {
+    order: 10;
+    border-bottom: 0;
+    border-top: 1px solid var(--cp-line);
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  #controls .cp-tabs button { min-height: 58px; font-size: 11px; }
+  #controls .cp-tabs button[aria-current="page"] { box-shadow: inset 0 2px 0 var(--cp-accent); }
+
+  /* The sheet covers the touch buttons' corner — hide them while it's open. */
+  body.panel-open #touchBar { display: none !important; }
+  body.panel-open #diagnostics { display: none; }
 }
