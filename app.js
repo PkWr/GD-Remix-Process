@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · strip layers";
+  const APP_VERSION = "2026-10-11 · share scenes";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -2636,6 +2636,14 @@
     wireSettings();
 
     window.addEventListener("keydown", (e) => {
+      // Typing in a text box (e.g. naming a scene) mustn't fire shortcuts.
+      const t = e.target;
+      if (t && ((t.tagName === "INPUT" && t.type === "text") || t.tagName === "TEXTAREA")) return;
+      // 1–9 switch scenes (Show tab lists them in this order).
+      if (/^[1-9]$/.test(e.key) && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        applySceneByIndex(parseInt(e.key, 10) - 1);
+        return;
+      }
       if (e.key === "c" || e.key === "C") {
         panel.classList.toggle("hidden");
       }
@@ -3571,6 +3579,416 @@
     panelSync();
   }
 
+  // ---------------------------------------------------------------------
+  // SCENES — named looks you can switch between in one tap (or keys 1–9)
+  // ---------------------------------------------------------------------
+  // A scene is a snapshot of every control (gatherControlState()), applied
+  // with applyControlState() — the same mechanism as presets and the
+  // remote page, so anything in settings.js is automatically included.
+  //
+  // Two sources, listed together:
+  //   shared — scenes.json in the project folder (pushed to GitHub), so
+  //            every machine that opens the site has them (e.g. the Igloo).
+  //            Read-only here.
+  //   local  — saved in this browser (localStorage). Export writes all of
+  //            them to a scenes.json file to put in the folder and push.
+  const SCENES_STORAGE_KEY = "photoRemixScenes";
+  let sharedScenes = [];
+  let activeSceneName = null;
+  let applyingScene = false;
+
+  function loadLocalScenes() {
+    try {
+      const raw = localStorage.getItem(SCENES_STORAGE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list.filter((s) => s && s.name && s.values) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function storeLocalScenes(list) {
+    try {
+      localStorage.setItem(SCENES_STORAGE_KEY, JSON.stringify(list));
+      return true;
+    } catch (e) {
+      showToast(`Couldn't save scenes in this browser: ${e.message}`, "error", 8000);
+      return false;
+    }
+  }
+
+  // Shared first (they're the planned running order), then this browser's.
+  function allScenes() {
+    const local = loadLocalScenes();
+    const localNames = new Set(local.map((s) => s.name));
+    return [
+      ...sharedScenes.filter((s) => !localNames.has(s.name)).map((s) => ({ ...s, shared: true })),
+      ...local.map((s) => ({ ...s, shared: false })),
+    ];
+  }
+
+  function applyScene(scene) {
+    if (!scene) return;
+    applyingScene = true;
+    try {
+      applyControlState(scene.values);
+    } finally {
+      applyingScene = false;
+    }
+    activeSceneName = scene.name;
+    broadcastState();
+    renderScenes();
+    showToast(`Scene: ${scene.name}`, "ok", 2500);
+  }
+
+  function applySceneByIndex(i) {
+    const scene = allScenes()[i];
+    if (scene) applyScene(scene);
+  }
+
+  function saveScene(name) {
+    name = (name || "").trim().slice(0, 40);
+    if (!name) {
+      showToast("Give the scene a name first.", "info", 3000);
+      return;
+    }
+    const list = loadLocalScenes();
+    const scene = { name, savedAt: Date.now(), values: gatherControlState() };
+    const existing = list.findIndex((s) => s.name === name);
+    if (existing >= 0) list[existing] = scene;
+    else list.push(scene);
+    if (!storeLocalScenes(list)) return;
+    activeSceneName = name;
+    renderScenes();
+    showToast(existing >= 0 ? `Updated scene: ${name}` : `Saved scene: ${name}`, "ok", 2500);
+  }
+
+  function deleteScene(name) {
+    storeLocalScenes(loadLocalScenes().filter((s) => s.name !== name));
+    if (activeSceneName === name) activeSceneName = null;
+    renderScenes();
+    showToast(`Deleted scene: ${name}`, "info", 2500);
+  }
+
+  function exportScenes() {
+    const scenes = allScenes().map(({ name, savedAt, values }) => ({ name, savedAt, values }));
+    if (!scenes.length) {
+      showToast("No scenes to export yet.", "info", 3000);
+      return;
+    }
+    const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), scenes }, null, 2)], {
+      type: "application/json",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "scenes.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    showToast("Exported scenes.json — put it in the project folder and push to share it.", "ok", 6000);
+  }
+
+  function escapeText(t) {
+    return String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  }
+
+  function renderScenes() {
+    const box = document.getElementById("cpScenes");
+    if (!box) return;
+    const scenes = allScenes();
+    if (!scenes.length) {
+      box.innerHTML = `<p class="cp-note">No scenes yet — set up a look, name it below and save.</p>`;
+      return;
+    }
+    box.innerHTML = scenes
+      .map((s, i) => {
+        const key = i < 9 ? `<kbd>${i + 1}</kbd>` : `<kbd aria-hidden="true"> </kbd>`;
+        const active = s.name === activeSceneName;
+        return (
+          `<div class="cp-scene">` +
+          `<button type="button" class="cp-scene-go" data-i="${i}" aria-pressed="${active}">${key}` +
+          `<span>${escapeText(s.name)}</span>${s.shared ? `<small>shared</small>` : ""}</button>` +
+          `<button type="button" class="cp-scene-share" data-i="${i}" aria-label="Share scene ${escapeText(s.name)}" title="Share — link and QR code">${iconSvg("qr_code_2", 20)}</button>` +
+          (s.shared
+            ? ""
+            : `<button type="button" class="cp-scene-del" data-name="${escapeText(s.name)}" aria-label="Delete scene ${escapeText(s.name)}">${iconSvg("close", 18)}</button>`) +
+          `</div>`
+        );
+      })
+      .join("");
+  }
+
+  function initScenes() {
+    const box = document.getElementById("cpScenes");
+    if (!box) return;
+
+    // The old single Save/Load slot becomes the first scene, once.
+    if (!loadLocalScenes().length) {
+      try {
+        const raw = localStorage.getItem(CONFIG.SETTINGS_STORAGE_KEY);
+        if (raw) {
+          const old = JSON.parse(raw);
+          if (old && old.values) storeLocalScenes([{ name: "Saved preset", savedAt: old.savedAt || Date.now(), values: old.values }]);
+        }
+      } catch (e) {
+        /* nothing to bring across */
+      }
+    }
+
+    box.addEventListener("click", (e) => {
+      const share = e.target.closest(".cp-scene-share");
+      if (share) {
+        shareScene(allScenes()[parseInt(share.dataset.i, 10)]);
+        return;
+      }
+      const del = e.target.closest(".cp-scene-del");
+      if (del) {
+        deleteScene(del.dataset.name);
+        return;
+      }
+      const go = e.target.closest(".cp-scene-go");
+      if (go) applySceneByIndex(parseInt(go.dataset.i, 10));
+    });
+
+    const nameInput = document.getElementById("cpSceneName");
+    const save = () => {
+      saveScene(nameInput ? nameInput.value : "");
+      if (nameInput) nameInput.value = "";
+    };
+    const saveBtn = document.getElementById("cpSceneSave");
+    if (saveBtn) saveBtn.addEventListener("click", save);
+    if (nameInput) {
+      nameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") save();
+      });
+    }
+    const exportBtn = document.getElementById("cpSceneExport");
+    if (exportBtn) exportBtn.addEventListener("click", exportScenes);
+
+    // Changing anything by hand means you're no longer exactly "on" a scene.
+    const panel = document.getElementById("controls");
+    const unmark = (e) => {
+      if (applyingScene || !activeSceneName) return;
+      if (e.target && e.target.id && e.target.id.startsWith("ctrl")) {
+        activeSceneName = null;
+        renderScenes();
+      }
+    };
+    panel.addEventListener("input", unmark);
+    panel.addEventListener("change", unmark);
+
+    renderScenes();
+
+    // Shared scenes from the project folder (absent = fine, none shared).
+    fetch(`scenes.json?t=${Date.now()}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const list = data && Array.isArray(data.scenes) ? data.scenes : [];
+        sharedScenes = list.filter((s) => s && s.name && s.values);
+        renderScenes();
+      })
+      .catch(() => {
+        /* no shared scenes file (or file://) */
+      });
+  }
+
+  // ---------------------------------------------------------------------
+  // SHARE A SCENE — link + QR code
+  // ---------------------------------------------------------------------
+  // A link that opens the app in a given scene: …/?scene=<code>. The code
+  // holds only the settings that differ from the defaults (usually 10–30),
+  // compressed where the browser can, so the link stays short enough for a
+  // QR code that scans easily off a screen. Opening the link applies the
+  // scene and adds it to that browser's scenes. The link carries no
+  // ?stage=, so a phone opens it in the phone layout.
+  //
+  // QR drawing: qrcode-generator (MIT, vendor/qrcode.min.js), loaded only
+  // the first time Share is pressed, so it costs nothing otherwise.
+  const BOOL_TYPES = ["switch", "chip", "palette-on", "hidden"];
+
+  function sceneDiff(values) {
+    const out = {};
+    for (const s of PRS.SETTINGS) {
+      const v = values[s.id];
+      if (!v) continue;
+      const key = s.id.replace(/^ctrl/, "");
+      if (BOOL_TYPES.includes(s.type)) {
+        const on = !!v.checked;
+        if (on !== !!s.default) out[key] = on ? 1 : 0;
+      } else {
+        const val = s.type === "range" ? Number(v.value) : v.value;
+        if (String(val).toLowerCase() !== String(s.default).toLowerCase()) out[key] = val;
+      }
+    }
+    return out;
+  }
+
+  // Full control state: every setting at its default, then the scene's
+  // differences on top — so the receiver sees exactly the shared look,
+  // whatever they had set before.
+  function sceneValuesFromDiff(diff) {
+    const values = {};
+    for (const s of PRS.SETTINGS) {
+      values[s.id] = BOOL_TYPES.includes(s.type) ? { checked: !!s.default } : { value: String(s.default) };
+    }
+    for (const [key, v] of Object.entries(diff || {})) {
+      const s = SET[`ctrl${key}`];
+      if (!s) continue; // a setting this version doesn't have — skip
+      values[s.id] = BOOL_TYPES.includes(s.type) ? { checked: !!v } : { value: String(v) };
+    }
+    return values;
+  }
+
+  const b64urlEncode = (bytes) => {
+    let bin = "";
+    bytes.forEach((b) => {
+      bin += String.fromCharCode(b);
+    });
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  };
+  const b64urlDecode = (str) => {
+    const b64 = str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4);
+    return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  };
+
+  async function encodeScene(scene) {
+    const json = JSON.stringify({ n: scene.name, v: sceneDiff(scene.values) });
+    const raw = new TextEncoder().encode(json);
+    if (window.CompressionStream) {
+      try {
+        const stream = new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+        const packed = new Uint8Array(await new Response(stream).arrayBuffer());
+        if (packed.length < raw.length) return "z" + b64urlEncode(packed);
+      } catch (e) {
+        /* fall back to uncompressed */
+      }
+    }
+    return "j" + b64urlEncode(raw);
+  }
+
+  async function decodeScene(code) {
+    const kind = code[0];
+    let bytes = b64urlDecode(code.slice(1));
+    if (kind === "z") {
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    } else if (kind !== "j") {
+      throw new Error("not a scene link");
+    }
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    if (!data || !data.n) throw new Error("scene link is incomplete");
+    return { name: String(data.n).slice(0, 40), values: sceneValuesFromDiff(data.v) };
+  }
+
+  async function sceneLink(scene) {
+    const url = new URL(location.href);
+    url.search = ""; // no ?stage= etc. — opens in the receiving device's default layout
+    url.hash = "";
+    url.pathname = url.pathname.replace(/index\.html$/, "");
+    url.searchParams.set("scene", await encodeScene(scene));
+    return url.toString();
+  }
+
+  let qrLibPromise = null;
+  function loadQrLib() {
+    if (window.qrcode) return Promise.resolve(window.qrcode);
+    if (!qrLibPromise) {
+      qrLibPromise = new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "vendor/qrcode.min.js";
+        s.onload = () => (window.qrcode ? resolve(window.qrcode) : reject(new Error("QR library missing")));
+        s.onerror = () => {
+          qrLibPromise = null;
+          reject(new Error("couldn't load vendor/qrcode.min.js"));
+        };
+        document.head.appendChild(s);
+      });
+    }
+    return qrLibPromise;
+  }
+
+  function shareDialog() {
+    let dlg = document.getElementById("shareDialog");
+    if (dlg) return dlg;
+    dlg = document.createElement("dialog");
+    dlg.id = "shareDialog";
+    dlg.setAttribute("aria-labelledby", "shareTitle");
+    dlg.innerHTML =
+      `<div class="sd-head"><h2 id="shareTitle">Share scene</h2>` +
+      `<button type="button" class="sd-close" aria-label="Close">${iconSvg("close", 22)}</button></div>` +
+      `<div class="sd-qr" id="shareQr" role="img" aria-label="QR code for the scene link"></div>` +
+      `<p class="sd-note" id="shareNote">Point a phone camera at the code to open this look.</p>` +
+      `<label class="sd-label" for="shareLink">Link</label>` +
+      `<div class="sd-row"><input type="text" id="shareLink" readonly>` +
+      `<button type="button" class="sd-copy" id="shareCopy">${iconSvg("content_copy", 20)}<span>Copy link</span></button></div>`;
+    document.body.appendChild(dlg);
+    dlg.querySelector(".sd-close").addEventListener("click", () => dlg.close());
+    // Click on the dimmed backdrop closes it too.
+    dlg.addEventListener("click", (e) => {
+      if (e.target === dlg) dlg.close();
+    });
+    dlg.querySelector("#shareCopy").addEventListener("click", async () => {
+      const input = dlg.querySelector("#shareLink");
+      try {
+        await navigator.clipboard.writeText(input.value);
+        showToast("Link copied.", "ok", 2500);
+      } catch (e) {
+        input.select();
+        showToast("Press Cmd/Ctrl + C to copy the selected link.", "info", 4000);
+      }
+    });
+    return dlg;
+  }
+
+  async function shareScene(scene) {
+    if (!scene) return;
+    const dlg = shareDialog();
+    dlg.querySelector("#shareTitle").textContent = `Share: ${scene.name}`;
+    const link = await sceneLink(scene);
+    dlg.querySelector("#shareLink").value = link;
+    const qrBox = dlg.querySelector("#shareQr");
+    const note = dlg.querySelector("#shareNote");
+    qrBox.innerHTML = "";
+    if (!dlg.open) dlg.showModal();
+    try {
+      const qrcode = await loadQrLib();
+      const qr = qrcode(0, "M"); // auto size, medium error correction
+      qr.addData(link);
+      qr.make();
+      qrBox.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+      const modules = qr.getModuleCount();
+      note.textContent =
+        modules > 77
+          ? "This scene changes a lot of settings, so the code is dense — if a phone struggles to scan it, send the link instead."
+          : "Point a phone camera at the code to open this look.";
+    } catch (e) {
+      note.textContent = `Couldn't draw the QR code (${e.message}) — the link still works.`;
+    }
+  }
+
+  // Opening a ?scene= link: apply it, keep it in this browser's scenes,
+  // and tidy the address so a reload doesn't re-add it.
+  async function openSharedSceneFromUrl() {
+    const code = new URLSearchParams(location.search).get("scene");
+    if (!code) return;
+    try {
+      const scene = await decodeScene(code);
+      const list = loadLocalScenes();
+      if (!list.some((s) => s.name === scene.name)) {
+        list.push({ name: scene.name, savedAt: Date.now(), values: scene.values });
+        storeLocalScenes(list);
+      }
+      applyScene(scene);
+      showToast(`Scene “${scene.name}” — saved to your scenes`, "ok", 4000);
+    } catch (e) {
+      showToast(`Couldn't open that scene link (${e.message}).`, "error", 8000);
+    }
+    const clean = new URL(location.href);
+    clean.searchParams.delete("scene");
+    history.replaceState(null, "", clean.toString());
+  }
+
   async function boot() {
     // Build the controls panel from settings.js before anything looks for
     // its inputs.
@@ -3589,6 +4007,7 @@
     resetControlsToDefaults();
     wireControls();
     initPanel();
+    initScenes();
     startPreviewPan();
     window.addEventListener("resize", scheduleStageRebuild);
     document.addEventListener("fullscreenchange", scheduleStageRebuild);
@@ -3636,6 +4055,9 @@
       cleanUrl.searchParams.delete("resume");
       history.replaceState(null, "", cleanUrl.toString());
     }
+
+    // Opened from a shared scene link / QR code (?scene=…).
+    openSharedSceneFromUrl();
 
     try {
       state.sources = await loadImageSourcesForMode(params.sourceMode);

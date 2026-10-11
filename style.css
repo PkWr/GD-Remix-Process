@@ -704,3 +704,161 @@ body.preview-pan #stage canvas {
   box-shadow: inset 0 2px 0 #7cff8a;
 }
 
+/* --- Scenes (Show tab) ------------------------------------------- */
+#controls .cp-scenes { display: flex; flex-direction: column; gap: 6px; }
+
+#controls .cp-scene { display: flex; gap: 6px; }
+
+#controls .cp-scene-go {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid var(--cp-line-strong);
+  border-radius: 10px;
+  background: var(--cp-sunk);
+  color: var(--cp-text);
+  font: 500 14px/1.2 system-ui, -apple-system, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+#controls .cp-scene-go span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#controls .cp-scene-go small { font-size: 11px; color: var(--cp-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+#controls .cp-scene-go:hover { border-color: #5a5e64; }
+
+#controls .cp-scene-go[aria-pressed="true"] {
+  background: var(--cp-accent-bg);
+  border-color: var(--cp-accent-line);
+  color: var(--cp-accent);
+}
+
+#controls .cp-scene-del {
+  flex: none;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  color: var(--cp-muted);
+  cursor: pointer;
+}
+
+#controls .cp-scene-del:hover { color: var(--cp-text); border-color: var(--cp-line-strong); }
+
+#controls .cp-scene-save { display: flex; gap: 6px; }
+
+#controls input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--cp-line-strong);
+  border-radius: 8px;
+  background: var(--cp-sunk);
+  color: var(--cp-text);
+  font: 14px/1.2 system-ui, -apple-system, sans-serif;
+}
+
+#controls input[type="text"]::placeholder { color: #8a8a8a; }
+#controls input[type="text"]:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 1px; }
+#controls .cp-scene-save .cp-btn { flex: none; }
+
+#controls .cp-scene-share {
+  flex: none;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  color: var(--cp-muted);
+  cursor: pointer;
+}
+
+#controls .cp-scene-share:hover { color: var(--cp-text); border-color: var(--cp-line-strong); }
+
+/* --- Share-a-scene dialog ---------------------------------------- */
+#shareDialog {
+  width: min(360px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid #2a2d31;
+  border-radius: 16px;
+  background: #121315;
+  color: #ececec;
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+#shareDialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+
+#shareDialog .sd-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+#shareDialog h2 { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+#shareDialog .sd-close {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 22px;
+  background: none;
+  color: #a3a3a3;
+  cursor: pointer;
+}
+
+#shareDialog .sd-close:hover { color: #ececec; background: rgba(255, 255, 255, 0.06); }
+
+/* QR codes scan best dark-on-light with a quiet border, whatever the theme. */
+#shareDialog .sd-qr {
+  aspect-ratio: 1;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+#shareDialog .sd-qr svg { display: block; width: 100%; height: 100%; }
+#shareDialog .sd-note { margin: 10px 0 12px; font-size: 12px; color: #a3a3a3; }
+#shareDialog .sd-label { display: block; margin-bottom: 6px; font-size: 13px; }
+#shareDialog .sd-row { display: flex; gap: 6px; }
+
+#shareDialog input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid #3a3d42;
+  border-radius: 8px;
+  background: #0e0f11;
+  color: #ececec;
+  font: 12px/1.2 "SF Mono", Menlo, Consolas, monospace;
+}
+
+#shareDialog .sd-copy {
+  flex: none;
+  min-height: 40px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #4e8f58;
+  border-radius: 8px;
+  background: #2c3a2f;
+  color: #7cff8a;
+  font: 500 13px/1 system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+}
+
