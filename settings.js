@@ -141,9 +141,10 @@
     { id: "ctrlStripOpacity", type: "range", label: "Layer opacity", min: 0.1, max: 1, step: 0.05, default: 0.7, format: "fixed2", param: "stripOpacity" },
     { id: "ctrlStripGap", type: "range", label: "Gap between images", min: 0, max: 100, step: 1, default: 0, int: true, format: "percent", param: "stripGap",
       help: "Dark space between images in the strip, as a share of the screen — the echo trail shows in it" },
-    { id: "ctrlEchoMode", type: "select", label: "Echo trail", default: "off", param: "echoMode",
+    { id: "ctrlEchoOn", type: "switch", label: "Echo trail on", default: false, param: "echoOn" },
+    { id: "ctrlEchoMode", type: "select", label: "Style", default: "even", param: "echoMode",
       help: "Moving pictures leave fading echoes of themselves, like a brush smear",
-      options: [["off", "Off"], ["smear", "Smooth smear"], ["even", "Even echoes"], ["ragged", "Ragged — dry brush"]] },
+      options: [["even", "Even echoes"], ["ragged", "Ragged — dry brush"], ["smear", "Smooth smear"]] },
     { id: "ctrlEchoLength", type: "range", label: "Trail length", min: 0, max: 100, step: 1, default: 60, int: true, format: "percent", param: "echoLength" },
     { id: "ctrlEchoStrength", type: "range", label: "Trail strength", min: 0, max: 100, step: 1, default: 60, int: true, format: "percent", param: "echoStrength" },
     { id: "ctrlEchoSpacing", type: "range", label: "Echo spacing", min: 2, max: 50, step: 1, default: 12, int: true, format: "percent", param: "echoSpacing",
@@ -233,14 +234,29 @@
         "ctrlSpeedRandomize", "ctrlAutoCycle",
       ] },
       { section: "Transitions", items: ["ctrlCrossfadeEnabled", "ctrlOpacity", { note: "The camera always hard-cuts." }] },
-      { card: "Move", summary: "pan · tilt · zoom", items: [
+      { card: "Move", summary: "pan · tilt · zoom", summarize: "move", items: [
         "ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed", "ctrlMoveEnd",
-        { note: "Strip only — run several strips over each other:" },
-        "ctrlStripLayers", "ctrlStripRelation", "ctrlStripBlend", "ctrlStripOpacity", "ctrlStripGap",
-        { note: "Echo trail — any move mode:" },
-        "ctrlEchoMode", "ctrlEchoLength", "ctrlEchoStrength", "ctrlEchoSpacing", "ctrlEchoBlend",
         "ctrlMoveRandomize",
-        { dual: ["ctrlMoveSpeedMin", "ctrlMoveSpeedMax"], label: "Random strength" },
+        { when: { id: "ctrlMoveRandomize", is: ["on"] }, items: [
+          { dual: ["ctrlMoveSpeedMin", "ctrlMoveSpeedMax"], label: "Random strength" },
+        ] },
+      ] },
+      // Only while Move "At the edge" is Strip.
+      { card: "Strip", summary: "images follow on", summarize: "strip", when: { id: "ctrlMoveEnd", is: ["strip"] }, items: [
+        "ctrlStripGap", "ctrlStripLayers",
+        { when: { id: "ctrlStripLayers", not: ["1"] }, items: [
+          "ctrlStripRelation", "ctrlStripBlend", "ctrlStripOpacity",
+        ] },
+      ] },
+      { card: "Echo trail", summary: "off", summarize: "echo", switch: "ctrlEchoOn", items: [
+        { when: { id: "ctrlEchoOn", is: ["off"] }, items: [
+          { note: "Switch on: moving pictures leave fading echoes of themselves. Works with any Move setting." },
+        ] },
+        { when: { id: "ctrlEchoOn", is: ["on"] }, items: [
+          "ctrlEchoMode", "ctrlEchoLength", "ctrlEchoStrength",
+          { when: { id: "ctrlEchoMode", not: ["smear"] }, items: ["ctrlEchoSpacing"] },
+          "ctrlEchoBlend",
+        ] },
       ] },
       { card: "Blend overlay", summary: "past frames on top", switch: "ctrlBlendOverlay", items: [
         { chips: ["ctrlBlendModeMultiply", "ctrlBlendModeScreen", "ctrlBlendModeOverlay", "ctrlBlendModeDarken",
@@ -395,6 +411,9 @@
       }
       return html + `</div>`;
     }
+    if (item.when) {
+      return `<div class="cp-when"${whenAttrs(item.when)}>${item.items.map((it) => itemHtml(it, opts)).join("")}</div>`;
+    }
     if (item.widget) return opts.mode === "display" ? widgetHtml(item.widget) : "";
     return "";
   }
@@ -465,13 +484,55 @@
     }
   }
 
+  // Conditional show/hide: { id, is: [...] } or { id, not: [...] }, matched
+  // against a select's value, a range's value, or "on"/"off" for a switch.
+  function whenAttrs(w) {
+    return (
+      ` data-when-id="${esc(w.id)}"` +
+      (w.is ? ` data-when-is="${esc(w.is.join("|"))}"` : "") +
+      (w.not ? ` data-when-not="${esc(w.not.join("|"))}"` : "")
+    );
+  }
+
+  function inputState(id) {
+    const el = document.getElementById(id);
+    if (!el) return "";
+    return el.type === "checkbox" ? (el.checked ? "on" : "off") : String(el.value);
+  }
+
+  // Live one-line summaries in card headers, so the tab reads at a glance.
+  const SUMMARIES = {
+    move() {
+      const p = +inputState("ctrlMovePanSpeed"), t = +inputState("ctrlMoveTiltSpeed"), z = +inputState("ctrlMoveZoomSpeed");
+      const parts = [];
+      if (p) parts.push(`pan ${formatValue(byId.ctrlMovePanSpeed, p)}`);
+      if (t) parts.push(`tilt ${formatValue(byId.ctrlMoveTiltSpeed, t)}`);
+      if (z) parts.push(`zoom ${formatValue(byId.ctrlMoveZoomSpeed, z)}`);
+      if (inputState("ctrlMoveRandomize") === "on") parts.push("random");
+      if (!parts.length) return "still";
+      const end = byId.ctrlMoveEnd.options.find(([v]) => v === inputState("ctrlMoveEnd"));
+      return `${parts.join(" · ")} · ${end ? end[0] : ""}`;
+    },
+    strip() {
+      const n = +inputState("ctrlStripLayers"), gap = +inputState("ctrlStripGap");
+      const parts = [n > 1 ? `${n} layers · ${inputState("ctrlStripRelation")}` : "1 layer"];
+      if (gap) parts.push(`gap ${gap}%`);
+      return parts.join(" · ");
+    },
+    echo() {
+      if (inputState("ctrlEchoOn") !== "on") return "off";
+      const blend = byId.ctrlEchoBlend.options.find(([v]) => v === inputState("ctrlEchoBlend"));
+      return `${inputState("ctrlEchoMode")} · ${blend ? blend[1].split(" ")[0].toLowerCase() : ""}`;
+    },
+  };
+
   function blockHtml(block, opts) {
     if (block.displayOnly && opts.mode !== "display") return "";
     const items = block.items.map((it) => itemHtml(it, opts)).join("");
     if (block.card) {
       const sw = block.switch ? byId[block.switch] : null;
       return (
-        `<section class="cp-card"><div class="cp-card-head">` +
+        `<section class="cp-card"${block.when ? whenAttrs(block.when) : ""}${block.summarize ? ` data-summary="${block.summarize}"` : ""}><div class="cp-card-head">` +
         `<button type="button" class="cp-card-toggle" aria-expanded="false"><span data-icon="keyboard_arrow_down"></span>` +
         `<b>${esc(block.card)}</b><small>${esc(block.summary || "")}</small></button>` +
         (sw ? `<input type="checkbox" class="cp-switch" id="${sw.id}"${checkedAttr(sw)} aria-label="${esc(block.card)} on">` : "") +
@@ -529,6 +590,18 @@
   // real inputs. Cheap; call after anything changes values.
   function syncPanel(root) {
     if (!root) return;
+    root.querySelectorAll("[data-when-id]").forEach((el) => {
+      const v = inputState(el.dataset.whenId);
+      let show = true;
+      if (el.dataset.whenIs) show = el.dataset.whenIs.split("|").includes(v);
+      if (el.dataset.whenNot) show = show && !el.dataset.whenNot.split("|").includes(v);
+      el.hidden = !show;
+    });
+    root.querySelectorAll(".cp-card[data-summary]").forEach((card) => {
+      const fn = SUMMARIES[card.dataset.summary];
+      const small = card.querySelector(".cp-card-toggle small");
+      if (fn && small) small.textContent = fn();
+    });
     root.querySelectorAll(".cp-chip[data-for]").forEach((chip) => {
       const input = document.getElementById(chip.dataset.for);
       chip.setAttribute("aria-pressed", String(!!(input && input.checked)));
