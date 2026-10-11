@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · share scenes";
+  const APP_VERSION = "2026-10-11 · echo trail";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -472,6 +472,13 @@
     stripRelation: "opposing",
     stripBlend: "screen",
     stripOpacity: 0.7,
+    // Strip gap: dark space between strip images (% of the screen).
+    stripGap: 0,
+    // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
+    // | "even" | "ragged"), with length and strength 0–100.
+    echoMode: "off",
+    echoLength: 60,
+    echoStrength: 60,
     // Global look adjustments (CSS filter %, 100 = no change) — applied to
     // the whole #stage element rather than run through the effect pipeline,
     // since they should affect literally everything on screen (every
@@ -1978,6 +1985,11 @@
     return lane.axis === "x" ? STAGE.w : STAGE.h;
   }
 
+  // Distance from one image's start to the next: its length plus the gap.
+  function lanePitch(lane) {
+    return laneLength(lane) * (1 + (params.stripGap || 0) / 100);
+  }
+
   // (Re)builds the lanes when the strip starts or its direction / layer
   // settings change. The base layer starts filling the screen; extra
   // layers start just off their edge and slide in.
@@ -2003,7 +2015,7 @@
   function laneNeed(lane) {
     if (lane.nextK === 0) return 1e9; // empty lane — first in the queue
     const L = laneLength(lane);
-    return lane.s - ((lane.nextK - 1) * L - 0.6 * L);
+    return lane.s - (lane.nextK * lanePitch(lane) - 1.6 * L);
   }
 
   function pushStripFrame(canvas) {
@@ -2024,8 +2036,9 @@
         ctx.globalAlpha = params.stripOpacity;
       }
       const L = laneLength(lane);
+      const P = lanePitch(lane);
       for (const f of lane.frames) {
-        const pos = Math.round(lane.dir * (lane.s - f.k * L));
+        const pos = Math.round(lane.dir * (lane.s - f.k * P));
         if (pos <= -L || pos >= L) continue;
         ctx.drawImage(f.canvas, lane.axis === "x" ? pos : 0, lane.axis === "y" ? pos : 0);
       }
@@ -2059,7 +2072,8 @@
         lane.s += CONFIG.MOVE_TILE_RATE * STAGE.h * (base.speed / 100) * lane.factor * dt;
       }
       const L = laneLength(lane);
-      lane.frames = lane.frames.filter((f) => lane.s - f.k * L < L); // drop frames fully scrolled past
+      const P = lanePitch(lane);
+      lane.frames = lane.frames.filter((f) => lane.s - f.k * P < L); // drop frames fully scrolled past
     }
     if (state.paused || state.stripPending) return;
     let best = -1;
@@ -2367,7 +2381,7 @@
     setText(
       "diagMove",
       moveIsActive()
-        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}${params.moveEndMode === "strip" ? ` ×${params.stripLayers} ${params.stripRelation}` : ""}`
+        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}${params.moveEndMode === "strip" ? ` ×${params.stripLayers} ${params.stripRelation}${params.stripGap ? ` gap ${params.stripGap}%` : ""}` : ""}${params.echoMode !== "off" ? ` · echo ${params.echoMode} ${params.echoLength}/${params.echoStrength}` : ""}`
         : "off"
     );
 
@@ -2743,6 +2757,88 @@
   // for now (each still ends up looking right most frames), but if the two
   // visibly fight during rehearsal, the fix is to fold them into composeFrame
   // too instead of leaving them as separate bypass-redraws.
+  // ---------------------------------------------------------------------
+  // ECHO TRAIL — the moving picture leaves fading echoes of itself
+  // ---------------------------------------------------------------------
+  // A stage-sized layer remembers past frames: each frame it fades a
+  // little (Trail length), and the newly composed picture is stamped into
+  // it — every frame (smooth smear), at a steady beat (even echoes) or in
+  // fits and starts with gaps (ragged, like a dry brush). The layer is then
+  // laid over the picture with "lighten", so echoes show over darker parts
+  // and in the dark gaps between strip images. Strength = how visible.
+  const echo = { canvas: document.createElement("canvas"), last: 0, sinceStamp: 0, skip: 0, active: false };
+
+  function resetEcho() {
+    echo.canvas.width = 0;
+    echo.active = false;
+    echo.last = 0;
+    echo.sinceStamp = 0;
+    echo.skip = 0;
+  }
+
+  function applyEcho(ctx, now) {
+    if (params.echoMode === "off") {
+      if (echo.active) resetEcho();
+      return;
+    }
+    const W = STAGE.w;
+    const H = STAGE.h;
+    const c = echo.canvas;
+    if (c.width !== W || c.height !== H) {
+      c.width = W;
+      c.height = H;
+      echo.last = 0;
+    }
+    echo.active = true;
+    const e = c.getContext("2d");
+    const dt = echo.last ? Math.min(0.1, (now - echo.last) / 1000) : 0;
+    echo.last = now;
+
+    // Fade: per 60fps frame keep 90% (short) … 99.5% (long), frame-rate independent.
+    if (dt > 0 && !state.paused) {
+      const keep = Math.pow(0.9 + 0.095 * (params.echoLength / 100), dt * 60);
+      e.globalCompositeOperation = "destination-out";
+      e.fillStyle = `rgba(0, 0, 0, ${1 - keep})`;
+      e.fillRect(0, 0, W, H);
+      e.globalCompositeOperation = "source-over";
+    }
+
+    // Stamp the fresh frame first, so echoes don't feed back into themselves.
+    let alpha = 0;
+    if (!state.paused) {
+      echo.sinceStamp += dt;
+      if (params.echoMode === "smear") {
+        alpha = 0.3;
+      } else if (params.echoMode === "even") {
+        if (echo.sinceStamp >= 0.14) {
+          echo.sinceStamp = 0;
+          alpha = 0.6;
+        }
+      } else {
+        // ragged: mostly paints, with bursts of skipping and uneven strength
+        if (echo.skip > 0) echo.skip -= dt;
+        else if (Math.random() < 0.03) echo.skip = 0.1 + Math.random() * 0.35;
+        else if (Math.random() < 0.6) alpha = 0.15 + Math.random() * 0.5;
+      }
+    }
+
+    if (alpha > 0) {
+      e.globalAlpha = alpha;
+      e.drawImage(ctx.canvas, 0, 0);
+      e.globalAlpha = 1;
+    }
+
+    // Lay the echoes over the picture.
+    const strength = params.echoStrength / 100;
+    if (strength > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighten";
+      ctx.globalAlpha = strength;
+      ctx.drawImage(c, 0, 0);
+      ctx.restore();
+    }
+  }
+
   function moveAnimationLoop(now) {
     advanceTileOffsets(now || performance.now());
     advanceStrip(now || performance.now());
@@ -2753,6 +2849,9 @@
         tilt: computeMoveTiltProgress(),
         zoom: computeMoveZoomLevel(),
       });
+      applyEcho(ctx, now || performance.now());
+    } else if (!camera.live && echo.active) {
+      resetEcho();
     }
     requestAnimationFrame(moveAnimationLoop);
   }
@@ -3213,6 +3312,8 @@
             ? { pan: computeMovePanProgress(), tilt: computeMoveTiltProgress(), zoom: computeMoveZoomLevel() }
             : null
         );
+        if (moveIsActive()) applyEcho(ctx, performance.now());
+        else if (echo.active) resetEcho();
       } catch (err) {
         console.warn("[camera] frame failed:", err);
       }
