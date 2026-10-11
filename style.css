@@ -339,6 +339,7 @@ body.preview-pan #stage canvas {
 
 #controls .cp-card-body { display: none; padding: 4px 12px 12px; flex-direction: column; gap: 8px; }
 #controls .cp-card.is-open .cp-card-body { display: flex; }
+#controls .cp-when { display: flex; flex-direction: column; gap: 8px; }
 
 #controls .cp-note { margin: 0; font-size: 12px; line-height: 1.45; color: var(--cp-muted); }
 

@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · echo spacing";
+  const APP_VERSION = "2026-10-11 · motion cards";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -476,7 +476,8 @@
     stripGap: 0,
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
     // | "even" | "ragged"), with length and strength 0–100.
-    echoMode: "off",
+    echoOn: false,
+    echoMode: "even",
     echoLength: 60,
     echoStrength: 60,
     echoBlend: "lighten",
@@ -2383,7 +2384,7 @@
     setText(
       "diagMove",
       moveIsActive()
-        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}${params.moveEndMode === "strip" ? ` ×${params.stripLayers} ${params.stripRelation}${params.stripGap ? ` gap ${params.stripGap}%` : ""}` : ""}${params.echoMode !== "off" ? ` · echo ${params.echoMode} ${params.echoLength}/${params.echoStrength} ${params.echoBlend}${params.echoMode !== "smear" ? ` sp ${params.echoSpacing}%` : ""}` : ""}`
+        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}${params.moveEndMode === "strip" ? ` ×${params.stripLayers} ${params.stripRelation}${params.stripGap ? ` gap ${params.stripGap}%` : ""}` : ""}${params.echoOn ? ` · echo ${params.echoMode} ${params.echoLength}/${params.echoStrength} ${params.echoBlend}${params.echoMode !== "smear" ? ` sp ${params.echoSpacing}%` : ""}` : ""}`
         : "off"
     );
 
@@ -2779,7 +2780,7 @@
   }
 
   function applyEcho(ctx, now) {
-    if (params.echoMode === "off") {
+    if (!params.echoOn) {
       if (echo.active) resetEcho();
       return;
     }
