@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · echo blend";
+  const APP_VERSION = "2026-10-11 · echo spacing";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -480,6 +480,7 @@
     echoLength: 60,
     echoStrength: 60,
     echoBlend: "lighten",
+    echoSpacing: 12,
     // Global look adjustments (CSS filter %, 100 = no change) — applied to
     // the whole #stage element rather than run through the effect pipeline,
     // since they should affect literally everything on screen (every
@@ -2382,7 +2383,7 @@
     setText(
       "diagMove",
       moveIsActive()
-        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}${params.moveEndMode === "strip" ? ` ×${params.stripLayers} ${params.stripRelation}${params.stripGap ? ` gap ${params.stripGap}%` : ""}` : ""}${params.echoMode !== "off" ? ` · echo ${params.echoMode} ${params.echoLength}/${params.echoStrength} ${params.echoBlend}` : ""}`
+        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}${params.moveEndMode === "strip" ? ` ×${params.stripLayers} ${params.stripRelation}${params.stripGap ? ` gap ${params.stripGap}%` : ""}` : ""}${params.echoMode !== "off" ? ` · echo ${params.echoMode} ${params.echoLength}/${params.echoStrength} ${params.echoBlend}${params.echoMode !== "smear" ? ` sp ${params.echoSpacing}%` : ""}` : ""}`
         : "off"
     );
 
@@ -2767,14 +2768,14 @@
   // fits and starts with gaps (ragged, like a dry brush). The layer is then
   // laid over the picture with "lighten", so echoes show over darker parts
   // and in the dark gaps between strip images. Strength = how visible.
-  const echo = { canvas: document.createElement("canvas"), last: 0, sinceStamp: 0, skip: 0, active: false };
+  const echo = { canvas: document.createElement("canvas"), last: 0, travelled: 0, gap: 0, active: false };
 
   function resetEcho() {
     echo.canvas.width = 0;
     echo.active = false;
     echo.last = 0;
-    echo.sinceStamp = 0;
-    echo.skip = 0;
+    echo.travelled = 0;
+    echo.gap = 0;
   }
 
   function applyEcho(ctx, now) {
@@ -2795,9 +2796,20 @@
     const dt = echo.last ? Math.min(0.1, (now - echo.last) / 1000) : 0;
     echo.last = now;
 
-    // Fade: per 60fps frame keep 90% (short) … 99.5% (long), frame-rate independent.
-    if (dt > 0 && !state.paused) {
-      const keep = Math.pow(0.9 + 0.095 * (params.echoLength / 100), dt * 60);
+    // How far the picture moved this frame (px).
+    const moveSpeed = Math.max(
+      Math.abs(state.moveResolvedPan),
+      Math.abs(state.moveResolvedTilt),
+      Math.abs(state.moveResolvedZoom)
+    );
+    const moved = state.paused ? 0 : CONFIG.MOVE_TILE_RATE * H * (moveSpeed / 100) * dt;
+
+    // Fade by distance, not time: Trail length = how far behind the picture
+    // the echoes reach (half-strength after 2% … 52% of the screen height),
+    // so a slow pan and a fast one leave the same length of trail.
+    if (moved > 0) {
+      const halfLife = (0.02 + 0.5 * (params.echoLength / 100)) * H;
+      const keep = Math.pow(0.5, moved / halfLife);
       e.globalCompositeOperation = "destination-out";
       e.fillStyle = `rgba(0, 0, 0, ${1 - keep})`;
       e.fillRect(0, 0, W, H);
@@ -2805,21 +2817,29 @@
     }
 
     // Stamp the fresh frame first, so echoes don't feed back into themselves.
+    // Even / ragged echoes are spaced by distance travelled (not by time), so
+    // each one is a clean copy that steadily drifts away from the picture
+    // rather than flickering a few pixels off it.
     let alpha = 0;
-    if (!state.paused) {
-      echo.sinceStamp += dt;
+    if (moved > 0) {
       if (params.echoMode === "smear") {
-        alpha = 0.3;
-      } else if (params.echoMode === "even") {
-        if (echo.sinceStamp >= 0.14) {
-          echo.sinceStamp = 0;
-          alpha = 0.6;
-        }
+        // a fixed share per screen-% travelled, so smear density is speed-independent
+        alpha = Math.min(0.5, (moved / H) * 20);
       } else {
-        // ragged: mostly paints, with bursts of skipping and uneven strength
-        if (echo.skip > 0) echo.skip -= dt;
-        else if (Math.random() < 0.03) echo.skip = 0.1 + Math.random() * 0.35;
-        else if (Math.random() < 0.6) alpha = 0.15 + Math.random() * 0.5;
+        echo.travelled += moved;
+        const spacing = Math.max(4, (H * params.echoSpacing) / 100);
+        if (!echo.gap) echo.gap = spacing;
+        if (echo.travelled >= echo.gap) {
+          echo.travelled = 0;
+          if (params.echoMode === "even") {
+            alpha = 0.6;
+            echo.gap = spacing;
+          } else {
+            // ragged: uneven spacing, the odd missed echo, uneven strength
+            echo.gap = spacing * (0.5 + Math.random());
+            alpha = Math.random() < 0.25 ? 0 : 0.3 + Math.random() * 0.5;
+          }
+        }
       }
     }
 
