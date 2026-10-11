@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · move loops";
+  const APP_VERSION = "2026-10-11 · move strip";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -458,11 +458,12 @@
     // wherever the sliders are currently set.
     moveRandomize: false,
     // What Move does when the image reaches the edge of its travel:
-    // "stop" (hold there — the original behaviour), "tile" / "mirror" (keep
+    // "strip" (images laid end to end and scrolled past, new ones joining
+    // the line — like the Igloo preview; see state.strip), "stop" (hold there — the original behaviour), "tile" / "mirror" (keep
     // scrolling forever over repeated copies; mirror flips neighbours so the
     // edges always join), or "next" (hold time = travel time, so each image
     // arrives just as the next one comes in). Set from settings.js.
-    moveEndMode: "mirror",
+    moveEndMode: "strip",
     // Global look adjustments (CSS filter %, 100 = no change) — applied to
     // the whole #stage element rather than run through the effect pipeline,
     // since they should affect literally everything on screen (every
@@ -1563,6 +1564,13 @@
     // straight on into the next image instead of jumping back.
     tileOffX: 0,
     tileOffY: 0,
+    // Move "Strip": rendered images laid end to end and scrolled past, like
+    // the Igloo preview. frames = [{ k, canvas }] where k is the frame's
+    // place in the line; s = distance scrolled (px). A new image is
+    // requested as the line runs short, so cycles are driven by the scroll
+    // rather than the hold timer while this is on.
+    strip: { frames: [], s: 0, axis: "x", dir: 1, nextK: 0, started: false },
+    stripPending: false,
   };
 
   // Animation ticks (pixelate/halftone/ascii redraws) refresh the cached
@@ -1894,10 +1902,92 @@
     state.tileOffY += (state.moveResolvedTilt / 100) * pxPerSec * dt;
   }
 
+  // Strip axis/direction from the current Pan/Tilt: the bigger of the two
+  // wins. Same directions as the other Move modes (negative Pan = picture
+  // travels right, positive Tilt = picture travels down).
+  function stripAxis() {
+    const pan = state.moveResolvedPan;
+    const tilt = state.moveResolvedTilt;
+    if (pan === 0 && tilt === 0) return null;
+    return Math.abs(pan) >= Math.abs(tilt)
+      ? { axis: "x", dir: pan < 0 ? 1 : -1, speed: Math.abs(pan) }
+      : { axis: "y", dir: tilt > 0 ? 1 : -1, speed: Math.abs(tilt) };
+  }
+
+  // Off with the live camera (one continuous feed, nothing to line up).
+  function stripActive() {
+    return params.moveEndMode === "strip" && !camera.live && stripAxis() !== null;
+  }
+
+  function pushStripFrame(canvas) {
+    const st = state.strip;
+    const ax = stripAxis();
+    if (!ax) return;
+    // First frame, or the direction changed (e.g. Random move): start a new line.
+    if (!st.started || ax.axis !== st.axis || ax.dir !== st.dir) {
+      st.frames = [];
+      st.s = 0;
+      st.nextK = 0;
+      st.axis = ax.axis;
+      st.dir = ax.dir;
+      st.started = true;
+    }
+    st.frames.push({ k: st.nextK++, canvas });
+  }
+
+  function applyStripMove(ctx) {
+    const st = state.strip;
+    const L = st.axis === "x" ? STAGE.w : STAGE.h;
+    ctx.clearRect(0, 0, STAGE.w, STAGE.h);
+    for (const f of st.frames) {
+      const pos = Math.round(st.dir * (st.s - f.k * L));
+      if (pos <= -L || pos >= L) continue;
+      ctx.drawImage(f.canvas, st.axis === "x" ? pos : 0, st.axis === "y" ? pos : 0);
+    }
+  }
+
+  // Scrolls the strip and asks for the next image as the line runs short.
+  let stripLastTick = 0;
+  function advanceStrip(now) {
+    const dt = stripLastTick ? Math.min(0.1, (now - stripLastTick) / 1000) : 0;
+    stripLastTick = now;
+    const st = state.strip;
+    if (!stripActive()) {
+      if (st.started) {
+        // Strip just switched off — back to the normal hold timer.
+        st.frames = [];
+        st.started = false;
+        if (!cycleTimeoutId && !state.paused && !state.stripPending && state.hasCycled) {
+          cycleTimeoutId = setTimeout(cycle, 0);
+        }
+      }
+      return;
+    }
+    const requestNext = () => {
+      state.stripPending = true;
+      if (cycleTimeoutId) {
+        clearTimeout(cycleTimeoutId);
+        cycleTimeoutId = null;
+      }
+      cycle();
+    };
+    if (!st.started) {
+      if (!state.stripPending && state.hasCycled) requestNext();
+      return;
+    }
+    const L = st.axis === "x" ? STAGE.w : STAGE.h;
+    if (!state.paused) st.s += CONFIG.MOVE_TILE_RATE * STAGE.h * (stripAxis().speed / 100) * dt;
+    st.frames = st.frames.filter((f) => st.s - f.k * L < L); // drop frames fully scrolled past
+    // Line up the next image while the current one still has 60% to go.
+    if (!state.paused && !state.stripPending && st.s > (st.nextK - 1) * L - 0.6 * L) requestNext();
+  }
+
   function composeFrame(destCtx, moveState) {
     destCtx.clearRect(0, 0, STAGE.w, STAGE.h);
     if (moveState === null) {
       destCtx.drawImage(state.lastEffectFrame, 0, 0);
+    } else if (stripActive() && state.strip.frames.length) {
+      applyStripMove(destCtx);
     } else if (params.moveEndMode === "tile" || params.moveEndMode === "mirror") {
       applyTiledMove(destCtx, state.lastEffectFrame, params.moveEndMode === "mirror");
     } else {
@@ -1993,7 +2083,7 @@
     // Live camera always hard-cuts between effects: a fade would show the
     // outgoing effect frozen on an old frame over the moving video. The
     // Crossfade setting itself is left alone and applies again for photos.
-    const fade = params.crossfadeEnabled && !camera.live;
+    const fade = params.crossfadeEnabled && !camera.live && !stripActive();
     const transition = fade ? `opacity ${CONFIG.CROSSFADE_MS}ms ease-in-out` : "none";
     incoming.style.transition = transition;
     incoming.style.opacity = String(params.opacity);
@@ -2095,6 +2185,7 @@
       state.lastEffectKey = effectKey;
       // What the live camera loop keeps re-running on every video frame.
       state.liveEffect = { effect, effectParams };
+      if (stripActive()) pushStripFrame(state.lastEffectFrame);
     } catch (err) {
       // Previously this only went to console.error, so a mid-render throw
       // (e.g. getImageData on a tainted canvas) would silently freeze the
@@ -2104,6 +2195,7 @@
       renderError = err;
     }
 
+    state.stripPending = false;
     if (gen !== cycleGeneration) return;
 
     let holdMs = randomHold();
@@ -2130,7 +2222,7 @@
 
     // Only schedule the next cycle if nothing paused us while this one was
     // in flight (e.g. user hit P while an image was still loading).
-    cycleTimeoutId = state.paused ? null : setTimeout(cycle, holdMs);
+    cycleTimeoutId = state.paused || stripActive() ? null : setTimeout(cycle, holdMs);
   }
 
   function updateDiagnostics(src, holdMs, effectKey, effectParams, renderError, blendOverlay, layersAvailable) {
@@ -2159,7 +2251,7 @@
       setText("diagEffect", text);
       if (diagEffectEl) diagEffectEl.classList.remove("error");
     }
-    setText("diagHold", `${(holdMs / 1000).toFixed(1)}s`);
+    setText("diagHold", stripActive() ? "set by the strip" : `${(holdMs / 1000).toFixed(1)}s`);
     const nowBits = [camera.live ? `camera · ${effectKey}` : effectKey];
     if (!renderError && effectParams && effectParams.paletteIndex) nowBits.push(`palette ${effectParams.paletteIndex}`);
     nowBits.push(`${(holdMs / 1000).toFixed(1)} s`);
@@ -2514,7 +2606,7 @@
   setInterval(() => {
     // Live camera redraws every video frame anyway, so these per-tick
     // animations would only fight it for the same canvas.
-    if (camera.live) return;
+    if (camera.live || stripActive()) return;
     if ((params.asciiAnimate || params.animatePaletteColor || params.asciiRandomCellSize) && state.lastEffectKey === "ascii") {
       redrawAsciiAnimationFrame();
     }
@@ -2546,6 +2638,7 @@
   // too instead of leaving them as separate bypass-redraws.
   function moveAnimationLoop(now) {
     advanceTileOffsets(now || performance.now());
+    advanceStrip(now || performance.now());
     if (!camera.live && state.lastEffectFrame && moveIsActive()) {
       const ctx = state.frontCanvas === canvasA ? ctxA : ctxB;
       composeFrame(ctx, {
@@ -2761,6 +2854,8 @@
     state.lastBlendLayers = [];
     state.lastBlendMode = null;
     state.lastEffectKey = null; // stops the effect animation ticker until the next render
+    state.strip.frames = [];
+    state.strip.started = false;
     lastPixelateSource = null;
     lastAsciiFrame = null;
     lastHalftoneFrame = null;
