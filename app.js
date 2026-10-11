@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · settings list";
+  const APP_VERSION = "2026-10-11 · touch bar";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3092,26 +3092,16 @@
     if (!TOUCH_UI || document.getElementById("touchBar")) return;
     const bar = document.createElement("div");
     bar.id = "touchBar";
-    Object.assign(bar.style, {
-      position: "fixed", right: "12px", bottom: "max(12px, env(safe-area-inset-bottom))",
-      display: "flex", gap: "8px", zIndex: "40", transition: "opacity 0.4s",
-    });
-    // Icon-only round buttons: 44px is Apple's/Google's minimum comfortable
-    // tap size. Labels live in aria-label/title for screen readers & hover.
+    bar.setAttribute("role", "toolbar");
+    bar.setAttribute("aria-label", "Display controls");
+    // Styled in style.css (#touchBar) to match the controls panel's footer
+    // tabs — dark full-width bar, icon above a text label — so opening the
+    // panel swaps one bar for the other in the same place.
     const mk = (id, label, icon, onTap) => {
       const b = document.createElement("button");
       b.type = "button";
       b.id = id;
-      b.innerHTML = iconSvg(icon);
-      b.setAttribute("aria-label", label);
-      b.title = label;
-      Object.assign(b.style, {
-        width: "44px", height: "44px", padding: "0", borderRadius: "50%",
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        border: "1px solid rgba(255,255,255,0.25)", background: "rgba(0,0,0,0.45)",
-        color: "rgba(255,255,255,0.92)", transition: "background 0.2s, border-color 0.2s",
-        WebkitBackdropFilter: "blur(6px)", backdropFilter: "blur(6px)", touchAction: "manipulation",
-      });
+      b.innerHTML = `${iconSvg(icon, 22)}<span>${label}</span>`;
       b.addEventListener("click", (e) => {
         e.stopPropagation();
         onTap();
@@ -3120,8 +3110,8 @@
       bar.appendChild(b);
       return b;
     };
-    mk("tbCamera", "Camera on", "videocam", () => setCamera(!camera.live));
-    mk("tbFlip", "Switch front/back camera", "cameraswitch", flipCamera);
+    mk("tbCamera", "Camera", "videocam", () => setCamera(!camera.live));
+    mk("tbFlip", "Flip", "cameraswitch", flipCamera);
     mk("tbControls", "Controls", "tune", () => {
       const panel = document.getElementById("controls");
       if (panel) panel.classList.toggle("hidden");
@@ -3139,13 +3129,8 @@
     panelSync();
     const cam = document.getElementById("tbCamera");
     if (!cam) return;
-    // Live: crossed-out camera (= tap to turn off) on a green ring.
-    cam.innerHTML = iconSvg(camera.live ? "videocam_off" : "videocam");
-    const label = camera.live ? "Camera off" : "Camera on";
-    cam.setAttribute("aria-label", label);
-    cam.title = label;
-    cam.style.background = camera.live ? "rgba(0,110,40,0.75)" : "rgba(0,0,0,0.45)";
-    cam.style.borderColor = camera.live ? "rgba(120,255,160,0.7)" : "rgba(255,255,255,0.25)";
+    // Live: crossed-out camera (= tap to turn off), green like an active tab.
+    cam.innerHTML = `${iconSvg(camera.live ? "videocam_off" : "videocam", 22)}<span>${camera.live ? "Camera off" : "Camera"}</span>`;
     cam.setAttribute("aria-pressed", String(camera.live));
     const flip = document.getElementById("tbFlip");
     if (flip) flip.style.display = camera.live ? "" : "none";
