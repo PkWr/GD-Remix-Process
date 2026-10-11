@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · move strip";
+  const APP_VERSION = "2026-10-11 · strip layers";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -464,6 +464,14 @@
     // edges always join), or "next" (hold time = travel time, so each image
     // arrives just as the next one comes in). Set from settings.js.
     moveEndMode: "strip",
+    // Strip layers: how many strips run at once (1–3), how the extra ones
+    // move relative to the first ("parallax" same way at other speeds,
+    // "opposing", "crossing" — one across, one up/down — or "random"), and
+    // how they combine with the layer beneath (blend mode + opacity).
+    stripLayers: 1,
+    stripRelation: "opposing",
+    stripBlend: "screen",
+    stripOpacity: 0.7,
     // Global look adjustments (CSS filter %, 100 = no change) — applied to
     // the whole #stage element rather than run through the effect pipeline,
     // since they should affect literally everything on screen (every
@@ -1568,9 +1576,12 @@
     // the Igloo preview. frames = [{ k, canvas }] where k is the frame's
     // place in the line; s = distance scrolled (px). A new image is
     // requested as the line runs short, so cycles are driven by the scroll
-    // rather than the hold timer while this is on.
-    strip: { frames: [], s: 0, axis: "x", dir: 1, nextK: 0, started: false },
+    // rather than the hold timer while this is on. Up to 3 lanes (strip
+    // layers), each { axis, dir, factor, frames, s, nextK } — see
+    // stripLaneSpecs().
+    strip: { lanes: [], sig: "", started: false },
     stripPending: false,
+    stripTarget: 0, // which lane the image being rendered right now will join
   };
 
   // Animation ticks (pixelate/halftone/ascii redraws) refresh the cached
@@ -1772,6 +1783,10 @@
   // the very top of cycle(), before any rendering, so even the initial seed
   // frame uses this cycle's freshly-resolved values.
   function resolveMoveSpeeds() {
+    // Strip with Random move: the direction is rolled once when the strip
+    // starts and then kept — re-rolling every image would restart the line
+    // (and with several layers, constantly).
+    if (params.moveRandomize && params.moveEndMode === "strip" && state.strip.started) return;
     if (!params.moveRandomize) {
       state.moveResolvedPan = params.movePanSpeed;
       state.moveResolvedTilt = params.moveTiltSpeed;
@@ -1919,74 +1934,158 @@
     return params.moveEndMode === "strip" && !camera.live && stripAxis() !== null;
   }
 
-  function pushStripFrame(canvas) {
-    const st = state.strip;
-    const ax = stripAxis();
-    if (!ax) return;
-    // First frame, or the direction changed (e.g. Random move): start a new line.
-    if (!st.started || ax.axis !== st.axis || ax.dir !== st.dir) {
-      st.frames = [];
-      st.s = 0;
-      st.nextK = 0;
-      st.axis = ax.axis;
-      st.dir = ax.dir;
-      st.started = true;
+  // Strip layers ("lanes"): 1–3 strips at once, each its own line of
+  // images with its own axis / direction / speed, drawn over each other.
+  // Lane 0 follows Pan/Tilt exactly; the others are set by "Layers move".
+  function stripLaneSpecs(base) {
+    const n = Math.max(1, Math.min(3, Math.round(params.stripLayers || 1)));
+    const other = base.axis === "x" ? "y" : "x";
+    const rel = params.stripRelation;
+    const specs = [];
+    for (let i = 0; i < n; i++) {
+      let axis = base.axis;
+      let dir = base.dir;
+      let factor = 1;
+      if (i > 0) {
+        if (rel === "parallax") {
+          factor = i === 1 ? 0.55 : 1.6; // one slower, one faster — same way
+        } else if (rel === "opposing") {
+          dir = i === 1 ? -base.dir : base.dir;
+          factor = i === 2 ? 0.6 : 1;
+        } else if (rel === "crossing") {
+          axis = i === 1 ? other : base.axis;
+          dir = i === 2 ? -base.dir : base.dir;
+          factor = i === 2 ? 1.5 : 0.85;
+        } else {
+          axis = Math.random() < 0.5 ? base.axis : other;
+          dir = Math.random() < 0.5 ? 1 : -1;
+          factor = 0.5 + Math.random();
+        }
+      }
+      specs.push({ axis, dir, factor });
     }
-    st.frames.push({ k: st.nextK++, canvas });
+    return specs;
+  }
+
+  function resetStrip() {
+    state.strip.lanes = [];
+    state.strip.sig = "";
+    state.strip.started = false;
+    state.stripTarget = 0;
+  }
+
+  function laneLength(lane) {
+    return lane.axis === "x" ? STAGE.w : STAGE.h;
+  }
+
+  // (Re)builds the lanes when the strip starts or its direction / layer
+  // settings change. The base layer starts filling the screen; extra
+  // layers start just off their edge and slide in.
+  function ensureStripLanes() {
+    const base = stripAxis();
+    if (!base) return false;
+    const sig = `${base.axis}${base.dir}|${params.stripLayers}|${params.stripRelation}`;
+    if (state.strip.sig === sig && state.strip.lanes.length) return true;
+    state.strip.sig = sig;
+    state.strip.started = true;
+    state.strip.lanes = stripLaneSpecs(base).map((spec, i) => ({
+      ...spec,
+      frames: [],
+      s: i === 0 ? 0 : -(spec.axis === "x" ? STAGE.w : STAGE.h),
+      nextK: 0,
+    }));
+    state.stripTarget = 0;
+    return true;
+  }
+
+  // How urgently a lane needs its next image: > 0 means line one up now
+  // (its current last image has less than 60% of its journey left).
+  function laneNeed(lane) {
+    if (lane.nextK === 0) return 1e9; // empty lane — first in the queue
+    const L = laneLength(lane);
+    return lane.s - ((lane.nextK - 1) * L - 0.6 * L);
+  }
+
+  function pushStripFrame(canvas) {
+    if (!ensureStripLanes()) return;
+    const lane = state.strip.lanes[state.stripTarget] || state.strip.lanes[0];
+    lane.frames.push({ k: lane.nextK++, canvas });
+  }
+
+  function stripHasFrames() {
+    return state.strip.lanes.some((lane) => lane.frames.length);
   }
 
   function applyStripMove(ctx) {
-    const st = state.strip;
-    const L = st.axis === "x" ? STAGE.w : STAGE.h;
     ctx.clearRect(0, 0, STAGE.w, STAGE.h);
-    for (const f of st.frames) {
-      const pos = Math.round(st.dir * (st.s - f.k * L));
-      if (pos <= -L || pos >= L) continue;
-      ctx.drawImage(f.canvas, st.axis === "x" ? pos : 0, st.axis === "y" ? pos : 0);
-    }
+    state.strip.lanes.forEach((lane, i) => {
+      if (i > 0) {
+        ctx.globalCompositeOperation = params.stripBlend === "normal" ? "source-over" : params.stripBlend;
+        ctx.globalAlpha = params.stripOpacity;
+      }
+      const L = laneLength(lane);
+      for (const f of lane.frames) {
+        const pos = Math.round(lane.dir * (lane.s - f.k * L));
+        if (pos <= -L || pos >= L) continue;
+        ctx.drawImage(f.canvas, lane.axis === "x" ? pos : 0, lane.axis === "y" ? pos : 0);
+      }
+    });
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
   }
 
-  // Scrolls the strip and asks for the next image as the line runs short.
+  // Scrolls every lane and asks for the next image for whichever lane is
+  // running shortest. One image is rendered at a time; it goes to the lane
+  // that asked (state.stripTarget).
   let stripLastTick = 0;
   function advanceStrip(now) {
     const dt = stripLastTick ? Math.min(0.1, (now - stripLastTick) / 1000) : 0;
     stripLastTick = now;
-    const st = state.strip;
     if (!stripActive()) {
-      if (st.started) {
+      if (state.strip.started) {
         // Strip just switched off — back to the normal hold timer.
-        st.frames = [];
-        st.started = false;
+        resetStrip();
         if (!cycleTimeoutId && !state.paused && !state.stripPending && state.hasCycled) {
           cycleTimeoutId = setTimeout(cycle, 0);
         }
       }
       return;
     }
-    const requestNext = () => {
-      state.stripPending = true;
-      if (cycleTimeoutId) {
-        clearTimeout(cycleTimeoutId);
-        cycleTimeoutId = null;
+    if (!state.hasCycled || !ensureStripLanes()) return;
+    const base = stripAxis();
+    const lanes = state.strip.lanes;
+    for (const lane of lanes) {
+      if (!state.paused && lane.nextK > 0) {
+        lane.s += CONFIG.MOVE_TILE_RATE * STAGE.h * (base.speed / 100) * lane.factor * dt;
       }
-      cycle();
-    };
-    if (!st.started) {
-      if (!state.stripPending && state.hasCycled) requestNext();
-      return;
+      const L = laneLength(lane);
+      lane.frames = lane.frames.filter((f) => lane.s - f.k * L < L); // drop frames fully scrolled past
     }
-    const L = st.axis === "x" ? STAGE.w : STAGE.h;
-    if (!state.paused) st.s += CONFIG.MOVE_TILE_RATE * STAGE.h * (stripAxis().speed / 100) * dt;
-    st.frames = st.frames.filter((f) => st.s - f.k * L < L); // drop frames fully scrolled past
-    // Line up the next image while the current one still has 60% to go.
-    if (!state.paused && !state.stripPending && st.s > (st.nextK - 1) * L - 0.6 * L) requestNext();
+    if (state.paused || state.stripPending) return;
+    let best = -1;
+    let bestNeed = 0;
+    lanes.forEach((lane, i) => {
+      const need = laneNeed(lane) - i * 1e-6; // ties: lower layer first
+      if (need > bestNeed) {
+        bestNeed = need;
+        best = i;
+      }
+    });
+    if (best < 0) return;
+    state.stripPending = true;
+    state.stripTarget = best;
+    if (cycleTimeoutId) {
+      clearTimeout(cycleTimeoutId);
+      cycleTimeoutId = null;
+    }
+    cycle();
   }
 
   function composeFrame(destCtx, moveState) {
     destCtx.clearRect(0, 0, STAGE.w, STAGE.h);
     if (moveState === null) {
       destCtx.drawImage(state.lastEffectFrame, 0, 0);
-    } else if (stripActive() && state.strip.frames.length) {
+    } else if (stripActive() && stripHasFrames()) {
       applyStripMove(destCtx);
     } else if (params.moveEndMode === "tile" || params.moveEndMode === "mirror") {
       applyTiledMove(destCtx, state.lastEffectFrame, params.moveEndMode === "mirror");
@@ -2268,7 +2367,7 @@
     setText(
       "diagMove",
       moveIsActive()
-        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}`
+        ? `pan ${state.moveResolvedPan} tilt ${state.moveResolvedTilt} zoom ${state.moveResolvedZoom} · at edge: ${params.moveEndMode}${params.moveEndMode === "strip" ? ` ×${params.stripLayers} ${params.stripRelation}` : ""}`
         : "off"
     );
 
@@ -2854,8 +2953,7 @@
     state.lastBlendLayers = [];
     state.lastBlendMode = null;
     state.lastEffectKey = null; // stops the effect animation ticker until the next render
-    state.strip.frames = [];
-    state.strip.started = false;
+    resetStrip();
     lastPixelateSource = null;
     lastAsciiFrame = null;
     lastHalftoneFrame = null;
