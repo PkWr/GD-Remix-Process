@@ -132,6 +132,13 @@
     { id: "ctrlMoveEnd", type: "select", label: "At the edge", default: "strip", param: "moveEndMode",
       help: "What happens when the picture reaches the end of its travel",
       options: [["strip", "Strip — new images follow on"], ["mirror", "Keep going — mirrored repeat"], ["tile", "Keep going — repeat"], ["next", "Next image arrives"], ["stop", "Stop"]] },
+    { id: "ctrlStripLayers", type: "range", label: "Strip layers", min: 1, max: 3, step: 1, default: 1, int: true, format: "int", param: "stripLayers",
+      help: "How many strips run at once, overlapping" },
+    { id: "ctrlStripRelation", type: "select", label: "Layers move", default: "opposing", param: "stripRelation",
+      options: [["opposing", "Opposite ways"], ["parallax", "Same way, different speeds"], ["crossing", "Crossing — across and up/down"], ["random", "Random"]] },
+    { id: "ctrlStripBlend", type: "select", label: "Layers combine", default: "screen", param: "stripBlend",
+      options: [["screen", "Screen — lighten"], ["multiply", "Multiply — darken"], ["difference", "Difference"], ["overlay", "Overlay"], ["exclusion", "Exclusion"], ["normal", "Normal — on top"]] },
+    { id: "ctrlStripOpacity", type: "range", label: "Layer opacity", min: 0.1, max: 1, step: 0.05, default: 0.7, format: "fixed2", param: "stripOpacity" },
     { id: "ctrlMoveSpeedMin", type: "range", label: "Random move strength minimum", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "moveSpeedMin" },
     { id: "ctrlMoveSpeedMax", type: "range", label: "Random move strength maximum", min: 0, max: 100, step: 1, default: 80, int: true, format: "percent", param: "moveSpeedMax" },
 
@@ -215,7 +222,10 @@
       ] },
       { section: "Transitions", items: ["ctrlCrossfadeEnabled", "ctrlOpacity", { note: "The camera always hard-cuts." }] },
       { card: "Move", summary: "pan · tilt · zoom", items: [
-        "ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed", "ctrlMoveEnd", "ctrlMoveRandomize",
+        "ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed", "ctrlMoveEnd",
+        { note: "Strip only — run several strips over each other:" },
+        "ctrlStripLayers", "ctrlStripRelation", "ctrlStripBlend", "ctrlStripOpacity",
+        "ctrlMoveRandomize",
         { dual: ["ctrlMoveSpeedMin", "ctrlMoveSpeedMax"], label: "Random strength" },
       ] },
       { card: "Blend overlay", summary: "past frames on top", switch: "ctrlBlendOverlay", items: [
