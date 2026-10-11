@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · rotoscope";
+  const APP_VERSION = "2026-10-11 · share scenes";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -399,17 +399,7 @@
       pixelate: true,
       ascii: true,
       halftone: true,
-      roto: true,
     },
-    // Rotoscope: flat colour bands + inked outlines (see applyRoto).
-    rotoTones: 4,
-    rotoLines: 55,
-    rotoDetail: 420,
-    // Trace movement (live camera only): outlines of whatever moves, with
-    // fading trails, over a dimmed picture (see applyTraceMotion).
-    traceMotion: false,
-    traceTrail: 60,
-    traceUnder: 20,
     // On = the very first image on page load forces Untouched regardless of
     // what the random engine would otherwise pick, so the show opens on a
     // plain photo before the effects kick in. Every cycle after that first
@@ -1420,97 +1410,6 @@
   // user-facing toggle now (see enabledEffects above) as well as the
   // internal fallback pickRandomEffect() reaches for if every effect gets
   // unchecked, so the cycle still has something to draw either way.
-  // Rotoscope: the picture simplified into a few flat bands of palette
-  // colour, with inked outlines wherever there's a strong edge — the look
-  // of animation traced over film. Works on a reduced-size copy (Detail =
-  // its height in px) for speed, so it can run on every live camera frame,
-  // then scales back up smoothly so the lines stay soft rather than blocky.
-  const rotoCanvas = document.createElement("canvas");
-
-  // Shared helpers (also used by Trace movement below).
-  function lumaOf(data, n) {
-    const lum = new Float32Array(n);
-    for (let i = 0, p = 0; i < n; i++, p += 4) {
-      lum[i] = (77 * data[p] + 150 * data[p + 1] + 29 * data[p + 2]) >> 8;
-    }
-    return lum;
-  }
-
-  // 3×3 box blur — evens out camera noise so flat areas stay flat.
-  function blur3(src, w, h) {
-    const out = new Float32Array(src.length);
-    for (let y = 0; y < h; y++) {
-      const y0 = y > 0 ? y - 1 : y;
-      const y1 = y < h - 1 ? y + 1 : y;
-      for (let x = 0; x < w; x++) {
-        const x0 = x > 0 ? x - 1 : x;
-        const x1 = x < w - 1 ? x + 1 : x;
-        out[y * w + x] =
-          (src[y0 * w + x0] + src[y0 * w + x] + src[y0 * w + x1] +
-            src[y * w + x0] + src[y * w + x] + src[y * w + x1] +
-            src[y1 * w + x0] + src[y1 * w + x] + src[y1 * w + x1]) / 9;
-      }
-    }
-    return out;
-  }
-
-  // Sobel edge strength at (x, y) — 0 at the borders.
-  function sobelAt(l, w, h, x, y) {
-    if (x === 0 || y === 0 || x === w - 1 || y === h - 1) return 0;
-    const i = y * w + x;
-    const gx = -l[i - w - 1] - 2 * l[i - 1] - l[i + w - 1] + l[i - w + 1] + 2 * l[i + 1] + l[i + w + 1];
-    const gy = -l[i - w - 1] - 2 * l[i - w] - l[i - w + 1] + l[i + w - 1] + 2 * l[i + w] + l[i + w + 1];
-    return Math.abs(gx) + Math.abs(gy);
-  }
-
-  function applyRoto(ctx, sourceCanvas, { tones, lines, detail, fgColor, bgColor }) {
-    const W = STAGE.w;
-    const H = STAGE.h;
-    const h = Math.max(90, Math.min(H, Math.round(detail)));
-    const w = Math.max(1, Math.round((W * h) / H));
-    rotoCanvas.width = w;
-    rotoCanvas.height = h;
-    const r = rotoCanvas.getContext("2d", { willReadFrequently: true });
-    r.imageSmoothingEnabled = true;
-    r.drawImage(sourceCanvas, 0, 0, w, h);
-    const img = r.getImageData(0, 0, w, h);
-    const d = img.data;
-    const n = w * h;
-    const lum = blur3(lumaOf(d, n), w, h);
-
-    const bands = Math.max(2, Math.round(tones));
-    const { rgb } = monoLut(bgColor || "#000000", fgColor || "#00ff00");
-    // Ink: the palette's shadow colour pushed most of the way to black, so
-    // lines read on every band including the darkest.
-    const sh = hexToRgb(bgColor || "#000000");
-    const ink = [sh.r * 0.25, sh.g * 0.25, sh.b * 0.25];
-    // Outline strength 0 = no lines; 100 = lines on even faint edges.
-    const thr = lines > 0 ? 40 + (100 - lines) * 3.2 : Infinity;
-
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const i = y * w + x;
-        const p = i * 4;
-        if (thr !== Infinity && sobelAt(lum, w, h, x, y) > thr) {
-          d[p] = ink[0];
-          d[p + 1] = ink[1];
-          d[p + 2] = ink[2];
-        } else {
-          const band = Math.min(bands - 1, Math.floor((lum[i] / 256) * bands));
-          const k = Math.round((band / (bands - 1)) * 255) * 3;
-          d[p] = rgb[k];
-          d[p + 1] = rgb[k + 1];
-          d[p + 2] = rgb[k + 2];
-        }
-        d[p + 3] = 255;
-      }
-    }
-    r.putImageData(img, 0, 0);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(rotoCanvas, 0, 0, w, h, 0, 0, W, H);
-  }
-
   const EFFECTS = {
     none: {
       label: "none",
@@ -1581,16 +1480,6 @@
         ...resolveActivePalette(),
       }),
       run: applyAscii,
-    },
-    roto: {
-      label: "rotoscope",
-      randomParams: () => ({
-        tones: params.rotoTones,
-        lines: params.rotoLines,
-        detail: params.rotoDetail,
-        ...resolveActivePalette(),
-      }),
-      run: applyRoto,
     },
   };
 
@@ -2688,9 +2577,6 @@
     camera(on) {
       setCamera(on);
     },
-    traceReset() {
-      resetTrace();
-    },
     // Untouched is exclusive: on = every effect off (remembering which
     // were on); off = those come back (or all, if none were). Turning any
     // effect on while Untouched is on turns Untouched off. Changes made
@@ -3303,91 +3189,6 @@
     return c;
   }
 
-  // ---------------------------------------------------------------------
-  // TRACE MOVEMENT (live camera) — onion-skin outlines of whatever moves
-  // ---------------------------------------------------------------------
-  // Each camera frame is compared with the last one at low resolution:
-  // edges that sit where something changed are drawn in the palette's
-  // highlight colour onto a trail layer, which fades a little every frame
-  // (Trail length). The normal effect picture is dimmed towards the
-  // shadow colour underneath (Picture underneath), so still things fade
-  // away and movement draws itself.
-  const TRACE_HEIGHT = 270; // working resolution (px tall) — cheap enough for every frame
-  const trace = {
-    small: document.createElement("canvas"),
-    marks: document.createElement("canvas"),
-    trail: document.createElement("canvas"),
-    prev: null,
-  };
-
-  function resetTrace() {
-    trace.prev = null;
-    trace.trail.width = 0;
-  }
-
-  function applyTraceMotion(ctx, cameraFrame, fgColor, bgColor) {
-    const W = STAGE.w;
-    const H = STAGE.h;
-    const h = Math.min(H, TRACE_HEIGHT);
-    const w = Math.max(1, Math.round((W * h) / H));
-    const n = w * h;
-    if (trace.small.width !== w || trace.small.height !== h) {
-      trace.small.width = trace.marks.width = trace.trail.width = w;
-      trace.small.height = trace.marks.height = trace.trail.height = h;
-      trace.prev = null;
-    }
-    const s = trace.small.getContext("2d", { willReadFrequently: true });
-    s.drawImage(cameraFrame, 0, 0, w, h);
-    const cur = blur3(lumaOf(s.getImageData(0, 0, w, h).data, n), w, h);
-    const prev = trace.prev;
-    trace.prev = cur;
-
-    // Fade the trail: keep 60% (short) … 98% (long) of it per frame.
-    const t = trace.trail.getContext("2d");
-    const keep = 0.6 + 0.38 * (params.traceTrail / 100);
-    t.globalCompositeOperation = "destination-out";
-    t.fillStyle = `rgba(0, 0, 0, ${1 - keep})`;
-    t.fillRect(0, 0, w, h);
-    t.globalCompositeOperation = "source-over";
-
-    if (prev) {
-      // Moving = brightness changed noticeably here or right next door.
-      const moving = new Uint8Array(n);
-      for (let i = 0; i < n; i++) if (Math.abs(cur[i] - prev[i]) > 18) moving[i] = 1;
-      const fg = hexToRgb(fgColor || "#00ff00");
-      const m = trace.marks.getContext("2d");
-      const marks = m.createImageData(w, h);
-      const md = marks.data;
-      for (let y = 1; y < h - 1; y++) {
-        for (let x = 1; x < w - 1; x++) {
-          const i = y * w + x;
-          const near =
-            moving[i] || moving[i - 1] || moving[i + 1] || moving[i - w] || moving[i + w];
-          if (near && sobelAt(cur, w, h, x, y) > 90) {
-            const p = i * 4;
-            md[p] = fg.r;
-            md[p + 1] = fg.g;
-            md[p + 2] = fg.b;
-            md[p + 3] = 255;
-          }
-        }
-      }
-      m.putImageData(marks, 0, 0);
-      t.drawImage(trace.marks, 0, 0);
-    }
-
-    // Dim the effect picture towards the shadow colour, then lay the trails on top.
-    ctx.save();
-    ctx.globalAlpha = 1 - params.traceUnder / 100;
-    ctx.fillStyle = bgColor || "#000000";
-    ctx.fillRect(0, 0, W, H);
-    ctx.globalAlpha = 1;
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(trace.trail, 0, 0, w, h, 0, 0, W, H);
-    ctx.restore();
-  }
-
   function cameraLoop() {
     if (!camera.live) return;
     const fx = state.liveEffect;
@@ -3402,10 +3203,6 @@
       lctx.clearRect(0, 0, STAGE.w, STAGE.h);
       try {
         fx.effect.run(lctx, source, fx.effectParams);
-        if (params.traceMotion) {
-          const pal = fx.effectParams && fx.effectParams.fgColor ? fx.effectParams : resolveActivePalette();
-          applyTraceMotion(lctx, source, pal.fgColor, pal.bgColor);
-        }
         state.lastEffectFrame = camera.layer;
         const ctx = state.frontCanvas === canvasA ? ctxA : ctxB;
         // Same composite as the photo path: effect layer (Move applies to
