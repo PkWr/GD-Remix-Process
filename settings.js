@@ -53,22 +53,6 @@
     { id: "ctrlEffectPixelate", type: "switch", label: "Pixelate", default: true, param: "enabledEffects.pixelate", after: "effectRotation" },
     { id: "ctrlEffectHalftone", type: "switch", label: "Halftone", default: true, param: "enabledEffects.halftone", after: "effectRotation" },
     { id: "ctrlEffectAscii", type: "switch", label: "ASCII", default: true, param: "enabledEffects.ascii", after: "effectRotation" },
-    { id: "ctrlEffectRoto", type: "switch", label: "Rotoscope", default: true, param: "enabledEffects.roto", after: "effectRotation" },
-
-    // Rotoscope
-    { id: "ctrlRotoTones", type: "range", label: "Colour bands", min: 2, max: 6, step: 1, default: 4, int: true, format: "int", param: "rotoTones",
-      help: "How many flat tones the picture is simplified into" },
-    { id: "ctrlRotoLines", type: "range", label: "Outline strength", min: 0, max: 100, step: 1, default: 55, int: true, format: "percent", param: "rotoLines",
-      help: "0 = no outlines; higher draws lines on fainter edges too" },
-    { id: "ctrlRotoDetail", type: "range", label: "Detail", min: 180, max: 720, step: 20, default: 420, int: true, format: "px", param: "rotoDetail",
-      help: "Working resolution — higher is crisper but slower (matters most on the live camera)" },
-
-    // Trace movement (live camera)
-    { id: "ctrlTraceMotion", type: "switch", label: "Trace movement", default: false, param: "traceMotion", after: "traceReset",
-      help: "Camera only: anything moving is drawn as outlines with fading trails" },
-    { id: "ctrlTraceTrail", type: "range", label: "Trail length", min: 0, max: 100, step: 1, default: 60, int: true, format: "percent", param: "traceTrail" },
-    { id: "ctrlTraceUnder", type: "range", label: "Picture underneath", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "traceUnder",
-      help: "How much of the normal effect still shows behind the traces" },
 
     // Pixelate
     { id: "ctrlPixelateMin", type: "range", label: "Pixelate cell size minimum", min: 2, max: 128, step: 1, default: 7, int: true, format: "px", param: "pixelateMin" },
@@ -191,7 +175,6 @@
     { tab: "source", label: "Source", icon: "photo_library", blocks: [
       { section: "Image source", items: [
         "ctrlLiveMode", "ctrlCamera", { widget: "flip" },
-        "ctrlTraceMotion", "ctrlTraceTrail", "ctrlTraceUnder",
         { note: "Off = the curated demo set. The front camera is mirrored; effects hard-cut while the camera is on." },
       ] },
       { section: "Stage", displayOnly: true, items: [{ widget: "profile" }] },
@@ -199,7 +182,7 @@
     ] },
     { tab: "effects", label: "Effects", icon: "blur_on", blocks: [
       { section: "In rotation", items: [
-        { proxyChips: ["ctrlEffectNone", "ctrlEffectDuotone", "ctrlEffectPixelate", "ctrlEffectHalftone", "ctrlEffectAscii", "ctrlEffectRoto"] },
+        { proxyChips: ["ctrlEffectNone", "ctrlEffectDuotone", "ctrlEffectPixelate", "ctrlEffectHalftone", "ctrlEffectAscii"] },
         "ctrlEffectNone",
         { note: "Untouched = plain photos only — switches every effect off." },
       ] },
@@ -217,10 +200,6 @@
       { card: "ASCII", summary: "characters · flicker", switch: "ctrlEffectAscii", items: [
         { dual: ["ctrlAsciiMin", "ctrlAsciiMax"], label: "Character size" },
         "ctrlAsciiRamp", "ctrlAsciiRandomize", "ctrlAsciiRampRandomize", "ctrlAsciiAnimate", "ctrlAsciiRandomCellSize",
-      ] },
-      { card: "Rotoscope", summary: "flat colour · outlines", switch: "ctrlEffectRoto", items: [
-        "ctrlRotoTones", "ctrlRotoLines", "ctrlRotoDetail",
-        { note: "Traced-animation look. Lovely on the live camera — lower Detail if it gets choppy." },
       ] },
     ] },
     { tab: "colour", label: "Colour", icon: "palette", blocks: [
