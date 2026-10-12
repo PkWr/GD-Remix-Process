@@ -1,0 +1,2193 @@
+{
+  "version": 1,
+  "exportedAt": "2026-10-12T12:49:20.441Z",
+  "scenes": [
+    {
+      "name": "T1 Plain photos",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": true
+        },
+        "ctrlEffectDuotone": {
+          "checked": false
+        },
+        "ctrlEffectPixelate": {
+          "checked": false
+        },
+        "ctrlEffectHalftone": {
+          "checked": false
+        },
+        "ctrlEffectAscii": {
+          "checked": false
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "6"
+        },
+        "ctrlSpeedMax": {
+          "value": "8"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "1"
+        },
+        "ctrlStripRelation": {
+          "value": "opposing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "0"
+        },
+        "ctrlEchoOn": {
+          "checked": false
+        },
+        "ctrlEchoMode": {
+          "value": "even"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "lighten"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "name": "T2 Duotone, still",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": false
+        },
+        "ctrlEffectDuotone": {
+          "checked": true
+        },
+        "ctrlEffectPixelate": {
+          "checked": false
+        },
+        "ctrlEffectHalftone": {
+          "checked": false
+        },
+        "ctrlEffectAscii": {
+          "checked": false
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "4"
+        },
+        "ctrlSpeedMax": {
+          "value": "6"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "1"
+        },
+        "ctrlStripRelation": {
+          "value": "opposing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "0"
+        },
+        "ctrlEchoOn": {
+          "checked": false
+        },
+        "ctrlEchoMode": {
+          "value": "even"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "lighten"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "name": "T3 Pixelate, quick changes",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": false
+        },
+        "ctrlEffectDuotone": {
+          "checked": false
+        },
+        "ctrlEffectPixelate": {
+          "checked": true
+        },
+        "ctrlEffectHalftone": {
+          "checked": false
+        },
+        "ctrlEffectAscii": {
+          "checked": false
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "2"
+        },
+        "ctrlSpeedMax": {
+          "value": "3"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "1"
+        },
+        "ctrlStripRelation": {
+          "value": "opposing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "0"
+        },
+        "ctrlEchoOn": {
+          "checked": false
+        },
+        "ctrlEchoMode": {
+          "value": "even"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "lighten"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "name": "T4 Halftone",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": false
+        },
+        "ctrlEffectDuotone": {
+          "checked": false
+        },
+        "ctrlEffectPixelate": {
+          "checked": false
+        },
+        "ctrlEffectHalftone": {
+          "checked": true
+        },
+        "ctrlEffectAscii": {
+          "checked": false
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "4"
+        },
+        "ctrlSpeedMax": {
+          "value": "6"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "1"
+        },
+        "ctrlStripRelation": {
+          "value": "opposing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "0"
+        },
+        "ctrlEchoOn": {
+          "checked": false
+        },
+        "ctrlEchoMode": {
+          "value": "even"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "lighten"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "name": "T5 ASCII, flickering",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": false
+        },
+        "ctrlEffectDuotone": {
+          "checked": false
+        },
+        "ctrlEffectPixelate": {
+          "checked": false
+        },
+        "ctrlEffectHalftone": {
+          "checked": false
+        },
+        "ctrlEffectAscii": {
+          "checked": true
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "5"
+        },
+        "ctrlSpeedMax": {
+          "value": "7"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "1"
+        },
+        "ctrlStripRelation": {
+          "value": "opposing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "0"
+        },
+        "ctrlEchoOn": {
+          "checked": false
+        },
+        "ctrlEchoMode": {
+          "value": "even"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "lighten"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "name": "T6 Slow strip around the room",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": false
+        },
+        "ctrlEffectDuotone": {
+          "checked": true
+        },
+        "ctrlEffectPixelate": {
+          "checked": false
+        },
+        "ctrlEffectHalftone": {
+          "checked": false
+        },
+        "ctrlEffectAscii": {
+          "checked": false
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "2.5"
+        },
+        "ctrlSpeedMax": {
+          "value": "9"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "20"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "1"
+        },
+        "ctrlStripRelation": {
+          "value": "opposing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "0"
+        },
+        "ctrlEchoOn": {
+          "checked": false
+        },
+        "ctrlEchoMode": {
+          "value": "even"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "lighten"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "name": "T7 Two strips crossing",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": false
+        },
+        "ctrlEffectDuotone": {
+          "checked": true
+        },
+        "ctrlEffectPixelate": {
+          "checked": true
+        },
+        "ctrlEffectHalftone": {
+          "checked": false
+        },
+        "ctrlEffectAscii": {
+          "checked": false
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "2.5"
+        },
+        "ctrlSpeedMax": {
+          "value": "9"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "30"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "2"
+        },
+        "ctrlStripRelation": {
+          "value": "opposing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "0"
+        },
+        "ctrlEchoOn": {
+          "checked": false
+        },
+        "ctrlEchoMode": {
+          "value": "even"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "lighten"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "name": "T8 Strip with echo trail",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": false
+        },
+        "ctrlEffectDuotone": {
+          "checked": true
+        },
+        "ctrlEffectPixelate": {
+          "checked": false
+        },
+        "ctrlEffectHalftone": {
+          "checked": false
+        },
+        "ctrlEffectAscii": {
+          "checked": false
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "2.5"
+        },
+        "ctrlSpeedMax": {
+          "value": "9"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "30"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "1"
+        },
+        "ctrlStripRelation": {
+          "value": "opposing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "40"
+        },
+        "ctrlEchoOn": {
+          "checked": true
+        },
+        "ctrlEchoMode": {
+          "value": "even"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "source-over"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "name": "T9 Everything at once",
+      "savedAt": 1791809360455,
+      "values": {
+        "ctrlLiveMode": {
+          "checked": false
+        },
+        "ctrlCamera": {
+          "checked": false
+        },
+        "ctrlEffectNone": {
+          "checked": false
+        },
+        "ctrlEffectDuotone": {
+          "checked": true
+        },
+        "ctrlEffectPixelate": {
+          "checked": true
+        },
+        "ctrlEffectHalftone": {
+          "checked": true
+        },
+        "ctrlEffectAscii": {
+          "checked": true
+        },
+        "ctrlPixelateMin": {
+          "value": "7"
+        },
+        "ctrlPixelateMax": {
+          "value": "17"
+        },
+        "ctrlPixelateRandomize": {
+          "checked": true
+        },
+        "ctrlPixelateAnimate": {
+          "checked": false
+        },
+        "ctrlPixelateRandomCellSize": {
+          "checked": false
+        },
+        "ctrlHalftoneMin": {
+          "value": "6"
+        },
+        "ctrlHalftoneMax": {
+          "value": "11"
+        },
+        "ctrlHalftoneRandomize": {
+          "checked": true
+        },
+        "ctrlHalftoneRandomCellSize": {
+          "checked": false
+        },
+        "ctrlAsciiMin": {
+          "value": "12"
+        },
+        "ctrlAsciiMax": {
+          "value": "24"
+        },
+        "ctrlAsciiRamp": {
+          "value": "density"
+        },
+        "ctrlAsciiRandomize": {
+          "checked": true
+        },
+        "ctrlAsciiRampRandomize": {
+          "checked": false
+        },
+        "ctrlAsciiAnimate": {
+          "checked": true
+        },
+        "ctrlAsciiRandomCellSize": {
+          "checked": false
+        },
+        "ctrlPalette1Fg": {
+          "value": "#00ff00"
+        },
+        "ctrlPalette1Bg": {
+          "value": "#002fa7"
+        },
+        "ctrlPalette1Enabled": {
+          "checked": true
+        },
+        "ctrlPalette2Fg": {
+          "value": "#00ffff"
+        },
+        "ctrlPalette2Bg": {
+          "value": "#6a0dad"
+        },
+        "ctrlPalette2Enabled": {
+          "checked": true
+        },
+        "ctrlPalette3Fg": {
+          "value": "#ffff00"
+        },
+        "ctrlPalette3Bg": {
+          "value": "#99000d"
+        },
+        "ctrlPalette3Enabled": {
+          "checked": true
+        },
+        "ctrlPalette4Fg": {
+          "value": "#ff00ff"
+        },
+        "ctrlPalette4Bg": {
+          "value": "#00802b"
+        },
+        "ctrlPalette4Enabled": {
+          "checked": true
+        },
+        "ctrlPaletteRandomize": {
+          "checked": false
+        },
+        "ctrlPaletteSafeMode": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteColor": {
+          "checked": false
+        },
+        "ctrlAnimatePaletteDensityMin": {
+          "value": "0"
+        },
+        "ctrlAnimatePaletteDensityMax": {
+          "value": "20"
+        },
+        "ctrlAnimatePaletteDensityRandomize": {
+          "checked": false
+        },
+        "ctrlSaturation": {
+          "value": "100"
+        },
+        "ctrlContrast": {
+          "value": "100"
+        },
+        "ctrlSpeedMin": {
+          "value": "2"
+        },
+        "ctrlSpeedMax": {
+          "value": "4"
+        },
+        "ctrlSpeedRandomize": {
+          "checked": true
+        },
+        "ctrlAutoCycle": {
+          "checked": true
+        },
+        "ctrlCrossfadeEnabled": {
+          "checked": true
+        },
+        "ctrlOpacity": {
+          "value": "1"
+        },
+        "ctrlMovePanSpeed": {
+          "value": "70"
+        },
+        "ctrlMoveTiltSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveZoomSpeed": {
+          "value": "0"
+        },
+        "ctrlMoveRandomize": {
+          "checked": false
+        },
+        "ctrlMoveEnd": {
+          "value": "strip"
+        },
+        "ctrlStripLayers": {
+          "value": "2"
+        },
+        "ctrlStripRelation": {
+          "value": "crossing"
+        },
+        "ctrlStripBlend": {
+          "value": "screen"
+        },
+        "ctrlStripOpacity": {
+          "value": "0.7"
+        },
+        "ctrlStripGap": {
+          "value": "25"
+        },
+        "ctrlEchoOn": {
+          "checked": true
+        },
+        "ctrlEchoMode": {
+          "value": "ragged"
+        },
+        "ctrlEchoLength": {
+          "value": "60"
+        },
+        "ctrlEchoStrength": {
+          "value": "60"
+        },
+        "ctrlEchoSpacing": {
+          "value": "12"
+        },
+        "ctrlEchoBlend": {
+          "value": "screen"
+        },
+        "ctrlMoveSpeedMin": {
+          "value": "20"
+        },
+        "ctrlMoveSpeedMax": {
+          "value": "80"
+        },
+        "ctrlBlendOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeMultiply": {
+          "checked": true
+        },
+        "ctrlBlendModeScreen": {
+          "checked": true
+        },
+        "ctrlBlendModeOverlay": {
+          "checked": false
+        },
+        "ctrlBlendModeDarken": {
+          "checked": false
+        },
+        "ctrlBlendModeLighten": {
+          "checked": false
+        },
+        "ctrlBlendModeDifference": {
+          "checked": false
+        },
+        "ctrlBlendModeExclusion": {
+          "checked": false
+        },
+        "ctrlBlendModeHardLight": {
+          "checked": false
+        },
+        "ctrlBlendLayers": {
+          "value": "1"
+        },
+        "ctrlRandomBlendLayers": {
+          "checked": false
+        },
+        "ctrlStartUnchanged": {
+          "checked": false
+        }
+      }
+    }
+  ]
+}

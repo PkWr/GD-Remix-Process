@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Igloo tests — Photo Remix</title>
+<!--
+  Test run sheet for Igloo staff. Standalone page: each test opens the app
+  (index.html?stage=igloo&scene=…) in a new tab with that test's settings;
+  the same tests are in scenes.json, so keys 1–9 in the app switch between
+  them too. Results are kept in this browser and can be copied or
+  downloaded to send back. Test list is generated from tests.js.
+-->
+<style>
+  :root { --bg: #0d0e10; --panel: #17181b; --line: #2b2e33; --text: #ececec; --muted: #a6a6a6; --accent: #7cff8a; --warn: #ffcf5c; --bad: #ff7b7b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  h2 { font-size: 18px; margin: 32px 0 10px; }
+  p { margin: 0 0 10px; }
+  .lede { color: var(--muted); max-width: 70ch; }
+  ol.steps { padding-left: 22px; margin: 0; }
+  ol.steps li { margin-bottom: 8px; }
+  kbd { display: inline-block; min-width: 1.6em; padding: 0 6px; border: 1px solid #555; border-bottom-width: 2px; border-radius: 5px; background: #222; font: 600 13px ui-monospace, Menlo, Consolas, monospace; text-align: center; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .test { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; }
+  .test h3 { margin: 0; font-size: 17px; }
+  .test h3 small { color: var(--muted); font-weight: 400; font-size: 14px; margin-left: 6px; }
+  .test .look { grid-column: 1 / -1; color: #d6d6d6; }
+  .open { align-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 9px; background: #2c3a2f; color: var(--accent); text-decoration: none; font-weight: 600; white-space: nowrap; }
+  .open:hover { background: #36503b; }
+  .open:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  fieldset { grid-column: 1 / -1; border: 0; padding: 0; margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  legend { font-size: 14px; color: var(--muted); margin-bottom: 6px; padding: 0; }
+  .rate { position: relative; }
+  .rate input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .rate span { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 20px; font-size: 14px; color: #cfcfcf; }
+  .rate input:checked + span { border-color: currentColor; background: #1f2622; }
+  .rate.ok input:checked + span { color: var(--accent); }
+  .rate.meh input:checked + span { color: var(--warn); }
+  .rate.bad input:checked + span, .rate.fail input:checked + span { color: var(--bad); }
+  .rate input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  textarea { grid-column: 1 / -1; width: 100%; min-height: 56px; resize: vertical; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: #0f1012; color: var(--text); font: inherit; font-size: 15px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  button { min-height: 44px; padding: 0 16px; border-radius: 9px; border: 1px solid var(--line); background: #22252a; color: var(--text); font: 600 15px system-ui, sans-serif; cursor: pointer; }
+  button.primary { background: #2c3a2f; color: var(--accent); border-color: #355a3b; }
+  #status { color: var(--muted); font-size: 14px; margin-top: 8px; min-height: 1.5em; }
+  .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .meta label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+  .meta input { width: 100%; min-height: 40px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: #0f1012; color: var(--text); font: inherit; }
+  @media (max-width: 560px) { .test { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Igloo tests — Photo Remix</h1>
+  <p class="lede">Nine short tests of the photo-remix web app on the Igloo walls. Each one opens the app with a different look; please watch it for about two minutes and note how it runs. It takes around 30 minutes in all. Thank you!</p>
+
+  <h2>Before you start</h2>
+  <ol class="steps">
+    <li>Open this page in the browser on the Igloo playback machine (the one that will show the walls).</li>
+    <li>Optional but helpful: first open the <a href="igloo-check.html" target="_blank" style="color:var(--accent)">Igloo check page</a>, press <b>Run benchmark</b>, then <b>Copy report</b> and paste it into an email to Patrick.</li>
+    <li>If you hear music, that is part of the app — a low volume is fine.</li>
+  </ol>
+
+  <h2>For each test</h2>
+  <ol class="steps">
+    <li>Click <b>Open test</b>. The app opens in a new tab.</li>
+    <li>Press <kbd>F</kbd> to go fullscreen across the walls. (If that doesn't work, press <kbd>F11</kbd>.)</li>
+    <li>Watch for about two minutes, using the “Look for” notes.</li>
+    <li>Close the tab (<kbd>Ctrl</kbd> + <kbd>W</kbd>) to come back here, then choose a rating and add any notes.</li>
+  </ol>
+  <p class="lede">Shortcut: once the app is open, the number keys <kbd>1</kbd>–<kbd>9</kbd> switch straight to tests 1–9 without leaving fullscreen. <kbd>D</kbd> shows an info panel (please mention anything odd it says); press <kbd>D</kbd> again to hide it.</p>
+
+  <h2>The tests</h2>
+  <div class="box meta" style="margin-bottom:12px">
+    <div><label for="who">Tested by</label><input id="who" autocomplete="name"></div>
+    <div><label for="when">Date</label><input id="when"></div>
+    <div><label for="browser">Browser (if known)</label><input id="browser"></div>
+  </div>
+  <div id="tests"></div>
+
+  <h2>Send the results</h2>
+  <div class="box">
+    <p>Your answers are kept on this page in this browser, so it's fine to come and go. When you've finished, press <b>Copy results</b> and paste them into an email to Patrick, or download them as a file.</p>
+    <div class="btns">
+      <button type="button" class="primary" id="copy">Copy results</button>
+      <button type="button" id="download">Download results</button>
+      <button type="button" id="clear">Clear answers</button>
+    </div>
+    <p id="status" role="status"></p>
+  </div>
+</main>
+<script>
+(() => {
+  "use strict";
+  const TESTS = [{"name":"T1 Plain photos","checks":"Picture mapping and sharpness","look":"Photos fill all six walls with no gaps or doubled strips at the joins. Are the photos sharp enough at this size? Note any that look soft or blocky.","code":"jeyJuIjoiVDEgUGxhaW4gcGhvdG9zIiwidiI6eyJFZmZlY3ROb25lIjoxLCJFZmZlY3REdW90b25lIjowLCJFZmZlY3RQaXhlbGF0ZSI6MCwiRWZmZWN0SGFsZnRvbmUiOjAsIkVmZmVjdEFzY2lpIjowLCJTcGVlZE1pbiI6NiwiU3BlZWRNYXgiOjh9fQ"},{"name":"T2 Duotone, still","checks":"Colour and crossfades","look":"Colours look strong and even across all walls. Fades between images are smooth, with no flashes or freezes.","code":"jeyJuIjoiVDIgRHVvdG9uZSwgc3RpbGwiLCJ2Ijp7IkVmZmVjdE5vbmUiOjAsIkVmZmVjdER1b3RvbmUiOjEsIkVmZmVjdFBpeGVsYXRlIjowLCJFZmZlY3RIYWxmdG9uZSI6MCwiRWZmZWN0QXNjaWkiOjAsIlNwZWVkTWluIjo0LCJTcGVlZE1heCI6Nn19"},{"name":"T3 Pixelate, quick changes","checks":"Speed of image changes","look":"A new image every 2–3 seconds. Does each change happen on time, or does the picture pause or stutter just before it changes?","code":"jeyJuIjoiVDMgUGl4ZWxhdGUsIHF1aWNrIGNoYW5nZXMiLCJ2Ijp7IkVmZmVjdE5vbmUiOjAsIkVmZmVjdER1b3RvbmUiOjAsIkVmZmVjdFBpeGVsYXRlIjoxLCJFZmZlY3RIYWxmdG9uZSI6MCwiRWZmZWN0QXNjaWkiOjAsIlNwZWVkTWluIjoyLCJTcGVlZE1heCI6M319"},{"name":"T4 Halftone","checks":"Heaviest still effect","look":"Dot pattern is crisp. Watch the moment each new image arrives: note any long pause (more than about half a second) or freeze.","code":"jeyJuIjoiVDQgSGFsZnRvbmUiLCJ2Ijp7IkVmZmVjdE5vbmUiOjAsIkVmZmVjdER1b3RvbmUiOjAsIkVmZmVjdFBpeGVsYXRlIjowLCJFZmZlY3RIYWxmdG9uZSI6MSwiRWZmZWN0QXNjaWkiOjAsIlNwZWVkTWluIjo0LCJTcGVlZE1heCI6Nn19"},{"name":"T5 ASCII, flickering","checks":"Animated effect load","look":"Characters flicker continuously. Is the flicker smooth everywhere, or does the whole room judder or lag?","code":"jeyJuIjoiVDUgQVNDSUksIGZsaWNrZXJpbmciLCJ2Ijp7IkVmZmVjdE5vbmUiOjAsIkVmZmVjdER1b3RvbmUiOjAsIkVmZmVjdFBpeGVsYXRlIjowLCJFZmZlY3RIYWxmdG9uZSI6MCwiRWZmZWN0QXNjaWkiOjEsIlNwZWVkTWluIjo1LCJTcGVlZE1heCI6N319"},{"name":"T6 Slow strip around the room","checks":"Smooth movement across the joins","look":"Images slide slowly round the walls in a continuous line. Watch the joins between walls: does the movement stay smooth, or jump or tear as it crosses?","code":"jeyJuIjoiVDYgU2xvdyBzdHJpcCBhcm91bmQgdGhlIHJvb20iLCJ2Ijp7IkVmZmVjdE5vbmUiOjAsIkVmZmVjdER1b3RvbmUiOjEsIkVmZmVjdFBpeGVsYXRlIjowLCJFZmZlY3RIYWxmdG9uZSI6MCwiRWZmZWN0QXNjaWkiOjAsIk1vdmVQYW5TcGVlZCI6MjAsIk1vdmVFbmQiOiJzdHJpcCJ9fQ"},{"name":"T7 Two strips crossing","checks":"Layered movement","look":"Two lines of images move in opposite directions over each other. Note whether movement stays smooth or becomes jerky.","code":"jeyJuIjoiVDcgVHdvIHN0cmlwcyBjcm9zc2luZyIsInYiOnsiRWZmZWN0Tm9uZSI6MCwiRWZmZWN0RHVvdG9uZSI6MSwiRWZmZWN0UGl4ZWxhdGUiOjEsIkVmZmVjdEhhbGZ0b25lIjowLCJFZmZlY3RBc2NpaSI6MCwiTW92ZVBhblNwZWVkIjozMCwiTW92ZUVuZCI6InN0cmlwIiwiU3RyaXBMYXllcnMiOjIsIlN0cmlwUmVsYXRpb24iOiJvcHBvc2luZyJ9fQ"},{"name":"T8 Strip with echo trail","checks":"Echo trail and gaps","look":"Dark gaps between images, with fading echoes trailing into them. Is it smooth? Do the echoes look like a trail, or just a blur?","code":"jeyJuIjoiVDggU3RyaXAgd2l0aCBlY2hvIHRyYWlsIiwidiI6eyJFZmZlY3ROb25lIjowLCJFZmZlY3REdW90b25lIjoxLCJFZmZlY3RQaXhlbGF0ZSI6MCwiRWZmZWN0SGFsZnRvbmUiOjAsIkVmZmVjdEFzY2lpIjowLCJNb3ZlUGFuU3BlZWQiOjMwLCJNb3ZlRW5kIjoic3RyaXAiLCJTdHJpcEdhcCI6NDAsIkVjaG9PbiI6MSwiRWNob01vZGUiOiJldmVuIiwiRWNob0JsZW5kIjoic291cmNlLW92ZXIifX0"},{"name":"T9 Everything at once","checks":"Stress test","look":"All effects, fast strip, two layers, ragged echoes. The hardest test. Let it run for 3 minutes: note any stutter, freeze, black screen or the browser slowing down over time.","code":"jeyJuIjoiVDkgRXZlcnl0aGluZyBhdCBvbmNlIiwidiI6eyJNb3ZlUGFuU3BlZWQiOjcwLCJNb3ZlRW5kIjoic3RyaXAiLCJTdHJpcExheWVycyI6MiwiU3RyaXBSZWxhdGlvbiI6ImNyb3NzaW5nIiwiU3RyaXBHYXAiOjI1LCJFY2hvT24iOjEsIkVjaG9Nb2RlIjoicmFnZ2VkIiwiRWNob0JsZW5kIjoic2NyZWVuIiwiU3BlZWRNaW4iOjIsIlNwZWVkTWF4Ijo0fX0"}];
+  const KEY = "photoRemixIglooTests";
+  const RATINGS = [["ok", "Smooth"], ["meh", "Small stutters"], ["bad", "Juddery / slow"], ["fail", "Didn't work"]];
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  const store = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* answers still on screen */ } };
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  const box = document.getElementById("tests");
+  box.innerHTML = TESTS.map((t, i) => {
+    const n = i + 1;
+    const title = t.name.replace(/^T\d+\s*/, "");
+    const href = `index.html?stage=igloo&scene=${encodeURIComponent(t.code)}`;
+    return `<section class="test" aria-labelledby="t${n}h">` +
+      `<h3 id="t${n}h">${n}. ${esc(title)}<small>${esc(t.checks)}</small></h3>` +
+      `<a class="open" href="${href}" target="_blank" rel="noopener">Open test ${n} ↗</a>` +
+      `<p class="look"><b>Look for:</b> ${esc(t.look)}</p>` +
+      `<fieldset><legend>How did it run?</legend>` +
+      RATINGS.map(([v, l]) => `<label class="rate ${v}"><input type="radio" name="r${n}" value="${v}"><span>${l}</span></label>`).join("") +
+      `</fieldset>` +
+      `<textarea id="n${n}" aria-label="Notes for test ${n}" placeholder="Notes (optional) — what you saw, which wall, roughly when"></textarea>` +
+      `</section>`;
+  }).join("");
+
+  // Restore + save answers.
+  const fields = ["who", "when", "browser"];
+  fields.forEach((id) => {
+    const el = document.getElementById(id);
+    if (saved[id]) el.value = saved[id];
+    el.addEventListener("input", () => { saved[id] = el.value; store(); });
+  });
+  if (!saved.when) document.getElementById("when").value = new Date().toLocaleDateString("en-GB");
+  if (!saved.browser) {
+    const ua = navigator.userAgent;
+    const m = ua.match(/(Edg|Chrome|Firefox|Version)\/(\d+)/);
+    if (m) document.getElementById("browser").value = `${{ Edg: "Edge", Version: "Safari" }[m[1]] || m[1]} ${m[2]}`;
+  }
+  TESTS.forEach((t, i) => {
+    const n = i + 1;
+    const note = document.getElementById(`n${n}`);
+    if (saved[`n${n}`]) note.value = saved[`n${n}`];
+    note.addEventListener("input", () => { saved[`n${n}`] = note.value; store(); });
+    document.querySelectorAll(`input[name="r${n}"]`).forEach((r) => {
+      if (saved[`r${n}`] === r.value) r.checked = true;
+      r.addEventListener("change", () => { saved[`r${n}`] = r.value; store(); });
+    });
+  });
+
+  function report() {
+    const val = (id) => document.getElementById(id).value.trim() || "—";
+    const lines = [
+      "Photo Remix — Igloo test results",
+      `Tested by: ${val("who")}`, `Date: ${val("when")}`, `Browser: ${val("browser")}`,
+      `Screen: ${screen.width}×${screen.height} @ ${window.devicePixelRatio}x`, "",
+    ];
+    TESTS.forEach((t, i) => {
+      const n = i + 1;
+      const r = document.querySelector(`input[name="r${n}"]:checked`);
+      const label = r ? RATINGS.find(([v]) => v === r.value)[1] : "not rated";
+      lines.push(`${n}. ${t.name.replace(/^T\d+\s*/, "")}: ${label}`);
+      const note = document.getElementById(`n${n}`).value.trim();
+      if (note) lines.push(`   ${note.replace(/\n/g, "\n   ")}`);
+    });
+    return lines.join("\n");
+  }
+  const status = (t) => { document.getElementById("status").textContent = t; };
+  document.getElementById("copy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(report()); status("Copied — paste it into an email to Patrick."); }
+    catch (e) { status("Couldn't copy automatically — use Download results instead."); }
+  });
+  document.getElementById("download").addEventListener("click", () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([report()], { type: "text/plain" }));
+    a.download = "igloo-test-results.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    status("Downloaded igloo-test-results.txt — attach it to an email to Patrick.");
+  });
+  document.getElementById("clear").addEventListener("click", () => {
+    saved = {}; store();
+    document.querySelectorAll("textarea").forEach((t) => { t.value = ""; });
+    document.querySelectorAll('input[type="radio"]').forEach((r) => { r.checked = false; });
+    status("Answers cleared.");
+  });
+})();
+</script>
+</body>
+</html>

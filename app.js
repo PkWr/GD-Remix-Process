@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-11 · motion cards";
+  const APP_VERSION = "2026-10-12 · igloo tests";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3742,11 +3742,16 @@
 
   // Shared first (they're the planned running order), then this browser's.
   function allScenes() {
+    // A local scene with a shared scene's name (e.g. opened from a test
+    // link) takes that shared scene's place, so keys 1–9 keep their order.
     const local = loadLocalScenes();
-    const localNames = new Set(local.map((s) => s.name));
+    const localByName = new Map(local.map((s) => [s.name, s]));
+    const sharedNames = new Set(sharedScenes.map((s) => s.name));
     return [
-      ...sharedScenes.filter((s) => !localNames.has(s.name)).map((s) => ({ ...s, shared: true })),
-      ...local.map((s) => ({ ...s, shared: false })),
+      ...sharedScenes.map((s) =>
+        localByName.has(s.name) ? { ...localByName.get(s.name), shared: false } : { ...s, shared: true }
+      ),
+      ...local.filter((s) => !sharedNames.has(s.name)).map((s) => ({ ...s, shared: false })),
     ];
   }
 
