@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-12 · igloo tests";
+  const APP_VERSION = "2026-10-12 · smooth strip";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -2033,6 +2033,7 @@
 
   function applyStripMove(ctx) {
     ctx.clearRect(0, 0, STAGE.w, STAGE.h);
+    ctx.imageSmoothingEnabled = true; // needed for the sub-pixel glide below
     state.strip.lanes.forEach((lane, i) => {
       if (i > 0) {
         ctx.globalCompositeOperation = params.stripBlend === "normal" ? "source-over" : params.stripBlend;
@@ -2041,7 +2042,9 @@
       const L = laneLength(lane);
       const P = lanePitch(lane);
       for (const f of lane.frames) {
-        const pos = Math.round(lane.dir * (lane.s - f.k * P));
+        // Not rounded: whole-pixel steps alternate (1, 2, 1, 2 px…) at slow
+        // speeds and read as judder; sub-pixel positions glide evenly.
+        const pos = lane.dir * (lane.s - f.k * P);
         if (pos <= -L || pos >= L) continue;
         ctx.drawImage(f.canvas, lane.axis === "x" ? pos : 0, lane.axis === "y" ? pos : 0);
       }
@@ -2854,7 +2857,8 @@
     const strength = params.echoStrength / 100;
     if (strength > 0) {
       ctx.save();
-      ctx.globalCompositeOperation = params.echoBlend || "lighten";
+      // "behind" = only where the picture is see-through (the strip gaps).
+      ctx.globalCompositeOperation = params.echoBlend === "behind" ? "destination-over" : params.echoBlend || "lighten";
       ctx.globalAlpha = strength;
       ctx.drawImage(c, 0, 0);
       ctx.restore();
