@@ -151,7 +151,7 @@
       help: "Even and ragged: how far the picture travels between echoes (share of the screen height)" },
     { id: "ctrlEchoBlend", type: "select", label: "Trail blend", default: "lighten", param: "echoBlend",
       help: "How the echoes sit over the picture",
-      options: [["lighten", "Lighten — gaps and shadows only"], ["screen", "Screen — glow over everything"], ["source-over", "Normal — see-through ghost"], ["difference", "Difference — inverted edges"]] },
+      options: [["behind", "Behind — gaps only"], ["lighten", "Lighten — gaps and shadows"], ["screen", "Screen — glow over everything"], ["source-over", "Normal — see-through ghost"], ["difference", "Difference — inverted edges"]] },
     { id: "ctrlMoveSpeedMin", type: "range", label: "Random move strength minimum", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "moveSpeedMin" },
     { id: "ctrlMoveSpeedMax", type: "range", label: "Random move strength maximum", min: 0, max: 100, step: 1, default: 80, int: true, format: "percent", param: "moveSpeedMax" },
 

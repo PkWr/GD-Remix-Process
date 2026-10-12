@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-12T12:49:20.441Z",
+  "exportedAt": "2026-10-12T13:47:55.008Z",
   "scenes": [
     {
       "name": "T1 Plain photos",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -247,7 +247,7 @@
     },
     {
       "name": "T2 Duotone, still",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -490,7 +490,7 @@
     },
     {
       "name": "T3 Pixelate, quick changes",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -733,7 +733,7 @@
     },
     {
       "name": "T4 Halftone",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -976,7 +976,7 @@
     },
     {
       "name": "T5 ASCII, flickering",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1219,7 +1219,7 @@
     },
     {
       "name": "T6 Slow strip around the room",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1462,7 +1462,7 @@
     },
     {
       "name": "T7 Two strips crossing",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1705,7 +1705,7 @@
     },
     {
       "name": "T8 Strip with echo trail",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1900,7 +1900,7 @@
           "value": "12"
         },
         "ctrlEchoBlend": {
-          "value": "source-over"
+          "value": "behind"
         },
         "ctrlMoveSpeedMin": {
           "value": "20"
@@ -1948,7 +1948,7 @@
     },
     {
       "name": "T9 Everything at once",
-      "savedAt": 1791809360455,
+      "savedAt": 1791812875019,
       "values": {
         "ctrlLiveMode": {
           "checked": false
