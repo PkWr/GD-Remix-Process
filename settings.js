@@ -474,6 +474,7 @@
       case "tools":
         return (
           `<p class="cp-links">` +
+          `<a href="showreel.html" target="_blank" title="Plays a loop of looks, about 10 seconds each, with captions. → / ← skip, P pauses">Showreel ↗</a>` +
           `<a href="seed-loader.html" target="_blank" title="Drag new photos in, auto-named and saved automatically">Image uploader ↗</a>` +
           `<a href="controls.html" target="_blank" title="Opens in a new tab on this same device — won't reach a phone or another computer">Remote controls ↗</a>` +
           `<a href="igloo-check.html" target="_blank">Igloo check ↗</a>` +

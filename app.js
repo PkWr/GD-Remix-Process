@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-15 · 3D forms";
+  const APP_VERSION = "2026-10-15 · showreel";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -210,7 +210,8 @@
   };
 
   const pageParams = new URLSearchParams(location.search);
-  const requestedProfile = (pageParams.get("stage") || "phone").toLowerCase();
+  // ?reel (the showreel) defaults to the desktop profile.
+  const requestedProfile = (pageParams.get("stage") || (pageParams.has("reel") ? "desktop" : "phone")).toLowerCase();
   if (!STAGE_PROFILES[requestedProfile]) {
     console.warn(`[stage] unknown profile "${requestedProfile}", using phone`);
   }
@@ -4476,6 +4477,84 @@
     clean.searchParams.delete("scene");
     history.replaceState(null, "", clean.toString());
   }
+  // ---------------------------------------------------------------------
+  // SHOWREEL (?reel) — plays the looks in showreel.json in a loop
+  // ---------------------------------------------------------------------
+  // Each look is a list of settings (differences from the defaults, same
+  // format as a share link), applied for `seconds`, with a small caption.
+  // The image source and camera are left as they are. → / ← skip, P pauses.
+  const reel = { looks: [], i: -1, left: 0, seconds: 10, caption: null };
+
+  function showReelLook(i) {
+    const n = reel.looks.length;
+    reel.i = ((i % n) + n) % n;
+    const look = reel.looks[reel.i];
+    reel.left = look.seconds || reel.seconds;
+    const values = sceneValuesFromDiff(look.settings || {});
+    delete values.ctrlLiveMode;
+    delete values.ctrlCamera;
+    applyingScene = true;
+    try {
+      applyControlState(values);
+    } finally {
+      applyingScene = false;
+    }
+    broadcastState();
+    // Start the look on a fresh image straight away, without past frames
+    // from the previous look (other colours) in the blend overlay.
+    state.recentFrames = [];
+    resetStrip();
+    if (!stripActive() && state.hasCycled && !camera.live) {
+      if (cycleTimeoutId) {
+        clearTimeout(cycleTimeoutId);
+        cycleTimeoutId = null;
+      }
+      state.stripPending = false;
+      cycle();
+    }
+    const cap = reel.caption;
+    cap.innerHTML = `<b>${String(reel.i + 1).padStart(2, "0")}</b>${escapeText(look.title || "")}`;
+    cap.classList.remove("show");
+    void cap.offsetWidth; // restart the fade
+    cap.classList.add("show");
+  }
+
+  async function startReel() {
+    if (!pageParams.has("reel")) return;
+    try {
+      const data = await fetch(`showreel.json?t=${Date.now()}`).then((r) => r.json());
+      reel.looks = Array.isArray(data.looks) ? data.looks : [];
+      reel.seconds = data.seconds || 10;
+    } catch (e) {
+      showToast(`Couldn't load showreel.json (${e.message}).`, "error", 8000);
+      return;
+    }
+    if (!reel.looks.length) return;
+    reel.caption = document.createElement("div");
+    reel.caption.id = "reelCaption";
+    reel.caption.setAttribute("aria-live", "polite");
+    document.body.appendChild(reel.caption);
+    document.body.classList.add("reel");
+    showReelLook(0);
+    let last = performance.now();
+    setInterval(() => {
+      const now = performance.now();
+      const dt = Math.min(0.25, (now - last) / 1000); // a stalled frame doesn't eat a look's time
+      last = now;
+      if (state.paused) return;
+      reel.left -= dt;
+      reel.caption.classList.toggle("show", reel.left > 0.7);
+      if (reel.left <= 0) showReelLook(reel.i + 1);
+    }, 100);
+    window.addEventListener("keydown", (e) => {
+      const t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
+      if (e.key === "ArrowRight") showReelLook(reel.i + 1);
+      if (e.key === "ArrowLeft") showReelLook(reel.i - 1);
+    });
+  }
+
+
 
   async function boot() {
     // Build the controls panel from settings.js before anything looks for
@@ -4546,6 +4625,7 @@
 
     // Opened from a shared scene link / QR code (?scene=…).
     openSharedSceneFromUrl();
+    startReel();
 
     try {
       state.sources = await loadImageSourcesForMode(params.sourceMode);
