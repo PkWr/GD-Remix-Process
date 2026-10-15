@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-15 · showreel";
+  const APP_VERSION = "2026-10-15 · showreel bar";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3850,7 +3850,7 @@
   let touchBarTimer = null;
 
   function buildTouchBar() {
-    if (!TOUCH_UI || document.getElementById("touchBar")) return;
+    if (!TOUCH_UI || document.getElementById("touchBar") || pageParams.has("reel")) return; // the showreel has its own bar
     const bar = document.createElement("div");
     bar.id = "touchBar";
     bar.setAttribute("role", "toolbar");
@@ -4483,13 +4483,84 @@
   // Each look is a list of settings (differences from the defaults, same
   // format as a share link), applied for `seconds`, with a small caption.
   // The image source and camera are left as they are. → / ← skip, P pauses.
-  const reel = { looks: [], i: -1, left: 0, seconds: 10, caption: null };
+  const reel = { looks: [], i: -1, left: 0, seconds: 5, caption: null, bar: null, barTimer: null, paused: null };
+  const REEL_PACES = [2, 3, 4, 5, 7, 10, 15, 20, 30]; // seconds per look
+
+  // Play bar — same look as the phone's touch bar (dark, icon above label):
+  // previous · slower · pause · faster · next. Shows on mouse move / tap,
+  // fades after a few seconds. Keys: ← → skip, − + pace, P pause.
+  function buildReelBar() {
+    const bar = document.createElement("div");
+    bar.id = "reelBar";
+    bar.setAttribute("role", "toolbar");
+    bar.setAttribute("aria-label", "Showreel controls");
+    const mk = (id, label, icon, onTap) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.id = id;
+      b.innerHTML = `${iconSvg(icon, 22)}<span>${label}</span>`;
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onTap();
+        showReelBar();
+      });
+      bar.appendChild(b);
+      return b;
+    };
+    mk("rbPrev", "Previous", "skip_previous", () => showReelLook(reel.i - 1));
+    mk("rbSlower", "Slower", "remove", () => setReelPace(+1));
+    mk("rbPause", "Pause", "pause", () => togglePause());
+    mk("rbFaster", "Faster", "add", () => setReelPace(-1));
+    mk("rbNext", "Next", "skip_next", () => showReelLook(reel.i + 1));
+    document.body.appendChild(bar);
+    reel.bar = bar;
+    updateReelBar();
+    ["mousemove", "pointerdown"].forEach((ev) => window.addEventListener(ev, showReelBar, { passive: true }));
+    showReelBar();
+  }
+
+  function showReelBar() {
+    if (!reel.bar) return;
+    document.body.classList.add("reel-bar-on");
+    clearTimeout(reel.barTimer);
+    reel.barTimer = setTimeout(() => {
+      // Stay up while the pointer is on it, or a key-board user is tabbing through it.
+      if (reel.bar.matches(":hover") || reel.bar.querySelector(":focus-visible")) return showReelBar();
+      document.body.classList.remove("reel-bar-on");
+    }, 3000);
+  }
+
+  // dir +1 = slower (longer per look), −1 = faster.
+  function setReelPace(dir) {
+    let k = REEL_PACES.findIndex((s) => s >= reel.seconds);
+    if (k < 0) k = REEL_PACES.length - 1;
+    k = Math.max(0, Math.min(REEL_PACES.length - 1, k + dir));
+    const was = reel.seconds;
+    reel.seconds = REEL_PACES[k];
+    reel.left = Math.max(0.5, Math.min(reel.left + (reel.seconds - was), reel.seconds));
+    updateReelBar();
+    showToast(`${reel.seconds} s per look`, "info", 1500);
+  }
+
+  function updateReelBar() {
+    if (!reel.bar) return;
+    if (reel.paused !== state.paused) {
+      reel.paused = state.paused;
+      const p = document.getElementById("rbPause");
+      p.innerHTML = `${iconSvg(state.paused ? "play_arrow" : "pause", 22)}<span>${state.paused ? "Play" : "Pause"}</span>`;
+      p.setAttribute("aria-pressed", String(state.paused));
+    }
+    document.getElementById("rbSlower").innerHTML = `${iconSvg("remove", 22)}<span>Slower</span>`;
+    document.getElementById("rbFaster").innerHTML = `${iconSvg("add", 22)}<span>Faster · ${reel.seconds} s</span>`;
+    document.getElementById("rbSlower").disabled = reel.seconds >= REEL_PACES[REEL_PACES.length - 1];
+    document.getElementById("rbFaster").disabled = reel.seconds <= REEL_PACES[0];
+  }
 
   function showReelLook(i) {
     const n = reel.looks.length;
     reel.i = ((i % n) + n) % n;
     const look = reel.looks[reel.i];
-    reel.left = look.seconds || reel.seconds;
+    reel.left = reel.seconds;
     const values = sceneValuesFromDiff(look.settings || {});
     delete values.ctrlLiveMode;
     delete values.ctrlCamera;
@@ -4524,7 +4595,7 @@
     try {
       const data = await fetch(`showreel.json?t=${Date.now()}`).then((r) => r.json());
       reel.looks = Array.isArray(data.looks) ? data.looks : [];
-      reel.seconds = data.seconds || 10;
+      reel.seconds = data.seconds || 5;
     } catch (e) {
       showToast(`Couldn't load showreel.json (${e.message}).`, "error", 8000);
       return;
@@ -4535,12 +4606,14 @@
     reel.caption.setAttribute("aria-live", "polite");
     document.body.appendChild(reel.caption);
     document.body.classList.add("reel");
+    buildReelBar();
     showReelLook(0);
     let last = performance.now();
     setInterval(() => {
       const now = performance.now();
       const dt = Math.min(0.25, (now - last) / 1000); // a stalled frame doesn't eat a look's time
       last = now;
+      updateReelBar();
       if (state.paused) return;
       reel.left -= dt;
       reel.caption.classList.toggle("show", reel.left > 0.7);
@@ -4551,6 +4624,9 @@
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
       if (e.key === "ArrowRight") showReelLook(reel.i + 1);
       if (e.key === "ArrowLeft") showReelLook(reel.i - 1);
+      if (e.key === "-" || e.key === "_") setReelPace(+1);
+      if (e.key === "+" || e.key === "=") setReelPace(-1);
+      if (["ArrowRight", "ArrowLeft", "-", "_", "+", "=", "p", "P"].includes(e.key)) showReelBar();
     });
   }
 
