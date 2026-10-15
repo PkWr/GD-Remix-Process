@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-12 · smooth strip";
+  const APP_VERSION = "2026-10-15 · 3D forms";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -472,6 +472,10 @@
     stripRelation: "opposing",
     stripBlend: "screen",
     stripOpacity: 0.7,
+    // 3D forms (see FORMS 3D below) — defaults come from settings.js.
+    formsOn: false,
+    formsShape: "form",
+    formsBehind: "black",
     // Strip gap: dark space between strip images (% of the screen).
     stripGap: 0,
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
@@ -2138,6 +2142,7 @@
     effect.run(destCtx, sourceCanvas, effectParams);
 
     const cleanSnapshot = snapshotFrame(destCtx.canvas);
+    forms3dTakeFrame(cleanSnapshot);
 
     // Move (if enabled) will only ever pan this — the primary effect layer —
     // never the blend-history layers below, which are frozen as a static
@@ -2402,7 +2407,7 @@
   function updateLookDiagnostic() {
     setText(
       "diagLook",
-      `crossfade ${params.crossfadeEnabled ? (camera.live ? "on (hard cuts while camera is on)" : "on") : "off (hard cut)"} · sat ${params.saturation}% · con ${params.contrast}%`
+      `crossfade ${params.crossfadeEnabled ? (camera.live ? "on (hard cuts while camera is on)" : "on") : "off (hard cut)"} · sat ${params.saturation}% · con ${params.contrast}%${params.formsOn ? ` · 3D forms ${forms3d.ready ? `${params.formsCount}× ${params.formsShape}${params.formsShape === "form" ? ` ${params.formsDrift ? "drift" : params.formsOrganic}` : ""} ${params.formsWrap} · ${forms3d.cams.length} camera${forms3d.cams.length > 1 ? "s" : ""}` : "loading…"}` : ""}`
     );
   }
 
@@ -2597,6 +2602,9 @@
     camera(on) {
       setCamera(on);
     },
+    forms3d() {
+      forms3dUpdate();
+    },
     // Untouched is exclusive: on = every effect off (remembering which
     // were on); off = those come back (or all, if none were). Turning any
     // effect on while Untouched is on turns Untouched off. Changes made
@@ -2763,6 +2771,353 @@
   // for now (each still ends up looking right most frames), but if the two
   // visibly fight during rehearsal, the fix is to fold them into composeFrame
   // too instead of leaving them as separate bypass-redraws.
+  // ---------------------------------------------------------------------
+  // 3D FORMS — each new image wrapped round a 3D shape (WebGL / three.js)
+  // ---------------------------------------------------------------------
+  // A WebGL canvas (#forms3d) sits over the normal picture. Every finished
+  // effect frame (renderFrame) is cropped to 2:1 and handed to the next
+  // form in turn, so all the 2D effects and palettes show on the shapes.
+  // The Form shape is a ball reshaped in the vertex shader: cube → sphere
+  // → wobbling globular blob (Geometric ↔ Organic). Forms sit on a ring
+  // round the viewer; profiles with seams (the Igloo) draw each wall with
+  // its own camera from the centre of the room, so forms stay round and
+  // line up across the joins. three.js (MIT) is bundled in vendor/ and only
+  // loaded the first time 3D forms is switched on.
+  const FORMS_RING = 10;
+  const FORMS_TEX = { w: 1024, h: 512 };
+  const forms3d = {
+    loading: null, ready: false, canvas: null, renderer: null, scene: null,
+    cams: [], meshes: [], geos: {}, shared: null, next: 0, travel: 0, last: 0,
+    running: false, visibleH: 6, camTick: 0,
+  };
+
+  function loadThree() {
+    if (window.THREE) return Promise.resolve(window.THREE);
+    if (!forms3d.loading) {
+      forms3d.loading = new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "vendor/three.min.js";
+        s.onload = () => (window.THREE ? resolve(window.THREE) : reject(new Error("3D library missing")));
+        s.onerror = () => {
+          forms3d.loading = null;
+          reject(new Error("couldn't load vendor/three.min.js"));
+        };
+        document.head.appendChild(s);
+      });
+    }
+    return forms3d.loading;
+  }
+
+  function forms3dActive() {
+    return params.formsOn && forms3d.ready;
+  }
+
+  const FORMS_VERTEX = `
+    uniform int morph; uniform float form; uniform float time;
+    varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN;
+    vec3 shapeAt(vec3 d) {
+      float g = clamp(form * 2.0, 0.0, 1.0);
+      float p = exp(mix(log(28.0), log(2.0), g));
+      float r = pow(pow(abs(d.x), p) + pow(abs(d.y), p) + pow(abs(d.z), p), -1.0 / p);
+      r /= pow(sqrt(3.0) * pow(3.0, -1.0 / p), 0.65);
+      float o = clamp(form * 2.0 - 1.0, 0.0, 1.0);
+      float n = 0.5 * sin(dot(d, vec3(1.7, 2.3, -1.1)) * 1.3 + time * 0.6)
+              + 0.35 * sin(dot(d, vec3(-2.9, 1.3, 2.1)) - time * 0.45 + 2.0)
+              + 0.25 * sin(dot(d, vec3(3.7, -2.6, 1.9)) * 0.9 + time * 0.8 + 4.0)
+              + 0.12 * sin(dot(d, vec3(-1.1, -4.3, 3.3)) * 1.4 - time * 1.1);
+      r *= (1.0 + o * 0.42 * n) / (1.0 + o * 0.3);
+      return d * r;
+    }
+    void main() {
+      vec3 p = position; vec3 nrm = normalize(normal);
+      if (morph == 1) {
+        vec3 d = normalize(position);
+        vec3 up = abs(d.y) > 0.99 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
+        vec3 t1 = normalize(cross(d, up)); vec3 t2 = cross(d, t1);
+        p = shapeAt(d);
+        vec3 a = shapeAt(normalize(d + 0.01 * t1)) - p;
+        vec3 b = shapeAt(normalize(d + 0.01 * t2)) - p;
+        nrm = normalize(cross(a, b));
+        if (dot(nrm, d) < 0.0) nrm = -nrm;
+      }
+      vPos = p; vNormal = nrm;
+      vViewN = normalize(normalMatrix * nrm);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    }`;
+  const FORMS_FRAGMENT = `
+    uniform sampler2D map; uniform int wrapMode; uniform float shade;
+    varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN;
+    const float PI = 3.14159265;
+    // Mirrored across, so the photo's left and right edges never meet in a seam.
+    vec3 photo(vec2 uv) {
+      uv.x = 1.0 - abs(2.0 * fract(uv.x) - 1.0);
+      uv.y = clamp(uv.y, 0.002, 0.998);
+      return texture2D(map, uv).rgb;
+    }
+    void main() {
+      vec3 p = normalize(vPos + 1e-5);
+      vec3 col;
+      if (wrapMode == 0) {
+        col = photo(vec2(atan(p.z, p.x) / (2.0 * PI) + 0.5, 1.0 - acos(clamp(p.y, -1.0, 1.0)) / PI));
+      } else if (wrapMode == 1) {
+        col = photo(vec2(atan(vPos.z, vPos.x) / (2.0 * PI) + 0.5, vPos.y * 0.5 + 0.5));
+      } else {
+        vec3 w = pow(abs(vNormal), vec3(4.0)); w /= (w.x + w.y + w.z);
+        col = photo(vPos.zy * 0.25 + 0.5) * w.x + photo(vPos.xz * 0.25 + 0.5) * w.y + photo(vPos.xy * 0.25 + 0.5) * w.z;
+      }
+      float lambert = max(dot(normalize(vViewN), normalize(vec3(0.4, 0.6, 0.8))), 0.0);
+      float rim = pow(1.0 - max(vViewN.z, 0.0), 3.0);
+      col *= mix(1.0, 0.25 + 0.95 * lambert, shade);
+      col += rim * 0.2 * shade;
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+
+  // Built-in shapes, centred and scaled to fit a unit ball. Bounds are
+  // padded so the Form's bulges are never culled at a wall's edge.
+  function formsGeometry(kind) {
+    const T = window.THREE;
+    if (forms3d.geos[kind]) return forms3d.geos[kind];
+    let g;
+    if (kind === "rock") {
+      g = new T.IcosahedronGeometry(1, 5);
+      const pos = g.attributes.position;
+      const v = new T.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        const n = Math.sin(v.x * 3.6 + v.y * 2.2) * 0.5 + Math.sin(v.y * 6.3 + v.z * 3.9) * 0.3 + Math.sin(v.z * 8.7 + v.x * 7.1) * 0.2;
+        v.multiplyScalar(1 + 0.18 * n);
+        pos.setXYZ(i, v.x, v.y * 0.85, v.z);
+      }
+    } else if (kind === "knot") {
+      g = new T.TorusKnotGeometry(0.8, 0.28, 240, 32, 2, 3);
+    } else if (kind === "vase") {
+      const pts = [];
+      for (let i = 0; i <= 48; i++) {
+        const t = i / 48;
+        pts.push(new T.Vector2(0.25 + 0.38 * Math.sin(t * Math.PI * 1.15 + 0.3) + 0.08 * Math.sin(t * 14), t * 2 - 1));
+      }
+      g = new T.LatheGeometry(pts, 96);
+    } else {
+      g = new T.SphereGeometry(1, 128, 96);
+    }
+    g.computeVertexNormals();
+    g.computeBoundingBox();
+    const c = new T.Vector3();
+    g.boundingBox.getCenter(c);
+    g.translate(-c.x, -c.y, -c.z);
+    g.computeBoundingSphere();
+    const s = 1 / g.boundingSphere.radius;
+    g.scale(s, s, s);
+    g.computeBoundingSphere();
+    g.boundingSphere.radius *= 1.6;
+    forms3d.geos[kind] = g;
+    return g;
+  }
+
+  function forms3dInit() {
+    const T = window.THREE;
+    const canvas = document.createElement("canvas");
+    canvas.id = "forms3d";
+    canvas.setAttribute("aria-hidden", "true");
+    document.getElementById("stage").appendChild(canvas);
+    forms3d.canvas = canvas;
+    forms3d.renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    forms3d.renderer.setPixelRatio(1);
+    forms3d.renderer.autoClear = false;
+    forms3d.scene = new T.Scene();
+    forms3d.shared = { wrapMode: { value: 0 }, shade: { value: 0.55 }, morph: { value: 1 } };
+    forms3d.ready = true;
+    forms3dResize();
+  }
+
+  // One camera per wall section on seamed profiles (Igloo: 6 × 60°), or one
+  // camera for the whole stage, all at the centre of the ring.
+  function forms3dResize() {
+    if (!forms3d.ready) return;
+    const T = window.THREE;
+    forms3d.renderer.setSize(STAGE.w, STAGE.h, false);
+    const sections = STAGE_PROFILE.seams || 1;
+    const secW = STAGE.w / sections;
+    const aspect = secW / STAGE.h;
+    let vfov;
+    if (sections > 1) vfov = 2 * Math.atan(Math.tan(Math.PI / sections) / aspect);
+    else vfov = aspect >= 1 ? 2 * Math.atan(Math.tan(Math.PI / 6) / aspect) : Math.PI / 3;
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
+    forms3d.visibleH = Math.min(2 * FORMS_RING * Math.tan(vfov / 2), 2 * FORMS_RING * Math.tan(hfov / 2));
+    forms3d.cams = Array.from({ length: sections }, (_, i) => {
+      const cam = new T.PerspectiveCamera((vfov * 180) / Math.PI, aspect, 0.1, 100);
+      cam.rotation.y = sections > 1 ? -((i + 0.5) * 2 * Math.PI) / sections : 0;
+      return { cam, x: Math.round(i * secW), w: Math.round((i + 1) * secW) - Math.round(i * secW) };
+    });
+    // Seamed rooms: start the group centred on the first wall.
+    forms3d.centre = sections > 1 ? Math.PI / sections : 0;
+    forms3d.room = sections > 1;
+    forms3d.hfov = hfov;
+  }
+
+  const formsRand = (k, s) => {
+    const x = Math.sin(k * 127.1 + s * 311.7) * 43758.5453;
+    return x - Math.floor(x);
+  };
+
+  function forms3dSync() {
+    const T = window.THREE;
+    const n = params.formsCount;
+    forms3d.shared.morph.value = params.formsShape === "form" ? 1 : 0;
+    const geo = formsGeometry(params.formsShape);
+    while (forms3d.meshes.length < n) {
+      const k = forms3d.meshes.length;
+      const material = new T.ShaderMaterial({
+        uniforms: {
+          map: { value: null }, form: { value: 0.25 }, time: { value: 0 },
+          wrapMode: forms3d.shared.wrapMode, shade: forms3d.shared.shade, morph: forms3d.shared.morph,
+        },
+        vertexShader: FORMS_VERTEX,
+        fragmentShader: FORMS_FRAGMENT,
+      });
+      const m = new T.Mesh(geo, material);
+      m.userData = { k, spin: 0.4 + formsRand(k, 1) * 0.8, tilt: formsRand(k, 2) * Math.PI };
+      forms3d.scene.add(m);
+      forms3d.meshes.push(m);
+    }
+    forms3d.meshes.forEach((m, i) => {
+      m.visible = i < n;
+      m.geometry = geo;
+    });
+  }
+
+  // Crops a 2:1 piece of a finished frame (somewhere different each time)
+  // into a small canvas the GPU can wrap round a form.
+  function formsTextureFrom(frame) {
+    const T = window.THREE;
+    const c = document.createElement("canvas");
+    c.width = FORMS_TEX.w;
+    c.height = FORMS_TEX.h;
+    const cw = Math.min(frame.width, frame.height * 2);
+    const ch = cw / 2;
+    const sx = Math.random() * (frame.width - cw);
+    const sy = Math.random() * (frame.height - ch);
+    const g = c.getContext("2d");
+    g.fillStyle = "#000";
+    g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(frame, sx, sy, cw, ch, 0, 0, c.width, c.height);
+    const t = new T.CanvasTexture(c);
+    t.minFilter = T.LinearMipmapLinearFilter;
+    t.anisotropy = Math.min(8, forms3d.renderer.capabilities.getMaxAnisotropy());
+    return t;
+  }
+
+  function formsSetTexture(m, frame) {
+    const u = m.material.uniforms;
+    if (u.map.value) u.map.value.dispose();
+    u.map.value = formsTextureFrom(frame);
+  }
+
+  // A new finished image goes to the next form in turn.
+  function forms3dTakeFrame(frame) {
+    if (!forms3dActive() || !frame) return;
+    const n = params.formsCount;
+    const m = forms3d.meshes[forms3d.next % n];
+    forms3d.next++;
+    if (m) formsSetTexture(m, frame);
+  }
+
+  function forms3dShow(on) {
+    const stage = document.getElementById("stage");
+    stage.classList.toggle("forms-only", on && params.formsBehind === "black");
+    if (forms3d.canvas) forms3d.canvas.hidden = !on;
+    if (on && !forms3d.running) {
+      forms3d.running = true;
+      forms3d.last = 0;
+      requestAnimationFrame(forms3dLoop);
+    }
+  }
+
+  async function forms3dUpdate() {
+    if (!params.formsOn) {
+      forms3dShow(false);
+      updateLookDiagnostic();
+      return;
+    }
+    try {
+      await loadThree();
+    } catch (e) {
+      showToast(`3D forms unavailable: ${e.message}`, "error", 8000);
+      return;
+    }
+    if (!params.formsOn) return;
+    if (!forms3d.ready) forms3dInit();
+    forms3dSync();
+    forms3dShow(true);
+    updateLookDiagnostic();
+  }
+
+  function forms3dLoop(now) {
+    if (!forms3dActive()) {
+      forms3d.running = false;
+      return;
+    }
+    const dt = forms3d.last ? Math.min(0.1, (now - forms3d.last) / 1000) : 0;
+    forms3d.last = now;
+    const run = state.paused ? 0 : dt;
+    const n = params.formsCount;
+    const frame = state.lastEffectFrame;
+
+    // Live camera: refresh one form with the latest camera frame twice a second.
+    if (camera.live && camera.layer) {
+      forms3d.camTick += run;
+      if (forms3d.camTick > 0.5) {
+        forms3d.camTick = 0;
+        forms3dTakeFrame(camera.layer);
+      }
+    }
+
+    forms3d.shared.wrapMode.value = { globe: 0, tube: 1, box: 2 }[params.formsWrap] || 0;
+    forms3d.shared.shade.value = params.formsShade / 100;
+    const organic = params.formsDrift ? 0.5 - 0.5 * Math.cos(now / 9000) : params.formsOrganic / 100;
+    const spacing = (params.formsSpacing * Math.PI) / 180;
+    const size = params.formsSize / 100;
+    const depth = params.formsDepth / 100;
+    const variety = params.formsVariety / 100;
+    const spin = params.formsSpin / 100;
+    forms3d.travel += run * (params.formsTravel / 100) * 0.12;
+    const H = forms3d.visibleH;
+
+    forms3d.meshes.forEach((m, i) => {
+      if (i >= n) return;
+      const { k } = m.userData;
+      if (!m.material.uniforms.map.value && frame) formsSetTexture(m, frame);
+      let a = forms3d.centre + forms3d.travel + (i - (n - 1) / 2) * spacing;
+      // One screen (laptop / phone): the whole "room" is squeezed into the
+      // screen's width, so the group stays in view and wraps edge to edge.
+      if (!forms3d.room) {
+        const u = (((a + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+        a = u * (forms3d.hfov / (2 * Math.PI)) * 1.15;
+      }
+      const r = FORMS_RING * (1 + depth * (formsRand(k, 3) - 0.5) * 0.7);
+      m.position.set(Math.sin(a) * r, (formsRand(k, 4) - 0.5) * H * 0.25 * (1 - size * 0.6), -Math.cos(a) * r);
+      m.scale.setScalar(H * 0.36 * size * (r / FORMS_RING));
+      m.rotation.y += run * spin * m.userData.spin * 1.2;
+      m.rotation.x = m.userData.tilt + Math.sin(now / 5000 + k) * 0.3 * spin;
+      const u = m.material.uniforms;
+      u.time.value = now / 1000 + k * 7.3;
+      u.form.value = Math.min(1, Math.max(0, organic + variety * (formsRand(k, 5) - 0.5)));
+    });
+
+    const R = forms3d.renderer;
+    R.setScissorTest(false);
+    R.setClearColor(0x000000, params.formsBehind === "black" ? 1 : 0);
+    R.setViewport(0, 0, STAGE.w, STAGE.h);
+    R.clear();
+    R.setScissorTest(true);
+    for (const { cam, x, w } of forms3d.cams) {
+      R.setViewport(x, 0, w, STAGE.h);
+      R.setScissor(x, 0, w, STAGE.h);
+      R.render(forms3d.scene, cam);
+    }
+    requestAnimationFrame(forms3dLoop);
+  }
+
   // ---------------------------------------------------------------------
   // ECHO TRAIL — the moving picture leaves fading echoes of itself
   // ---------------------------------------------------------------------
@@ -3080,6 +3435,7 @@
     STAGE.h = next.h;
 
     sizeCanvases();
+    forms3dResize();
     normalizedCache.clear();
     state.recentFrames = [];
     state.lastEffectFrame = null;
