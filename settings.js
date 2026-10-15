@@ -152,6 +152,27 @@
     { id: "ctrlEchoBlend", type: "select", label: "Trail blend", default: "lighten", param: "echoBlend",
       help: "How the echoes sit over the picture",
       options: [["behind", "Behind — gaps only"], ["lighten", "Lighten — gaps and shadows"], ["screen", "Screen — glow over everything"], ["source-over", "Normal — see-through ghost"], ["difference", "Difference — inverted edges"]] },
+    // Motion — 3D forms (photos wrapped round 3D shapes, drawn with WebGL)
+    { id: "ctrlFormsOn", type: "switch", label: "3D forms on", default: false, param: "formsOn", after: "forms3d" },
+    { id: "ctrlFormsShape", type: "select", label: "Shape", default: "form", param: "formsShape", after: "forms3d",
+      options: [["form", "Form — geometric to organic"], ["rock", "Rock"], ["knot", "Knot"], ["vase", "Vase"]] },
+    { id: "ctrlFormsOrganic", type: "range", label: "Geometric ↔ Organic", min: 0, max: 100, step: 1, default: 25, int: true, format: "formName", param: "formsOrganic",
+      help: "0 cube · 50 sphere · 100 globular blob" },
+    { id: "ctrlFormsDrift", type: "switch", label: "Drift slowly between them", default: false, param: "formsDrift" },
+    { id: "ctrlFormsCount", type: "range", label: "How many", min: 1, max: 24, step: 1, default: 6, int: true, format: "int", param: "formsCount", after: "forms3d" },
+    { id: "ctrlFormsSpacing", type: "range", label: "Spacing", min: 4, max: 90, step: 1, default: 45, int: true, format: "degrees", param: "formsSpacing",
+      help: "Degrees round the room between neighbours — small values overlap" },
+    { id: "ctrlFormsSize", type: "range", label: "Size", min: 15, max: 100, step: 1, default: 55, int: true, format: "percent", param: "formsSize" },
+    { id: "ctrlFormsDepth", type: "range", label: "Near / far spread", min: 0, max: 100, step: 1, default: 40, int: true, format: "percent", param: "formsDepth",
+      help: "Pushes some forms closer, so overlaps stack instead of merging" },
+    { id: "ctrlFormsVariety", type: "range", label: "Mix of forms", min: 0, max: 100, step: 1, default: 60, int: true, format: "percent", param: "formsVariety" },
+    { id: "ctrlFormsTravel", type: "range", label: "Travel round the room", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "formsTravel" },
+    { id: "ctrlFormsSpin", type: "range", label: "Spin", min: 0, max: 100, step: 1, default: 30, int: true, format: "percent", param: "formsSpin" },
+    { id: "ctrlFormsWrap", type: "select", label: "Wrap", default: "globe", param: "formsWrap",
+      options: [["globe", "Globe — from the centre"], ["tube", "Tube — like a label"], ["box", "Box — front, side, top"]] },
+    { id: "ctrlFormsShade", type: "range", label: "Shading", min: 0, max: 100, step: 1, default: 55, int: true, format: "percent", param: "formsShade" },
+    { id: "ctrlFormsBehind", type: "select", label: "Behind the forms", default: "black", param: "formsBehind", after: "forms3d",
+      options: [["black", "Black"], ["picture", "The normal picture"]] },
     { id: "ctrlMoveSpeedMin", type: "range", label: "Random move strength minimum", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "moveSpeedMin" },
     { id: "ctrlMoveSpeedMax", type: "range", label: "Random move strength maximum", min: 0, max: 100, step: 1, default: 80, int: true, format: "percent", param: "moveSpeedMax" },
 
@@ -258,6 +279,18 @@
           "ctrlEchoBlend",
         ] },
       ] },
+      { card: "3D forms", summary: "off", summarize: "forms", switch: "ctrlFormsOn", items: [
+        { when: { id: "ctrlFormsOn", is: ["off"] }, items: [
+          { note: "Switch on: each new image is wrapped round a 3D shape. On the Igloo they sit round all six walls." },
+        ] },
+        { when: { id: "ctrlFormsOn", is: ["on"] }, items: [
+          "ctrlFormsShape",
+          { when: { id: "ctrlFormsShape", is: ["form"] }, items: ["ctrlFormsOrganic", "ctrlFormsDrift"] },
+          "ctrlFormsCount",
+          { when: { id: "ctrlFormsCount", not: ["1"] }, items: ["ctrlFormsSpacing", "ctrlFormsDepth", "ctrlFormsVariety"] },
+          "ctrlFormsSize", "ctrlFormsTravel", "ctrlFormsSpin", "ctrlFormsWrap", "ctrlFormsShade", "ctrlFormsBehind",
+        ] },
+      ] },
       { card: "Blend overlay", summary: "past frames on top", switch: "ctrlBlendOverlay", items: [
         { chips: ["ctrlBlendModeMultiply", "ctrlBlendModeScreen", "ctrlBlendModeOverlay", "ctrlBlendModeDarken",
           "ctrlBlendModeLighten", "ctrlBlendModeDifference", "ctrlBlendModeExclusion", "ctrlBlendModeHardLight"], label: "Modes" },
@@ -311,6 +344,8 @@
     percent: (v) => `${v}%`,
     fixed2: (v) => Number(v).toFixed(2),
     int: (v) => String(v),
+    degrees: (v) => `${v}°`,
+    formName: (v) => (v < 12 ? "cube" : v < 40 ? "rounded box" : v < 60 ? "sphere" : v < 85 ? "soft blob" : "globular"),
     moveH: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "left" : "right"}`),
     moveV: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "down" : "up"}`),
     moveZ: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "out" : "in"}`),
@@ -518,6 +553,13 @@
       const parts = [n > 1 ? `${n} layers · ${inputState("ctrlStripRelation")}` : "1 layer"];
       if (gap) parts.push(`gap ${gap}%`);
       return parts.join(" · ");
+    },
+    forms() {
+      if (inputState("ctrlFormsOn") !== "on") return "off";
+      const n = +inputState("ctrlFormsCount");
+      const shape = inputState("ctrlFormsShape");
+      const what = shape === "form" ? FORMATS.formName(+inputState("ctrlFormsOrganic")) : shape;
+      return `${n} × ${what}${inputState("ctrlFormsBehind") === "picture" ? " · over picture" : ""}`;
     },
     echo() {
       if (inputState("ctrlEchoOn") !== "on") return "off";

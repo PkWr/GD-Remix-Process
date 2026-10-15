@@ -25,6 +25,13 @@ html, body {
   object-fit: contain; /* phone: letterboxes the 9:16 stage; desktop: stage already matches the window, so this is a no-op */
 }
 
+/* 3D forms layer sits over the picture; with "Behind: black" the flat
+   picture underneath is hidden (it keeps running, just not shown). */
+#stage #forms3d { z-index: 3; }
+#stage #forms3d[hidden] { display: none; }
+#stage.forms-only #canvasA,
+#stage.forms-only #canvasB { visibility: hidden; }
+
 /* top layer starts transparent; app.js crossfades opacity between the two */
 #canvasB {
   opacity: 0;
