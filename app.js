@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-15 · showreel bar";
+  const APP_VERSION = "2026-10-15 · showreel 3D";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3075,7 +3075,7 @@
 
     forms3d.shared.wrapMode.value = { globe: 0, tube: 1, box: 2 }[params.formsWrap] || 0;
     forms3d.shared.shade.value = params.formsShade / 100;
-    const organic = params.formsDrift ? 0.5 - 0.5 * Math.cos(now / 9000) : params.formsOrganic / 100;
+    const organic = params.formsDrift ? 0.5 - 0.5 * Math.cos(now / 3500) : params.formsOrganic / 100; // drift: cube → blob → cube in ~22 s
     const spacing = (params.formsSpacing * Math.PI) / 180;
     const size = params.formsSize / 100;
     const depth = params.formsDepth / 100;
@@ -4564,6 +4564,7 @@
     const values = sceneValuesFromDiff(look.settings || {});
     delete values.ctrlLiveMode;
     delete values.ctrlCamera;
+    delete values.ctrlAutoCycle; // would undo Pause at every look change
     applyingScene = true;
     try {
       applyControlState(values);
