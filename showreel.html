@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Showreel — Photo Remix</title>
+<!-- Short link for the showreel: opens the app in its showreel mode
+     (desktop profile, looks from showreel.json). -->
+<meta http-equiv="refresh" content="0; url=index.html?reel">
+<style>body { margin: 0; background: #000; color: #aaa; font: 16px system-ui, sans-serif; display: grid; place-items: center; height: 100vh; } a { color: #7cff8a; }</style>
+</head>
+<body>
+<p>Opening the showreel… <a href="index.html?reel">continue</a></p>
+<script>location.replace("index.html?reel" + location.hash);</script>
+</body>
+</html>
