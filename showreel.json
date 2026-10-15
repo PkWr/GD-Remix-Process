@@ -1,6 +1,6 @@
 {
   "about": "Showreel for index.html?reel — each look applies these settings (differences from the defaults) for 'seconds'.",
-  "seconds": 10,
+  "seconds": 5,
   "looks": [
     {
       "title": "Photographs, greyscale",

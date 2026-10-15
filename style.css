@@ -674,7 +674,8 @@ body.preview-pan #stage canvas {
 
 /* Phone / touch button bar (built in app.js) — matches the controls
    panel's footer tabs: same dark bar, icon above label, green when on. */
-#touchBar {
+#touchBar,
+#reelBar {
   position: fixed;
   left: 0;
   right: 0;
@@ -687,7 +688,8 @@ body.preview-pan #stage canvas {
   transition: opacity 0.4s;
 }
 
-#touchBar button {
+#touchBar button,
+#reelBar button {
   flex: 1;
   min-width: 0;
   min-height: 58px;
@@ -704,10 +706,11 @@ body.preview-pan #stage canvas {
   touch-action: manipulation;
 }
 
-#touchBar button svg { display: block; }
-#touchBar button:active { color: #ececec; }
+#touchBar button svg , #reelBar button svg { display: block; }
+#touchBar button:active , #reelBar button:active { color: #ececec; }
 
-#touchBar button[aria-pressed="true"] {
+#touchBar button,
+#reelBar button[aria-pressed="true"] {
   color: #7cff8a;
   box-shadow: inset 0 2px 0 #7cff8a;
 }
@@ -890,3 +893,14 @@ body.preview-pan #stage canvas {
 #reelCaption.show { opacity: 1; }
 #reelCaption b { font-weight: 700; margin-right: 0.7em; opacity: 0.6; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { #reelCaption { transition: none; } }
+
+/* Showreel play bar: same style as #touchBar; hidden until the mouse moves. */
+#reelBar { opacity: 0; pointer-events: none; justify-content: center; }
+#reelBar button { flex: 0 1 120px; cursor: pointer; }
+#reelBar button:hover:not(:disabled) { color: #ececec; }
+#reelBar button:disabled { opacity: 0.35; cursor: default; }
+#reelBar button:focus-visible { outline: 2px solid #7cff8a; outline-offset: -4px; }
+body.reel-bar-on #reelBar { opacity: 1; pointer-events: auto; }
+body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 72px); }
+#reelCaption { transition: opacity 0.6s ease, bottom 0.3s ease; }
+body.reel:not(.reel-bar-on) { cursor: none; }
