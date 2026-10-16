@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-16 · glass forms";
+  const APP_VERSION = "2026-10-16 · desktop bar";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3902,11 +3902,14 @@
 
   const TOUCH_UI =
     pageParams.has("touch") || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+  // The same bar on laptops/desktops (shows when the mouse moves), but not
+  // on the Igloo walls or in the showreel, which has its own bar.
+  const BAR_UI = TOUCH_UI || (!STAGE_PROFILE.seams && !pageParams.has("reel"));
   const TOUCH_BAR_HIDE_MS = 5000;
   let touchBarTimer = null;
 
   function buildTouchBar() {
-    if (!TOUCH_UI || document.getElementById("touchBar") || pageParams.has("reel")) return; // the showreel has its own bar
+    if (!BAR_UI || document.getElementById("touchBar") || pageParams.has("reel")) return; // the showreel has its own bar
     const bar = document.createElement("div");
     bar.id = "touchBar";
     bar.setAttribute("role", "toolbar");
@@ -3991,11 +3994,21 @@
   document.addEventListener("pointerdown", (e) => {
     const audio = document.getElementById("bgAudio");
     if (audio && audio.paused) audio.play().catch(() => {});
-    if (!TOUCH_UI) return;
-    wakeLockWanted = true;
-    keepScreenAwake();
+    if (!BAR_UI) return;
+    if (TOUCH_UI) {
+      wakeLockWanted = true;
+      keepScreenAwake();
+    }
     if (!e.target.closest || !e.target.closest("#touchBar")) showTouchBar();
   });
+  // Mouse: moving it brings the bar back (desktop).
+  window.addEventListener(
+    "mousemove",
+    () => {
+      if (BAR_UI && !TOUCH_UI) showTouchBar();
+    },
+    { passive: true }
+  );
 
   // ---------------------------------------------------------------------
   // CONTROLS PANEL UI (v2) — tabs, cards, chips, slider fills, profile.
