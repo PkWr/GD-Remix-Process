@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-16 · desktop bar";
+  const APP_VERSION = "2026-10-16 · device profile";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -175,7 +175,7 @@
   // ---------------------------------------------------------------------
   // 1b. STAGE PROFILES
   // ---------------------------------------------------------------------
-  // Picked once per page load from the URL: ?stage=desktop, default phone.
+  // Picked once per page load from the URL (?stage=desktop); with no ?stage, from the device (see deviceProfile).
   //   phone   — fixed 1080x1920 (9:16 Instagram Story), letterboxed into the
   //             window by CSS object-fit: contain. Identical to v1.
   //   desktop — sized to the window x devicePixelRatio, capped at maxWidth
@@ -210,8 +210,17 @@
   };
 
   const pageParams = new URLSearchParams(location.search);
-  // ?reel (the showreel) defaults to the desktop profile.
-  const requestedProfile = (pageParams.get("stage") || (pageParams.has("reel") ? "desktop" : "phone")).toLowerCase();
+  // No ?stage= in the address: pick from the device. Phones (touch screen,
+  // short side under 600px) get the phone profile; laptops, desktops and
+  // tablets get desktop. The showreel is always desktop. The Profile menu
+  // (Show tab) or a ?stage= link still chooses any profile, incl. igloo.
+  function deviceProfile() {
+    if (pageParams.has("reel")) return "desktop";
+    const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    const shortSide = Math.min(screen.width || innerWidth, screen.height || innerHeight);
+    return coarse && shortSide < 600 ? "phone" : "desktop";
+  }
+  const requestedProfile = (pageParams.get("stage") || deviceProfile()).toLowerCase();
   if (!STAGE_PROFILES[requestedProfile]) {
     console.warn(`[stage] unknown profile "${requestedProfile}", using phone`);
   }
@@ -4044,7 +4053,7 @@
     const url = new URL(location.href);
     ["stage", "preview", "resume", "layout"].forEach((k) => url.searchParams.delete(k));
     const stage = choice === "igloo-preview" ? "igloo" : choice;
-    if (stage !== "phone") url.searchParams.set("stage", stage);
+    url.searchParams.set("stage", stage); // always explicit — no ?stage now means "match the device"
     if (choice === "igloo-preview") url.searchParams.set("preview", "1");
     url.searchParams.set("resume", "profile");
     location.href = url.toString();
