@@ -1,5 +1,5 @@
 /*
- * Generative Photo Remix — app.js
+ * Spot (generative photo remix) — app.js
  *
  * Plain JS, no build step, no framework. Sections below map to the spec's
  * build order:

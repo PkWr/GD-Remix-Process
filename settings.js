@@ -1,5 +1,5 @@
 /*
- * Generative Photo Remix — settings.js
+ * Spot (generative photo remix) — settings.js
  *
  * THE ONE PLACE every control is defined. Shared by index.html (the
  * display) and controls.html (the remote page), loaded before app.js /

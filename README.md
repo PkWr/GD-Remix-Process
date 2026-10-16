@@ -1,14 +1,14 @@
-# Photo Remix
+# Spot
 
-A generative photo-remix tool by Patrick Walker. It cycles through photographs and remixes them live in the browser: duotone, pixelate, halftone and ASCII effects, moving strips with echo trails, blend overlays, and 3D forms that wear the images or bend them like glass. It runs on a phone, a laptop or desktop, and across the six walls of an Igloo immersive room.
+Spot is a generative photo-remix tool by Patrick Walker. It cycles through photographs and remixes them live in the browser: duotone, pixelate, halftone and ASCII effects, moving strips with echo trails, blend overlays, and 3D forms that wear the images or bend them like glass. It runs on a phone, a laptop or desktop, and across the six walls of an Igloo immersive room.
 
 ## Open it
 
 | | |
 |---|---|
 | App (matches your device) | https://pkwr.github.io/GD-Remix-Process/ |
-| Showreel | https://pkwr.github.io/GD-Remix-Process/showreel.html |
-| Igloo walls | https://pkwr.github.io/GD-Remix-Process/?stage=igloo |
+| Spot Reel (showreel) | https://pkwr.github.io/GD-Remix-Process/showreel.html |
+| Spot Room (Igloo walls) | https://pkwr.github.io/GD-Remix-Process/?stage=igloo |
 | Igloo preview on a laptop | https://pkwr.github.io/GD-Remix-Process/?stage=igloo&preview |
 | Igloo test page | https://pkwr.github.io/GD-Remix-Process/igloo-tests.html |
 | Igloo check (machine report) | https://pkwr.github.io/GD-Remix-Process/igloo-check.html |
