@@ -497,6 +497,7 @@
           `<a href="seed-loader.html" target="_blank" title="Drag new photos in, auto-named and saved automatically">Image uploader ↗</a>` +
           `<a href="controls.html" target="_blank" title="Opens in a new tab on this same device — won't reach a phone or another computer">Remote controls ↗</a>` +
           `<a href="igloo-check.html" target="_blank">Igloo check ↗</a>` +
+          `<a href="about.html" target="_blank">About & credits ↗</a>` +
           `</p><p class="cp-note" id="statusLine">loading…</p>`
         );
       case "scenes":
