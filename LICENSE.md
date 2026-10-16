@@ -1,10 +1,10 @@
 # Licence
 
-© 2026 Sheffield Hallam University — BA (Hons) Graphic Design. All rights reserved.
+© 2026 Patrick Walker — all rights reserved.
 
 This repository is public so the web app can be hosted on GitHub Pages. That does not
 grant permission to copy, reuse or redistribute the code, images or other content.
-Please ask first: the BA (Hons) Graphic Design programme team at Sheffield Hallam University.
+Please ask Patrick Walker first.
 
 Student work shown in the app is used with the students' permission and remains theirs.
 
