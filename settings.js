@@ -171,6 +171,16 @@
     { id: "ctrlFormsWrap", type: "select", label: "Wrap", default: "globe", param: "formsWrap",
       options: [["globe", "Globe — from the centre"], ["tube", "Tube — like a label"], ["box", "Box — front, side, top"]] },
     { id: "ctrlFormsShade", type: "range", label: "Shading", min: 0, max: 100, step: 1, default: 55, int: true, format: "percent", param: "formsShade" },
+    { id: "ctrlFormsSurface", type: "select", label: "Surface", default: "photo", param: "formsSurface", after: "forms3d",
+      help: "Photo: the shapes wear the images. Glass lens: they magnify and bend the picture behind them",
+      options: [["photo", "Photo — wears the images"], ["glass", "Glass lens — bends the picture behind"]] },
+    { id: "ctrlFormsMagnify", type: "range", label: "Magnify", min: 0, max: 100, step: 1, default: 40, int: true, format: "percent", param: "formsMagnify" },
+    { id: "ctrlFormsBend", type: "range", label: "Bend", min: 0, max: 100, step: 1, default: 50, int: true, format: "percent", param: "formsBend",
+      help: "Low = clear glass, high = liquid" },
+    { id: "ctrlFormsRim", type: "range", label: "Rim", min: 0, max: 100, step: 1, default: 60, int: true, format: "percent", param: "formsRim",
+      help: "Bright glassy edge that lifts the shape off the background" },
+    { id: "ctrlFormsFringe", type: "switch", label: "Colour fringes", default: false, param: "formsFringe",
+      help: "Rainbow split at the edges, like a real lens — adds colours outside the palette" },
     { id: "ctrlFormsBehind", type: "select", label: "Behind the forms", default: "black", param: "formsBehind", after: "forms3d",
       options: [["black", "Black"], ["picture", "The normal picture"]] },
     { id: "ctrlMoveSpeedMin", type: "range", label: "Random move strength minimum", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "moveSpeedMin" },
@@ -288,7 +298,12 @@
           { when: { id: "ctrlFormsShape", is: ["form"] }, items: ["ctrlFormsOrganic", "ctrlFormsDrift"] },
           "ctrlFormsCount",
           { when: { id: "ctrlFormsCount", not: ["1"] }, items: ["ctrlFormsSpacing", "ctrlFormsDepth", "ctrlFormsVariety"] },
-          "ctrlFormsSize", "ctrlFormsTravel", "ctrlFormsSpin", "ctrlFormsWrap", "ctrlFormsShade", "ctrlFormsBehind",
+          "ctrlFormsSize", "ctrlFormsTravel", "ctrlFormsSpin",
+          "ctrlFormsSurface",
+          { when: { id: "ctrlFormsSurface", is: ["photo"] }, items: ["ctrlFormsWrap", "ctrlFormsShade"] },
+          { when: { id: "ctrlFormsSurface", is: ["glass"] }, items: ["ctrlFormsMagnify", "ctrlFormsBend", "ctrlFormsRim", "ctrlFormsFringe",
+            { note: "With Behind: black, the glass becomes a window — the picture only shows through the shapes." }] },
+          "ctrlFormsBehind",
         ] },
       ] },
       { card: "Blend overlay", summary: "past frames on top", switch: "ctrlBlendOverlay", items: [
@@ -564,7 +579,8 @@
       const n = +inputState("ctrlFormsCount");
       const shape = inputState("ctrlFormsShape");
       const what = shape === "form" ? FORMATS.formName(+inputState("ctrlFormsOrganic")) : shape;
-      return `${n} × ${what}${inputState("ctrlFormsBehind") === "picture" ? " · over picture" : ""}`;
+      const glass = inputState("ctrlFormsSurface") === "glass" ? " · glass" : "";
+      return `${n} × ${what}${glass}${inputState("ctrlFormsBehind") === "picture" ? " · over picture" : ""}`;
     },
     echo() {
       if (inputState("ctrlEchoOn") !== "on") return "off";

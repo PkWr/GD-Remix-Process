@@ -904,3 +904,12 @@ body.reel-bar-on #reelBar { opacity: 1; pointer-events: auto; }
 body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 72px); }
 #reelCaption { transition: opacity 0.6s ease, bottom 0.3s ease; }
 body.reel:not(.reel-bar-on) { cursor: none; }
+#reelBar #rbVersion {
+  position: absolute;
+  right: 16px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  color: #8a8a8a;
+  font: 11px/1.2 ui-monospace, Menlo, Consolas, monospace;
+  pointer-events: none;
+}
+@media (max-width: 700px) { #reelBar #rbVersion { display: none; } }
