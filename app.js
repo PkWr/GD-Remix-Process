@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-15 · showreel 3D";
+  const APP_VERSION = "2026-10-16 · glass forms";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -477,6 +477,7 @@
     formsOn: false,
     formsShape: "form",
     formsBehind: "black",
+    formsSurface: "photo",
     // Strip gap: dark space between strip images (% of the screen).
     stripGap: 0,
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
@@ -2408,7 +2409,7 @@
   function updateLookDiagnostic() {
     setText(
       "diagLook",
-      `crossfade ${params.crossfadeEnabled ? (camera.live ? "on (hard cuts while camera is on)" : "on") : "off (hard cut)"} · sat ${params.saturation}% · con ${params.contrast}%${params.formsOn ? ` · 3D forms ${forms3d.ready ? `${params.formsCount}× ${params.formsShape}${params.formsShape === "form" ? ` ${params.formsDrift ? "drift" : params.formsOrganic}` : ""} ${params.formsWrap} · ${forms3d.cams.length} camera${forms3d.cams.length > 1 ? "s" : ""}` : "loading…"}` : ""}`
+      `crossfade ${params.crossfadeEnabled ? (camera.live ? "on (hard cuts while camera is on)" : "on") : "off (hard cut)"} · sat ${params.saturation}% · con ${params.contrast}%${params.formsOn ? ` · 3D forms ${forms3d.ready ? `${params.formsCount}× ${params.formsShape}${params.formsShape === "form" ? ` ${params.formsDrift ? "drift" : params.formsOrganic}` : ""} ${params.formsSurface === "glass" ? "glass" : params.formsWrap} · ${forms3d.cams.length} camera${forms3d.cams.length > 1 ? "s" : ""}` : "loading…"}` : ""}`
     );
   }
 
@@ -2815,7 +2816,7 @@
 
   const FORMS_VERTEX = `
     uniform int morph; uniform float form; uniform float time;
-    varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN;
+    varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN; varying vec2 vCentre;
     vec3 shapeAt(vec3 d) {
       float g = clamp(form * 2.0, 0.0, 1.0);
       float p = exp(mix(log(28.0), log(2.0), g));
@@ -2843,12 +2844,40 @@
       }
       vPos = p; vNormal = nrm;
       vViewN = normalize(normalMatrix * nrm);
+      vec4 c = projectionMatrix * modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+      vCentre = c.xy / c.w; // shape's centre on screen (−1…1 within this wall's view)
       gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
     }`;
   const FORMS_FRAGMENT = `
     uniform sampler2D map; uniform int wrapMode; uniform float shade;
-    varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN;
+    uniform int surface; uniform sampler2D bg; uniform vec2 res; uniform vec4 vp;
+    uniform float magnify; uniform float bend; uniform float rimAmt; uniform int fringe;
+    varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN; varying vec2 vCentre;
     const float PI = 3.14159265;
+    // Glass lens: look at the flat picture just behind this point, pulled in
+    // towards the shape's centre (magnify) and pushed along the surface's
+    // slope (bend), with a bright fresnel rim and a small highlight.
+    vec3 glass() {
+      vec3 n = normalize(vViewN);
+      vec2 px = gl_FragCoord.xy;
+      vec2 centre = vec2(vp.x + (vCentre.x * 0.5 + 0.5) * vp.z, (vCentre.y * 0.5 + 0.5) * vp.w);
+      vec2 p = centre + (px - centre) / (1.0 + magnify * 2.5);
+      vec2 off = -n.xy * bend * 0.12 * res.y;
+      vec3 col;
+      if (fringe == 1) {
+        col.r = texture2D(bg, clamp((p + off * 0.92) / res, 0.0, 1.0)).r;
+        col.g = texture2D(bg, clamp((p + off) / res, 0.0, 1.0)).g;
+        col.b = texture2D(bg, clamp((p + off * 1.1) / res, 0.0, 1.0)).b;
+      } else {
+        col = texture2D(bg, clamp((p + off) / res, 0.0, 1.0)).rgb;
+      }
+      float facing = max(n.z, 0.0);
+      float rim = pow(1.0 - facing, 2.5);
+      float spec = pow(max(dot(n, normalize(vec3(-0.35, 0.55, 0.75))), 0.0), 60.0);
+      col = mix(col, vec3(1.0), clamp(rim * rimAmt * 0.9 + spec * rimAmt, 0.0, 1.0));
+      col *= mix(1.0, 0.82 + 0.18 * facing, rimAmt * 0.6); // slight darkening towards the edge
+      return col;
+    }
     // Mirrored across, so the photo's left and right edges never meet in a seam.
     vec3 photo(vec2 uv) {
       uv.x = 1.0 - abs(2.0 * fract(uv.x) - 1.0);
@@ -2856,6 +2885,7 @@
       return texture2D(map, uv).rgb;
     }
     void main() {
+      if (surface == 1) { gl_FragColor = vec4(glass(), 1.0); return; }
       vec3 p = normalize(vPos + 1e-5);
       vec3 col;
       if (wrapMode == 0) {
@@ -2926,7 +2956,19 @@
     forms3d.renderer.setPixelRatio(1);
     forms3d.renderer.autoClear = false;
     forms3d.scene = new T.Scene();
-    forms3d.shared = { wrapMode: { value: 0 }, shade: { value: 0.55 }, morph: { value: 1 } };
+    forms3d.shared = {
+      wrapMode: { value: 0 }, shade: { value: 0.55 }, morph: { value: 1 },
+      surface: { value: 0 }, bg: { value: null }, res: { value: new T.Vector2(1, 1) }, vp: { value: new T.Vector4(0, 0, 1, 1) },
+      magnify: { value: 0.4 }, bend: { value: 0.5 }, rimAmt: { value: 0.6 }, fringe: { value: 0 },
+    };
+    // The flat picture canvases, read straight into the GPU for the glass.
+    forms3d.bgTex = new Map();
+    for (const c of [canvasA, canvasB]) {
+      const t = new T.CanvasTexture(c);
+      t.minFilter = T.LinearFilter;
+      t.generateMipmaps = false;
+      forms3d.bgTex.set(c, t);
+    }
     forms3d.ready = true;
     forms3dResize();
   }
@@ -2971,7 +3013,7 @@
       const material = new T.ShaderMaterial({
         uniforms: {
           map: { value: null }, form: { value: 0.25 }, time: { value: 0 },
-          wrapMode: forms3d.shared.wrapMode, shade: forms3d.shared.shade, morph: forms3d.shared.morph,
+          ...forms3d.shared,
         },
         vertexShader: FORMS_VERTEX,
         fragmentShader: FORMS_FRAGMENT,
@@ -3075,6 +3117,19 @@
 
     forms3d.shared.wrapMode.value = { globe: 0, tube: 1, box: 2 }[params.formsWrap] || 0;
     forms3d.shared.shade.value = params.formsShade / 100;
+    const glass = params.formsSurface === "glass";
+    const sh = forms3d.shared;
+    sh.surface.value = glass ? 1 : 0;
+    if (glass) {
+      const t = forms3d.bgTex.get(state.frontCanvas) || forms3d.bgTex.get(canvasA);
+      t.needsUpdate = true; // the picture changes every frame
+      sh.bg.value = t;
+      sh.res.value.set(STAGE.w, STAGE.h);
+      sh.magnify.value = params.formsMagnify / 100;
+      sh.bend.value = params.formsBend / 100;
+      sh.rimAmt.value = params.formsRim / 100;
+      sh.fringe.value = params.formsFringe ? 1 : 0;
+    }
     const organic = params.formsDrift ? 0.5 - 0.5 * Math.cos(now / 3500) : params.formsOrganic / 100; // drift: cube → blob → cube in ~22 s
     const spacing = (params.formsSpacing * Math.PI) / 180;
     const size = params.formsSize / 100;
@@ -3112,6 +3167,7 @@
     R.clear();
     R.setScissorTest(true);
     for (const { cam, x, w } of forms3d.cams) {
+      forms3d.shared.vp.value.set(x, 0, w, STAGE.h);
       R.setViewport(x, 0, w, STAGE.h);
       R.setScissor(x, 0, w, STAGE.h);
       R.render(forms3d.scene, cam);
@@ -4512,6 +4568,10 @@
     mk("rbPause", "Pause", "pause", () => togglePause());
     mk("rbFaster", "Faster", "add", () => setReelPace(-1));
     mk("rbNext", "Next", "skip_next", () => showReelLook(reel.i + 1));
+    const ver = document.createElement("span");
+    ver.id = "rbVersion";
+    ver.textContent = `build ${APP_VERSION}`;
+    bar.appendChild(ver);
     document.body.appendChild(bar);
     reel.bar = bar;
     updateReelBar();
