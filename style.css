@@ -1050,40 +1050,67 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
 #startScreen .start-foot a:hover, #startScreen .start-foot a:focus-visible { color: var(--spot-yellow); text-decoration: underline; text-underline-offset: 3px; }
 #startOpen:focus-visible { box-shadow: inset 0 0 0 3px var(--spot-yellow), 0 0 0 200vmax #000; }
 
-/* Start screen: About slides up out of the credit bar (paper + ink, like
-   the panel on pkwr.github.io/projects). */
-#startScreen .start-bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; }
-#startScreen .start-bottom .start-foot { position: relative; }
-#startScreen .start-about {
-  position: absolute;
-  right: 12px;
-  bottom: 100%;
-  width: min(420px, calc(100vw - 24px));
-  max-height: calc(100vh - 90px);
-  overflow-y: auto;
-  padding: 24px 24px 20px;
-  background: var(--spot-paper);
+/* Start screen bottom: a yellow bar (ink type) that grows upwards into
+   the About drawer — the yellow strip of pkwr.github.io/projects. */
+#startScreen .start-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  background: var(--spot-yellow);
   color: var(--spot-ink);
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
-  transform: translateY(calc(100% + 60px));
-  opacity: 0;
-  visibility: hidden;
-  transition: transform 450ms cubic-bezier(.2, .7, .2, 1), opacity 250ms ease, visibility 0s linear 450ms;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+}
+#startScreen .start-bottom .start-foot {
+  position: relative;
+  background: none;
+  color: var(--spot-ink);
+}
+#startScreen .start-foot .start-name { color: var(--spot-ink); }
+#startScreen .start-foot span { color: rgba(17, 17, 17, 0.7); }
+#startScreen .start-foot a { color: var(--spot-ink); text-decoration: none; }
+#startScreen .start-foot a:hover, #startScreen .start-foot a:focus-visible,
+#startScreen .start-bottom.about-open #startAboutLink { color: var(--spot-ink); text-decoration: underline; text-underline-offset: 3px; outline: none; }
+#startScreen .start-about {
+  position: relative;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 520ms cubic-bezier(.2, .7, .2, 1);
 }
 #startScreen .start-bottom.about-open .start-about {
-  transform: translateY(-8px);
-  opacity: 1;
-  visibility: visible;
-  transition: transform 450ms cubic-bezier(.2, .7, .2, 1), opacity 200ms ease, visibility 0s;
+  max-height: min(78vh, 900px);
+  overflow-y: auto;
+  border-bottom: 1px solid var(--spot-ink);
 }
-#startScreen .start-about .sa-eyebrow { margin: 0 0 12px; font-size: 11px !important; letter-spacing: .08em; text-transform: uppercase; color: #6b6862; }
-#startScreen .start-about .sa-title { margin: 0; font-size: 38px !important; line-height: 1; letter-spacing: -0.03em; font-weight: 300 !important; }
-#startScreen .start-about .sa-sub { margin: 8px 0 16px; font-size: 13px !important; color: #6b6862; }
-#startScreen .start-about .sa-text { margin: 0 0 12px; font-size: 13px !important; line-height: 1.6; }
-#startScreen .start-about .sa-list { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
-#startScreen .start-about .sa-list li { padding: 8px 0; border-bottom: 1px solid #d9d5ce; }
-#startScreen .start-about a { color: inherit; text-underline-offset: 3px; }
-#startScreen .start-about a:hover, #startScreen .start-about a:focus-visible { background: var(--spot-yellow); outline: none; }
-#startScreen .start-about a[target="_blank"]::after { content: " \2197"; }
-#startScreen .start-bottom.about-open #startAboutLink { color: var(--spot-yellow); text-decoration: underline; text-underline-offset: 3px; }
+#startScreen .sa-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  margin: 10px 12px 0 0;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: none;
+  color: var(--spot-ink);
+  font-size: 26px !important;
+  font-style: normal !important;
+  line-height: 1;
+  cursor: pointer;
+}
+#startScreen .sa-close:hover, #startScreen .sa-close:focus-visible { background: rgba(17, 17, 17, 0.08); outline: none; }
+#startScreen .sa-content { max-width: 640px; padding: 28px 20px 24px; }
+#startScreen .sa-content h1 { margin: 0 0 8px; font-size: clamp(32px, 4vw, 46px) !important; line-height: 1; letter-spacing: -0.03em; font-weight: 300 !important; }
+#startScreen .sa-content .subtitle { margin: 0 0 28px; font-size: 13px !important; color: rgba(17, 17, 17, 0.7); }
+#startScreen .sa-content section { margin: 0 0 24px; }
+#startScreen .sa-content h2 { margin: 0 0 10px; font-size: 11px !important; letter-spacing: .08em; text-transform: uppercase; color: rgba(17, 17, 17, 0.65); }
+#startScreen .sa-content p { margin: 0 0 0.9em; font-size: 13px !important; line-height: 1.6; }
+#startScreen .sa-content ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
+#startScreen .sa-content li { padding: 8px 0; border-bottom: 1px solid rgba(17, 17, 17, 0.25); }
+#startScreen .sa-content dl { margin: 0; display: grid; grid-template-columns: 7em 1fr; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
+#startScreen .sa-content dt, #startScreen .sa-content dd { margin: 0; padding: 8px 0; border-bottom: 1px solid rgba(17, 17, 17, 0.25); }
+#startScreen .sa-content dt { font-size: 11px !important; text-transform: uppercase; letter-spacing: .06em; color: rgba(17, 17, 17, 0.65); }
+#startScreen .sa-content a { color: inherit; text-underline-offset: 3px; }
+#startScreen .sa-content a:hover, #startScreen .sa-content a:focus-visible { background: #fff; outline: none; }
+#startScreen .sa-content a[target="_blank"]::after { content: " \2197"; }
 @media (prefers-reduced-motion: reduce) { #startScreen .start-about { transition: none; } }
