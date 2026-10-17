@@ -1018,11 +1018,24 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
   font-size: 12px !important;
   font-weight: 400 !important;
 }
-#touchBar button svg, #reelBar button svg { opacity: 0.9; }
+/* Rollover changes the icon, not the colour: it lifts slightly and its
+   line thickens (a stroke drawn over the icon's own shape). */
+#touchBar button svg, #reelBar button svg { transition: transform 180ms ease; }
+#touchBar button svg path, #reelBar button svg path {
+  stroke: currentColor;
+  stroke-width: 0;
+  stroke-linejoin: round;
+  transition: stroke-width 180ms ease;
+}
 #touchBar button:hover, #reelBar button:hover:not(:disabled),
-#touchBar button:active, #reelBar button:active { color: #000; background: #ffd000; }
+#touchBar button:active, #reelBar button:active { color: var(--spot-ink); background: none; }
+#touchBar button:hover svg, #reelBar button:hover:not(:disabled) svg,
+#touchBar button:focus-visible svg, #reelBar button:focus-visible svg { transform: translateY(-2px); }
+#touchBar button:hover svg path, #reelBar button:hover:not(:disabled) svg path,
+#touchBar button:focus-visible svg path, #reelBar button:focus-visible svg path { stroke-width: 30; }
 #touchBar button[aria-pressed="true"],
-#reelBar button[aria-pressed="true"] { color: var(--spot-ink); background: #ffd000; box-shadow: inset 0 2px 0 var(--spot-ink); }
+#reelBar button[aria-pressed="true"] { color: var(--spot-ink); background: none; box-shadow: inset 0 2px 0 var(--spot-ink); }
+@media (prefers-reduced-motion: reduce) { #touchBar button svg, #reelBar button svg { transition: none; } }
 #touchBar button:focus-visible, #reelBar button:focus-visible { outline: 2px solid var(--spot-ink); outline-offset: -4px; }
 #reelBar button:disabled { opacity: 0.35; }
 #reelBar #rbVersion { color: rgba(17, 17, 17, 0.6); font-size: 11px !important; }
