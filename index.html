@@ -112,6 +112,30 @@
         main.querySelectorAll("footer, .eyebrow").forEach(function (n) { n.remove(); });
         main.querySelectorAll('a[href="index.html"]').forEach(function (n) { n.remove(); });
         document.getElementById("startAboutContent").innerHTML = main.innerHTML;
+        // Phones: the panel covers the circle, so it carries its own way in.
+        // Summary first, then an open circle and "More about Spot"; the rest
+        // unfolds below, with a second open circle at the end.
+        var phone = window.matchMedia("(pointer: coarse)").matches && Math.min(innerWidth, innerHeight) < 600;
+        if (!phone) return;
+        var box = document.getElementById("startAboutContent");
+        var first = box.querySelector("section");
+        if (!first) return;
+        box.classList.add("is-short");
+        var circle = function () {
+          var b = document.createElement("button");
+          b.type = "button"; b.className = "sa-open"; b.textContent = "open";
+          b.addEventListener("click", function () { setAbout(false); open(); });
+          return b;
+        };
+        var more = document.createElement("button");
+        more.type = "button"; more.className = "sa-more"; more.textContent = "More about Spot \u2193";
+        more.addEventListener("click", function () { box.classList.remove("is-short"); more.remove(); });
+        var lead = document.createElement("div");
+        lead.className = "sa-lead";
+        lead.appendChild(circle()); lead.appendChild(more);
+        first.after(lead);
+        var tail = circle(); tail.classList.add("sa-open-end");
+        box.appendChild(tail);
       }).catch(function () { /* keeps the plain link to about.html */ });
       // On first open the About panel slides out by itself, so the project is
       // introduced before the circle. Leaving it, Escape, the strip or a click
