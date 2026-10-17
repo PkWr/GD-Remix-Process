@@ -115,8 +115,8 @@
         // Phones: the panel covers the circle, so it carries its own way in.
         // Summary first, then an open circle and "More about Spot"; the rest
         // unfolds below, with a second open circle at the end.
-        var phone = window.matchMedia("(pointer: coarse)").matches && Math.min(innerWidth, innerHeight) < 600;
-        if (!phone) return;
+        // (Built on every screen; CSS shows it only where the panel is wide
+        // enough to cover the circle — narrow screens and narrow windows.)
         var box = document.getElementById("startAboutContent");
         var first = box.querySelector("section");
         if (!first) return;
