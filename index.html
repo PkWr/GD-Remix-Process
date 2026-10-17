@@ -113,6 +113,12 @@
         main.querySelectorAll('a[href="index.html"]').forEach(function (n) { n.remove(); });
         document.getElementById("startAboutContent").innerHTML = main.innerHTML;
       }).catch(function () { /* keeps the plain link to about.html */ });
+      // On first open the About panel slides out by itself, so the project is
+      // introduced before the circle. Leaving it, Escape, the strip or a click
+      // outside closes it as usual.
+      setTimeout(function () {
+        if (root.classList.contains("show-start") && !drawer.classList.contains("is-open")) setAbout(true);
+      }, 700);
       // Enter or Space opens it too, without having to tab to the button first.
       window.addEventListener("keydown", function (e) {
         if ((e.key === "Enter" || e.key === " ") && root.classList.contains("show-start") && e.target === document.body) {
