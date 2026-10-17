@@ -19,6 +19,7 @@
   .subtitle { margin: 0 0 40px; color: var(--muted); font-size: 14px; }
   section { margin: 0 0 32px; }
   p { margin: 0 0 1em; font-size: 14px; line-height: 1.6; }
+  p.note { font-size: 12px; color: var(--muted); }
   ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); font-size: 13px; }
   li { padding: 9px 0; border-bottom: 1px solid var(--rule); line-height: 1.5; }
   a { color: inherit; text-underline-offset: 3px; }
@@ -56,6 +57,17 @@
   </section>
 
   <section>
+    <h2>Energy &amp; sustainability</h2>
+    <p>Every piece of making has an energy cost, and digital work tends to hide its own. Spot tries to keep its cost small and in view. It runs on the device already in the room: the phone, the laptop, or the Igloo&rsquo;s own computer. It works in real time, with no render pass and no exported video. Nothing is uploaded or stored on a server, because there is no server.</p>
+    <p>Industry motion tools assume high-spec hardware. Adobe After Effects asks for at least 16&nbsp;GB of memory and, on Windows, a dedicated graphics card with 4&nbsp;GB of its own memory. For 4K work it recommends 32&nbsp;GB or more, fast SSDs and extra high-speed drives for media. TouchDesigner, widely used for live and immersive work, needs a graphics card with at least 4&nbsp;GB, recommends 8&nbsp;GB or more, and keeps several features for recent Nvidia cards. Large immersive shows run Notch content on dedicated media servers such as disguise&rsquo;s GX&nbsp;3+, built round a graphics card with 96&nbsp;GB of memory. Top-end graphics cards can draw up to 575&nbsp;watts on their own, before the rest of the computer. Specs like these also push people to upgrade, and making new hardware has an energy cost of its own.</p>
+    <p>Spot asks for none of this: a web browser on the device already in the room, a phone included.</p>
+    <p class="note">Requirements as published by Adobe (After Effects 26, 2026), Derivative (TouchDesigner) and disguise (GX&nbsp;3+); graphics card figure for Nvidia&rsquo;s RTX&nbsp;5090.</p>
+    <p>It does as little as the look needs. Most effects are simple 2D drawing techniques applied to one image at a time. The 3D library only loads when 3D forms are switched on, and the images ship with the page rather than coming from a cloud service.</p>
+    <p>AI enters the same question, as it did in Concrete. Here it was used to build the tool, not to run it. Its energy was spent once, in development, and not again each time Spot plays. That matters in a current discourse focused on the growing electricity and water demands of data centres.</p>
+    <p>Spot is designed to use far less energy than a render-based workflow; measuring that, in the studio and in the Igloo, is part of the project.</p>
+  </section>
+
+  <section>
     <h2>Details</h2>
     <dl>
       <dt>Type</dt><dd>Scholarship of Teaching and Learning (SoTL) project</dd>
@@ -86,6 +98,7 @@
     <ul>
       <li><a href="https://pkwr.github.io/projects/gd-vx-ai/" target="_blank" rel="noopener">GD v/x AI — project page</a></li>
       <li><a href="https://pkwr.github.io/projects/concrete/" target="_blank" rel="noopener">Concrete, 2025</a></li>
+      <li><a href="https://pkwr.github.io/projects/themes/energy-and-sustainability/" target="_blank" rel="noopener">Energy &amp; Sustainability — theme</a></li>
       <li><a href="https://pkwr.github.io/projects/" target="_blank" rel="noopener">Patrick Walker · Projects</a></li>
     </ul>
   </section>
