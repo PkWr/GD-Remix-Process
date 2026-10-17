@@ -919,7 +919,9 @@ body.panel-open #touchBar { display: none !important; }
 #touchBar button { cursor: pointer; }
 @media (hover: hover) { #touchBar button:hover { color: #ececec; } }
 
-/* Start screen (index.html): one "open" circle on black, credit bar below. */
+/* Start screen (index.html): a white "open" circle on black, credit bar
+   below. The black is the circle's own giant shadow, so on hover the circle
+   turns clear and becomes a window onto the app already running behind. */
 #startScreen { display: none; }
 html.show-start #startScreen {
   display: flex;
@@ -928,7 +930,8 @@ html.show-start #startScreen {
   z-index: 200;
   align-items: center;
   justify-content: center;
-  background: #000;
+  overflow: hidden;
+  background: transparent;
   transition: opacity 0.5s ease;
 }
 html.start-leaving #startScreen { opacity: 0; pointer-events: none; }
@@ -936,16 +939,23 @@ html.start-leaving #startScreen { opacity: 0; pointer-events: none; }
   width: clamp(140px, 26vmin, 260px);
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 2px solid #ececec;
-  background: none;
-  color: #ececec;
+  border: 0;
+  background: #ececec;
+  color: #000;
+  box-shadow: 0 0 0 200vmax #000;
   font: 500 clamp(18px, 3.2vmin, 30px) / 1 system-ui, -apple-system, "Segoe UI", sans-serif;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
-#startOpen:hover, #startOpen:focus-visible { background: #ececec; color: #000; outline: none; }
-#startOpen:focus-visible { box-shadow: 0 0 0 4px #000, 0 0 0 6px #7cff8a; }
+#startOpen:hover, #startOpen:focus-visible {
+  background: transparent;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.75), 0 0 2px rgba(0, 0, 0, 0.9);
+  outline: none;
+  box-shadow: inset 0 0 0 2px #ececec, 0 0 0 200vmax #000;
+}
+#startOpen:focus-visible { box-shadow: inset 0 0 0 3px #7cff8a, 0 0 0 200vmax #000; }
 #startScreen .start-foot {
   position: fixed;
   left: 0;
@@ -960,6 +970,7 @@ html.start-leaving #startScreen { opacity: 0; pointer-events: none; }
   color: #a3a3a3;
   font: 500 13px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
+#startScreen .start-foot .start-name { color: #ececec; font-weight: 700; margin-right: 0.9em; letter-spacing: 0.02em; }
 #startScreen .start-foot a { color: #ececec; text-decoration: none; }
 #startScreen .start-foot a:hover, #startScreen .start-foot a:focus-visible { color: #7cff8a; text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) { html.show-start #startScreen, #startOpen { transition: none; } }
