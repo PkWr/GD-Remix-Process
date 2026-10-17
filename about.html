@@ -24,6 +24,9 @@
   a { color: inherit; text-underline-offset: 3px; }
   a:hover, a:focus-visible { background: var(--yellow); outline: none; }
   a[target="_blank"]::after { content: " \2197"; }
+  dl { margin: 0; display: grid; grid-template-columns: 7em 1fr; border-top: 1px solid var(--ink); font-size: 13px; }
+  dt, dd { margin: 0; padding: 9px 0; border-bottom: 1px solid var(--rule); line-height: 1.45; }
+  dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding-top: 11px; }
   footer { margin-top: 48px; display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); }
 </style>
 </head>
@@ -34,7 +37,33 @@
   <p class="subtitle">A generative photo-remix tool by Patrick Walker</p>
 
   <section>
-    <p>Photographs remixed live in the browser: halftone, pixel, ASCII and duotone, moving strips with echo trails, and 3D forms that wear the images or bend them like glass. It runs on a phone, on a laptop and across the six walls of an immersive room.</p>
+    <h2>Summary</h2>
+    <p>Spot is part of GD v/x AI (Graphic Design versus, divided by, multiplied by AI), a Scholarship of Teaching and Learning project at Sheffield Hallam University, asking whether AI supplants creativity in graphic design, or co-enables and augments it.</p>
+  </section>
+
+  <section>
+    <h2>Description</h2>
+    <p>Most classroom use of AI in graphic design means prompting for images, text or layouts. GD v/x AI tests an alternative: students and staff co-developing new AI tooling and processes together, moving AI from tool-use into shared creative practice.</p>
+    <p>Concrete (2025) is its first proof of concept.</p>
+    <p>At its centre is Spot, motion tooling that runs in a web browser: no specialist hardware, no account, no subscription, and nothing uploaded. The same tooling scales from a phone to a desktop to the six walls of the Igloo Immersive Suite, where it first ran in October 2026, and it works in real time, with no render pass. Built to run lightly, it is designed to use far less energy than a conventional render-based workflow; measuring that is part of the project.</p>
+  </section>
+
+  <section>
+    <h2>How it&rsquo;s made</h2>
+    <p>It began as a background piece for a two-hour outreach workshop with technical college students on 10 July 2026: a single web page that took the photos students shot during the session and remixed them live on the wall while they photographed and drew by hand. The first version was built in six days, by Patrick Walker working with an AI coding assistant to a fixed written brief: three files, no server, no login, and a set of seed images so it would still run if the wifi failed.</p>
+    <p>It has grown through use since. Pixelation, halftone, ASCII and duotone effects; 3D forms that wrap each image round a shape; a live camera layer; a second window for controls; and stage sizes for a phone, a desktop and the Igloo&rsquo;s six walls. In October 2026 it was named Spot; Spot Room is the Igloo version, Spot Reel the showreel. Scenes can be saved as links. It is still plain HTML, CSS and JavaScript, with no server and no build step.</p>
+    <p>Making it was a collaboration. Patrick Walker brought creative practice, context and insight; working with the AI elevated them, extending what could be built and how quickly. The AI is in the making, not the running: every effect is a drawing technique, not a generative model.</p>
+  </section>
+
+  <section>
+    <h2>Details</h2>
+    <dl>
+      <dt>Type</dt><dd>Scholarship of Teaching and Learning (SoTL) project</dd>
+      <dt>Course</dt><dd>BA (Hons) Graphic Design, Sheffield Hallam University</dd>
+      <dt>Period</dt><dd>2025 to 2027</dd>
+      <dt>Lead</dt><dd>Patrick Walker</dd>
+      <dt>Team</dt><dd>Paul Allen, Georgia Burns, Matt Edgar, Jake Goodall, Muiz, Jenni Whitehead</dd>
+    </dl>
   </section>
 
   <section>
@@ -55,6 +84,8 @@
   <section>
     <h2>Elsewhere</h2>
     <ul>
+      <li><a href="https://pkwr.github.io/projects/gd-vx-ai/" target="_blank" rel="noopener">GD v/x AI — project page</a></li>
+      <li><a href="https://pkwr.github.io/projects/concrete/" target="_blank" rel="noopener">Concrete, 2025</a></li>
       <li><a href="https://pkwr.github.io/projects/" target="_blank" rel="noopener">Patrick Walker · Projects</a></li>
     </ul>
   </section>

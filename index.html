@@ -17,10 +17,27 @@
   <script>if (!location.search) document.documentElement.classList.add("show-start");</script>
   <div id="startScreen">
     <button type="button" id="startOpen" aria-label="Open Spot">open</button>
-    <footer class="start-foot">
-      <span><strong class="start-name">Spot</strong> © 2026 pkwr</span>
-      <a href="about.html">About</a>
-    </footer>
+    <div class="start-bottom" id="startBottom">
+      <!-- About: slides up out of the bar on rollover / focus / first tap. -->
+      <section class="start-about" id="startAbout" aria-label="About Spot">
+        <p class="sa-eyebrow">About</p>
+        <h2 class="sa-title">Spot</h2>
+        <p class="sa-sub">A generative photo-remix tool by Patrick Walker</p>
+        <p class="sa-text">Part of GD v/x AI, a Scholarship of Teaching and Learning project at Sheffield Hallam University, asking whether AI supplants creativity in graphic design, or co-enables and augments it.</p>
+        <p class="sa-text">Spot is motion tooling that runs in a web browser: no specialist hardware, no account, no subscription, and nothing uploaded. The same tooling scales from a phone to a desktop to the six walls of the Igloo Immersive Suite, in real time, with no render pass.</p>
+        <p class="sa-text">The AI is in the making, not the running: every effect is a drawing technique, not a generative model.</p>
+        <ul class="sa-list">
+          <li>© 2026 Patrick Walker — all rights reserved</li>
+          <li>Student work shown with permission</li>
+          <li><a href="about.html">How it&rsquo;s made, team &amp; credits</a></li>
+          <li><a href="https://pkwr.github.io/projects/" target="_blank" rel="noopener">Patrick Walker · Projects</a></li>
+        </ul>
+      </section>
+      <footer class="start-foot">
+        <span><strong class="start-name">Spot</strong> © 2026 pkwr</span>
+        <a href="about.html" id="startAboutLink" aria-controls="startAbout" aria-expanded="false">About</a>
+      </footer>
+    </div>
   </div>
 
   <main id="stage">
@@ -69,6 +86,29 @@
         setTimeout(function () { root.classList.remove("show-start", "start-leaving"); }, 500);
       }
       btn.addEventListener("click", open);
+      // About panel: opens on rollover or keyboard focus; on touch screens
+      // the first tap opens it and a second tap follows the link.
+      var bottom = document.getElementById("startBottom");
+      var aboutLink = document.getElementById("startAboutLink");
+      function setAbout(on) {
+        bottom.classList.toggle("about-open", on);
+        aboutLink.setAttribute("aria-expanded", String(on));
+      }
+      // Phones fire a pretend rollover (and focus) just before a tap — ignore
+      // those, so the tap itself decides: first tap opens, second follows.
+      var lastTouch = 0;
+      window.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") lastTouch = Date.now(); }, true);
+      var touchy = function () { return Date.now() - lastTouch < 800; };
+      aboutLink.addEventListener("mouseenter", function () { if (!touchy()) setAbout(true); });
+      aboutLink.addEventListener("focus", function () { if (!touchy()) setAbout(true); });
+      bottom.addEventListener("mouseleave", function () { setAbout(false); });
+      bottom.addEventListener("focusout", function (e) { if (!bottom.contains(e.relatedTarget)) setAbout(false); });
+      aboutLink.addEventListener("click", function (e) {
+        if (!bottom.classList.contains("about-open")) { e.preventDefault(); setAbout(true); }
+      });
+      document.getElementById("startScreen").addEventListener("pointerdown", function (e) {
+        if (!bottom.contains(e.target)) setAbout(false);
+      });
       // Enter or Space opens it too, without having to tab to the button first.
       window.addEventListener("keydown", function (e) {
         if ((e.key === "Enter" || e.key === " ") && root.classList.contains("show-start") && e.target === document.body) {
