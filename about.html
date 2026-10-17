@@ -6,32 +6,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About & credits — Spot</title>
 <style>
-  body { margin: 0; background: #0d0e10; color: #ececec; font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
-  h1 { font-size: 26px; margin: 0 0 4px; }
-  h2 { font-size: 17px; margin: 28px 0 8px; }
-  p, li { color: #cfcfcf; }
-  .lede { color: #a6a6a6; }
-  a { color: #7cff8a; }
-  ul { padding-left: 20px; }
+  @font-face { font-family: "IBM Plex Mono"; font-style: italic; font-weight: 300; font-display: swap; src: url("vendor/fonts/ibm-plex-mono-latin-300-italic.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Mono"; font-style: italic; font-weight: 400; font-display: swap; src: url("vendor/fonts/ibm-plex-mono-latin-400-italic.woff2") format("woff2"); }
+  :root { --ink: #111; --paper: #f4f2ee; --muted: #6b6862; --rule: #d9d5ce; --yellow: #ffe100; --font: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
+  * { box-sizing: border-box; }
+  html { font-synthesis: none; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-style: italic; -webkit-font-smoothing: antialiased; }
+  h1, h2, strong, b { font-weight: 400; }
+  main { max-width: 620px; margin: 0 auto; padding: 56px 24px 72px; }
+  .eyebrow, h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1; letter-spacing: -0.03em; font-weight: 300; margin: 0 0 12px; }
+  .subtitle { margin: 0 0 40px; color: var(--muted); font-size: 14px; }
+  section { margin: 0 0 32px; }
+  p { margin: 0 0 1em; font-size: 14px; line-height: 1.6; }
+  ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); font-size: 13px; }
+  li { padding: 9px 0; border-bottom: 1px solid var(--rule); line-height: 1.5; }
+  a { color: inherit; text-underline-offset: 3px; }
+  a:hover, a:focus-visible { background: var(--yellow); outline: none; }
+  a[target="_blank"]::after { content: " \2197"; }
+  footer { margin-top: 48px; display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
 <main>
+  <p class="eyebrow">About &amp; credits</p>
   <h1>Spot</h1>
-  <p class="lede">Spot is a generative photo-remix tool by Patrick Walker: photographs remixed live with halftone, pixel, ASCII, duotone, moving strips and 3D forms.</p>
+  <p class="subtitle">A generative photo-remix tool by Patrick Walker</p>
 
-  <h2>Rights</h2>
-  <p>© 2026 Patrick Walker — all rights reserved. The code and images are published here so the app can run in a browser; that is not permission to copy or reuse them. Please ask first.</p>
-  <p>Student work shown in the app is used with the students' permission and remains theirs.</p>
+  <section>
+    <p>Photographs remixed live in the browser: halftone, pixel, ASCII and duotone, moving strips with echo trails, and 3D forms that wear the images or bend them like glass. It runs on a phone, on a laptop and across the six walls of an immersive room.</p>
+  </section>
 
-  <h2>Third-party code</h2>
-  <ul>
-    <li><a href="https://threejs.org" rel="noopener">three.js</a> r128 — 3D forms. MIT licence, © 2010–2021 three.js authors.</li>
-    <li><a href="https://github.com/kazuhikoarase/qrcode-generator" rel="noopener">qrcode-generator</a> 1.4.4 — scene QR codes. MIT licence, © Kazuhiko Arase.</li>
-  </ul>
+  <section>
+    <h2>Rights</h2>
+    <p>© 2026 Patrick Walker — all rights reserved. The code and images are published so the app can run in a browser; that is not permission to copy or reuse them. Please ask first.</p>
+    <p>Student work shown in the app is used with the students' permission and remains theirs.</p>
+  </section>
 
-  <p><a href="index.html">← Back to the app</a></p>
+  <section>
+    <h2>Third-party</h2>
+    <ul>
+      <li><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> r128 — 3D forms. MIT licence, © 2010–2021 three.js authors.</li>
+      <li><a href="https://github.com/kazuhikoarase/qrcode-generator" target="_blank" rel="noopener">qrcode-generator</a> 1.4.4 — scene QR codes. MIT licence, © Kazuhiko Arase.</li>
+      <li><a href="https://github.com/IBM/plex" target="_blank" rel="noopener">IBM Plex Mono</a> — type. SIL Open Font Licence, © 2017 IBM Corp.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Elsewhere</h2>
+    <ul>
+      <li><a href="https://pkwr.github.io/projects/" target="_blank" rel="noopener">Patrick Walker · Projects</a></li>
+    </ul>
+  </section>
+
+  <footer><span>© 2026 pkwr</span><a href="index.html">Back to Spot</a></footer>
 </main>
 </body>
 </html>

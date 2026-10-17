@@ -12,5 +12,6 @@ Student work shown in the app is used with the students' permission and remains 
 
 - three.js r128 — `vendor/three.min.js` — © 2010–2021 three.js authors, MIT licence.
 - qrcode-generator 1.4.4 — `vendor/qrcode.min.js` — © Kazuhiko Arase, MIT licence.
+- IBM Plex Mono (italic 300/400) — `vendor/fonts/` — © 2017 IBM Corp., SIL Open Font Licence 1.1 (`vendor/fonts/OFL.txt`).
 
-The MIT licence for each is kept in the header of its file.
+The MIT licence for each library is kept in the header of its file.
