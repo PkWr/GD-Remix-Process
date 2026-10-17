@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-16 · device profile";
+  const APP_VERSION = "2026-10-17 · opening look";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -4673,6 +4673,41 @@
     cap.classList.add("show");
   }
 
+  // ---------------------------------------------------------------------
+  // OPENING LOOK — what a plain visit (the start screen, no ?… in the
+  // address) shows. Same format as a share link: only the settings that
+  // differ from the defaults. Links with ?stage / ?scene / ?reel are left
+  // alone. To change it: set up a look, Share it, and paste its settings
+  // here (or ask for the link to be decoded).
+  const OPENING_LOOK = {
+    EffectDuotone: 0,
+    PixelateMin: 48, PixelateMax: 128, PixelateAnimate: 1,
+    HalftoneMin: 18, HalftoneMax: 32,
+    AsciiMin: 18, AsciiMax: 40, AsciiRampRandomize: 1,
+    Saturation: 0,
+    SpeedMax: 14.5,
+    MovePanSpeed: 33, MoveEnd: "tile",
+    FormsOn: 1, FormsOrganic: 100, FormsCount: 1, FormsSize: 100, FormsTravel: 100, FormsSpin: 14,
+    FormsSurface: "glass", FormsBehind: "picture",
+  };
+
+  function applyOpeningLook() {
+    // pageParams = the address as the page was opened (a scene link tidies
+    // its ?scene away later, so location.search can't be trusted here).
+    if ([...pageParams.keys()].length) return;
+    const values = sceneValuesFromDiff(OPENING_LOOK);
+    delete values.ctrlLiveMode;
+    delete values.ctrlCamera;
+    delete values.ctrlAutoCycle;
+    applyingScene = true;
+    try {
+      applyControlState(values);
+    } finally {
+      applyingScene = false;
+    }
+    broadcastState();
+  }
+
   async function startReel() {
     if (!pageParams.has("reel")) return;
     try {
@@ -4785,6 +4820,7 @@
     // Opened from a shared scene link / QR code (?scene=…).
     openSharedSceneFromUrl();
     startReel();
+    applyOpeningLook();
 
     try {
       state.sources = await loadImageSourcesForMode(params.sourceMode);
