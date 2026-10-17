@@ -17,18 +17,18 @@
   <script>if (!location.search) document.documentElement.classList.add("show-start");</script>
   <div id="startScreen">
     <button type="button" id="startOpen" aria-label="Open Spot">open</button>
-    <div class="start-bottom" id="startBottom">
-      <!-- About: the whole yellow bar grows upwards to show the About page's
-           text (read from about.html, so there's one copy to edit). Opens on
-           rollover / focus / tap of "About"; closes on leaving the bar or ×. -->
-      <section class="start-about" id="startAbout" aria-label="About Spot">
-        <button type="button" class="sa-close" id="startAboutClose" aria-label="Close About">×</button>
+    <!-- Side strip, as on pkwr.github.io/projects: yellow, "Spot · About"
+         set sideways. Rolling over (or clicking / tapping) it slides the
+         About panel out; its text is read from about.html (one copy). -->
+    <div class="start-drawer" id="startDrawer">
+      <button type="button" class="start-strip" id="startStrip" aria-expanded="false" aria-controls="startPanel" aria-label="About Spot">
+        <span class="strip-label">Spot · About</span>
+        <span class="strip-icon" aria-hidden="true">+</span>
+      </button>
+      <aside class="start-panel" id="startPanel" aria-label="About Spot">
         <div class="sa-content" id="startAboutContent"><p><a href="about.html">About Spot</a></p></div>
-      </section>
-      <footer class="start-foot">
-        <span><strong class="start-name">Spot</strong> © 2026 pkwr</span>
-        <a href="about.html" id="startAboutLink" aria-controls="startAbout" aria-expanded="false">About</a>
-      </footer>
+        <footer class="sp-foot"><span>© 2026 pkwr</span><a href="about.html">Open as a page</a></footer>
+      </aside>
     </div>
   </div>
 
@@ -78,32 +78,32 @@
         setTimeout(function () { root.classList.remove("show-start", "start-leaving"); }, 500);
       }
       btn.addEventListener("click", open);
-      // About drawer: opens on rollover, keyboard focus or a tap on "About".
-      var bottom = document.getElementById("startBottom");
-      var aboutLink = document.getElementById("startAboutLink");
+      // About panel: opens when the strip is rolled over, focused, clicked or
+      // tapped; closes when the mouse leaves it, on the strip again, Escape,
+      // or a click / tap elsewhere.
+      var drawer = document.getElementById("startDrawer");
+      var strip = document.getElementById("startStrip");
       function setAbout(on) {
-        bottom.classList.toggle("about-open", on);
-        aboutLink.setAttribute("aria-expanded", String(on));
+        drawer.classList.toggle("is-open", on);
+        strip.setAttribute("aria-expanded", String(on));
       }
-      // Phones fire a pretend rollover (and focus) just before a tap — ignore
-      // those, so the tap itself decides: first tap opens, second follows.
+      // Phones fire a pretend rollover (and mouse-leave) around a tap — ignore
+      // those so the tap itself decides.
       var lastTouch = 0;
       window.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") lastTouch = Date.now(); }, true);
       var touchy = function () { return Date.now() - lastTouch < 800; };
-      aboutLink.addEventListener("mouseenter", function () { if (!touchy()) setAbout(true); });
-      aboutLink.addEventListener("focus", function () { if (!touchy()) setAbout(true); });
-      // (Touch screens send a pretend mouse-leave when the drawer grows away
-      // from the finger — only a real mouse leaving closes it.)
-      bottom.addEventListener("mouseleave", function () { if (!touchy()) setAbout(false); });
-      bottom.addEventListener("focusout", function (e) { if (!bottom.contains(e.relatedTarget)) setAbout(false); });
-      // Clicking / tapping "About" always opens it; close with ×, Escape,
-      // or by moving off the bar (mouse).
-      aboutLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        setAbout(true);
+      var openedAt = 0;
+      strip.addEventListener("mouseenter", function () { if (!touchy() && !drawer.classList.contains("is-open")) { openedAt = Date.now(); setAbout(true); } });
+      drawer.addEventListener("mouseleave", function () { if (!touchy()) setAbout(false); });
+      strip.addEventListener("click", function () {
+        // a click straight after the rollover opened it shouldn't close it again
+        if (Date.now() - openedAt < 400) return;
+        setAbout(!drawer.classList.contains("is-open"));
       });
-      document.getElementById("startAboutClose").addEventListener("click", function (e) { e.stopPropagation(); setAbout(false); });
       window.addEventListener("keydown", function (e) { if (e.key === "Escape") setAbout(false); });
+      document.getElementById("startScreen").addEventListener("pointerdown", function (e) {
+        if (!drawer.contains(e.target)) setAbout(false);
+      });
       // Fill the drawer from about.html (the one copy of the About text).
       fetch("about.html").then(function (r) { return r.text(); }).then(function (html) {
         var doc = new DOMParser().parseFromString(html, "text/html");
@@ -113,9 +113,6 @@
         main.querySelectorAll('a[href="index.html"]').forEach(function (n) { n.remove(); });
         document.getElementById("startAboutContent").innerHTML = main.innerHTML;
       }).catch(function () { /* keeps the plain link to about.html */ });
-      document.getElementById("startScreen").addEventListener("pointerdown", function (e) {
-        if (!bottom.contains(e.target)) setAbout(false);
-      });
       // Enter or Space opens it too, without having to tab to the button first.
       window.addEventListener("keydown", function (e) {
         if ((e.key === "Enter" || e.key === " ") && root.classList.contains("show-start") && e.target === document.body) {
