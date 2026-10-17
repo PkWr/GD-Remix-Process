@@ -18,20 +18,12 @@
   <div id="startScreen">
     <button type="button" id="startOpen" aria-label="Open Spot">open</button>
     <div class="start-bottom" id="startBottom">
-      <!-- About: slides up out of the bar on rollover / focus / first tap. -->
+      <!-- About: the whole yellow bar grows upwards to show the About page's
+           text (read from about.html, so there's one copy to edit). Opens on
+           rollover / focus / tap of "About"; closes on leaving the bar or ×. -->
       <section class="start-about" id="startAbout" aria-label="About Spot">
-        <p class="sa-eyebrow">About</p>
-        <h2 class="sa-title">Spot</h2>
-        <p class="sa-sub">A generative photo-remix tool by Patrick Walker</p>
-        <p class="sa-text">Part of GD v/x AI, a Scholarship of Teaching and Learning project at Sheffield Hallam University, asking whether AI supplants creativity in graphic design, or co-enables and augments it.</p>
-        <p class="sa-text">Spot is motion tooling that runs in a web browser: no specialist hardware, no account, no subscription, and nothing uploaded. The same tooling scales from a phone to a desktop to the six walls of the Igloo Immersive Suite, in real time, with no render pass.</p>
-        <p class="sa-text">The AI is in the making, not the running: every effect is a drawing technique, not a generative model.</p>
-        <ul class="sa-list">
-          <li>© 2026 Patrick Walker — all rights reserved</li>
-          <li>Student work shown with permission</li>
-          <li><a href="about.html">How it&rsquo;s made, team &amp; credits</a></li>
-          <li><a href="https://pkwr.github.io/projects/" target="_blank" rel="noopener">Patrick Walker · Projects</a></li>
-        </ul>
+        <button type="button" class="sa-close" id="startAboutClose" aria-label="Close About">×</button>
+        <div class="sa-content" id="startAboutContent"><p><a href="about.html">About Spot</a></p></div>
       </section>
       <footer class="start-foot">
         <span><strong class="start-name">Spot</strong> © 2026 pkwr</span>
@@ -86,8 +78,7 @@
         setTimeout(function () { root.classList.remove("show-start", "start-leaving"); }, 500);
       }
       btn.addEventListener("click", open);
-      // About panel: opens on rollover or keyboard focus; on touch screens
-      // the first tap opens it and a second tap follows the link.
+      // About drawer: opens on rollover, keyboard focus or a tap on "About".
       var bottom = document.getElementById("startBottom");
       var aboutLink = document.getElementById("startAboutLink");
       function setAbout(on) {
@@ -101,11 +92,27 @@
       var touchy = function () { return Date.now() - lastTouch < 800; };
       aboutLink.addEventListener("mouseenter", function () { if (!touchy()) setAbout(true); });
       aboutLink.addEventListener("focus", function () { if (!touchy()) setAbout(true); });
-      bottom.addEventListener("mouseleave", function () { setAbout(false); });
+      // (Touch screens send a pretend mouse-leave when the drawer grows away
+      // from the finger — only a real mouse leaving closes it.)
+      bottom.addEventListener("mouseleave", function () { if (!touchy()) setAbout(false); });
       bottom.addEventListener("focusout", function (e) { if (!bottom.contains(e.relatedTarget)) setAbout(false); });
+      // Clicking / tapping "About" always opens it; close with ×, Escape,
+      // or by moving off the bar (mouse).
       aboutLink.addEventListener("click", function (e) {
-        if (!bottom.classList.contains("about-open")) { e.preventDefault(); setAbout(true); }
+        e.preventDefault();
+        setAbout(true);
       });
+      document.getElementById("startAboutClose").addEventListener("click", function (e) { e.stopPropagation(); setAbout(false); });
+      window.addEventListener("keydown", function (e) { if (e.key === "Escape") setAbout(false); });
+      // Fill the drawer from about.html (the one copy of the About text).
+      fetch("about.html").then(function (r) { return r.text(); }).then(function (html) {
+        var doc = new DOMParser().parseFromString(html, "text/html");
+        var main = doc.querySelector("main");
+        if (!main) return;
+        main.querySelectorAll("footer, .eyebrow").forEach(function (n) { n.remove(); });
+        main.querySelectorAll('a[href="index.html"]').forEach(function (n) { n.remove(); });
+        document.getElementById("startAboutContent").innerHTML = main.innerHTML;
+      }).catch(function () { /* keeps the plain link to about.html */ });
       document.getElementById("startScreen").addEventListener("pointerdown", function (e) {
         if (!bottom.contains(e.target)) setAbout(false);
       });
