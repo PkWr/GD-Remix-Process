@@ -946,31 +946,15 @@ html.start-leaving #startScreen { opacity: 0; pointer-events: none; }
   font: 500 clamp(18px, 3.2vmin, 30px) / 1 system-ui, -apple-system, "Segoe UI", sans-serif;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: background-color 0.35s ease, color 0.35s ease;
+  transition: background-color 0.35s ease, color 0.35s ease, transform 0.6s cubic-bezier(.2, .7, .2, 1);
 }
 #startOpen:hover, #startOpen:focus-visible {
   background: transparent;
   color: transparent; /* just the moving picture through the circle */
   outline: none;
+  transform: scale(2); /* the window opens to twice the size */
 }
 #startOpen:focus-visible { box-shadow: inset 0 0 0 3px #ffe100, 0 0 0 200vmax #000; }
-#startScreen .start-foot {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px max(16px, env(safe-area-inset-bottom));
-  background: #121315;
-  border-top: 1px solid #2a2d31;
-  color: #a3a3a3;
-  font: 500 13px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-#startScreen .start-foot .start-name { color: #ececec; font-weight: 700; margin-right: 0.9em; letter-spacing: 0.02em; }
-#startScreen .start-foot a { color: #ececec; text-decoration: none; }
-#startScreen .start-foot a:hover, #startScreen .start-foot a:focus-visible { color: #ffe100; text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) { html.show-start #startScreen, #startOpen { transition: none; } }
 
 /* ===== Spot house style — leaning on pkwr.github.io/projects =====
@@ -1052,78 +1036,82 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
 
 /* Start screen */
 #startOpen { font-weight: 400 !important; letter-spacing: 0; }
-#startScreen .start-foot {
-  background: none;
-  border-top: 0;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 13px !important;
-}
-#startScreen .start-foot .start-name { color: #fff; font-weight: 400 !important; letter-spacing: 0; }
-#startScreen .start-foot a { color: #fff; }
-#startScreen .start-foot a:hover, #startScreen .start-foot a:focus-visible { color: var(--spot-yellow); text-decoration: underline; text-underline-offset: 3px; }
 #startOpen:focus-visible { box-shadow: inset 0 0 0 3px var(--spot-yellow), 0 0 0 200vmax #000; }
 
-/* Start screen bottom: a yellow bar (ink type) that grows upwards into
-   the About drawer — the yellow strip of pkwr.github.io/projects. */
-#startScreen .start-bottom {
+/* Start screen: yellow side strip + About panel, after the drawer on
+   pkwr.github.io/projects (strip yellow while closed, white when open). */
+#startScreen { --strip-w: 44px; --panel-w: max(320px, calc(100vw / 3 - var(--strip-w))); }
+#startScreen .start-drawer {
   position: fixed;
-  left: 0;
+  top: 0;
   right: 0;
   bottom: 0;
-  z-index: 2;
+  z-index: 3;
+  display: flex;
+  transform: translateX(var(--panel-w));
+  transition: transform 450ms cubic-bezier(.2, .7, .2, 1);
+}
+#startScreen .start-drawer.is-open { transform: translateX(0); }
+#startScreen .start-strip {
+  width: var(--strip-w);
+  flex-shrink: 0;
+  margin: 0;
+  padding: 22px 0;
+  border: 0;
   background: var(--spot-yellow);
   color: var(--spot-ink);
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
-}
-#startScreen .start-bottom .start-foot {
-  position: relative;
-  background: none;
-  color: var(--spot-ink);
-}
-#startScreen .start-foot .start-name { color: var(--spot-ink); }
-#startScreen .start-foot span { color: rgba(17, 17, 17, 0.7); }
-#startScreen .start-foot a { color: var(--spot-ink); text-decoration: none; }
-#startScreen .start-foot a:hover, #startScreen .start-foot a:focus-visible,
-#startScreen .start-bottom.about-open #startAboutLink { color: var(--spot-ink); text-decoration: underline; text-underline-offset: 3px; outline: none; }
-#startScreen .start-about {
-  position: relative;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 520ms cubic-bezier(.2, .7, .2, 1);
-}
-#startScreen .start-bottom.about-open .start-about {
-  max-height: min(78vh, 900px);
-  overflow-y: auto;
-  border-bottom: 1px solid var(--spot-ink);
-}
-#startScreen .sa-close {
-  position: sticky;
-  top: 0;
-  float: right;
-  margin: 10px 12px 0 0;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  background: none;
-  color: var(--spot-ink);
-  font-size: 26px !important;
-  font-style: normal !important;
-  line-height: 1;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.22);
+  transition: background-color 500ms ease;
 }
-#startScreen .sa-close:hover, #startScreen .sa-close:focus-visible { background: rgba(17, 17, 17, 0.08); outline: none; }
-#startScreen .sa-content { max-width: 640px; padding: 28px 20px 24px; }
-#startScreen .sa-content h1 { margin: 0 0 8px; font-size: clamp(32px, 4vw, 46px) !important; line-height: 1; letter-spacing: -0.03em; font-weight: 300 !important; }
-#startScreen .sa-content .subtitle { margin: 0 0 28px; font-size: 13px !important; color: rgba(17, 17, 17, 0.7); }
+#startScreen .start-drawer.is-open .start-strip { background: #fff; }
+#startScreen .start-strip:focus-visible { outline: 2px solid var(--spot-ink); outline-offset: -4px; }
+#startScreen .strip-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 12px !important;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+#startScreen .strip-icon {
+  font-size: 22px !important;
+  line-height: 1;
+  font-style: normal !important;
+  transition: transform 300ms cubic-bezier(.2, .7, .2, 1);
+}
+#startScreen .start-drawer.is-open .strip-icon { transform: rotate(45deg); }
+@media (prefers-reduced-motion: no-preference) {
+  #startScreen .start-drawer:not(.is-open) .strip-icon { animation: spot-nudge 2.4s ease-in-out 1.2s 2; }
+}
+@keyframes spot-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
+#startScreen .start-panel {
+  width: var(--panel-w);
+  max-width: calc(100vw - var(--strip-w));
+  background: #fff;
+  color: var(--spot-ink);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+#startScreen .sa-content { padding: 28px 28px 8px; }
+#startScreen .sa-content h1 { margin: 0 0 8px; font-size: clamp(30px, 2.6vw, 42px) !important; line-height: 1; letter-spacing: -0.03em; font-weight: 300 !important; }
+#startScreen .sa-content .subtitle { margin: 0 0 26px; font-size: 13px !important; color: #6b6862; }
 #startScreen .sa-content section { margin: 0 0 24px; }
-#startScreen .sa-content h2 { margin: 0 0 10px; font-size: 11px !important; letter-spacing: .08em; text-transform: uppercase; color: rgba(17, 17, 17, 0.65); }
+#startScreen .sa-content h2 { margin: 0 0 10px; font-size: 11px !important; letter-spacing: .08em; text-transform: uppercase; color: #6b6862; }
 #startScreen .sa-content p { margin: 0 0 0.9em; font-size: 13px !important; line-height: 1.6; }
 #startScreen .sa-content ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
-#startScreen .sa-content li { padding: 8px 0; border-bottom: 1px solid rgba(17, 17, 17, 0.25); }
+#startScreen .sa-content li { padding: 8px 0; border-bottom: 1px solid #d9d5ce; }
 #startScreen .sa-content dl { margin: 0; display: grid; grid-template-columns: 7em 1fr; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
-#startScreen .sa-content dt, #startScreen .sa-content dd { margin: 0; padding: 8px 0; border-bottom: 1px solid rgba(17, 17, 17, 0.25); }
-#startScreen .sa-content dt { font-size: 11px !important; text-transform: uppercase; letter-spacing: .06em; color: rgba(17, 17, 17, 0.65); }
-#startScreen .sa-content a { color: inherit; text-underline-offset: 3px; }
-#startScreen .sa-content a:hover, #startScreen .sa-content a:focus-visible { background: #fff; outline: none; }
+#startScreen .sa-content dt, #startScreen .sa-content dd { margin: 0; padding: 8px 0; border-bottom: 1px solid #d9d5ce; }
+#startScreen .sa-content dt { font-size: 11px !important; text-transform: uppercase; letter-spacing: .06em; color: #6b6862; }
+#startScreen .sa-content a, #startScreen .sp-foot a { color: inherit; text-underline-offset: 3px; }
+#startScreen .sa-content a:hover, #startScreen .sa-content a:focus-visible,
+#startScreen .sp-foot a:hover, #startScreen .sp-foot a:focus-visible { background: var(--spot-yellow); outline: none; }
 #startScreen .sa-content a[target="_blank"]::after { content: " \2197"; }
-@media (prefers-reduced-motion: reduce) { #startScreen .start-about { transition: none; } }
+#startScreen .sp-foot { margin-top: auto; padding: 16px 28px 22px; display: flex; justify-content: space-between; gap: 12px; font-size: 12px !important; color: #6b6862; }
+@media (prefers-reduced-motion: reduce) { #startScreen .start-drawer, #startScreen .strip-icon { transition: none; } }
