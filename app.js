@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-22 · seamless 3D wrap";
+  const APP_VERSION = "2026-10-22 · camera holds still";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3780,16 +3780,12 @@
         fx.effect.run(lctx, source, fx.effectParams);
         state.lastEffectFrame = camera.layer;
         const ctx = state.frontCanvas === canvasA ? ctxA : ctxB;
-        // Same composite as the photo path: effect layer (Move applies to
-        // it), past-frame blend layers frozen on top.
-        composeFrame(
-          ctx,
-          moveIsActive()
-            ? { pan: computeMovePanProgress(), tilt: computeMoveTiltProgress(), zoom: computeMoveZoomLevel() }
-            : null
-        );
-        if (moveIsActive()) applyEcho(ctx, performance.now());
-        else if (echo.active) resetEcho();
+        // Same composite as the photo path (effect layer, past-frame blend
+        // layers frozen on top) but held still: the live picture is already
+        // moving, so Move (pan, tilt, zoom) and its echo trail sit out while
+        // the camera is on, and pick up again when it goes off.
+        composeFrame(ctx, null);
+        if (echo.active) resetEcho();
       } catch (err) {
         console.warn("[camera] frame failed:", err);
       }
