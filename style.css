@@ -1121,10 +1121,11 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
 #startScreen .sa-lead { display: flex; align-items: center; gap: 22px; margin: 4px 0 28px; }
 #startScreen .sa-open {
   flex: none; width: 92px; height: 92px; border-radius: 50%; border: 0; padding: 0;
-  background: var(--spot-yellow); color: var(--spot-ink); font-size: 17px !important; cursor: pointer;
-  transition: transform 200ms ease;
+  background: var(--spot-ink); color: #fff; font-size: 17px !important; cursor: pointer;
+  transition: transform 200ms ease, background-color 150ms ease, color 150ms ease;
 }
 #startScreen .sa-open:active { transform: scale(0.94); }
+#startScreen .sa-open:hover, #startScreen .sa-open:active, #startScreen .sa-open:focus-visible { background: var(--spot-yellow); color: var(--spot-ink); outline: none; }
 #startScreen .sa-open-end { display: block; margin: 8px 0 28px; }
 #startScreen .sa-more {
   border: 0; background: none; padding: 0; color: var(--spot-ink); font-size: 13px !important;

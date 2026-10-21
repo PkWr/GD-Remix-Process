@@ -95,6 +95,9 @@
       var openedAt = 0;
       strip.addEventListener("mouseenter", function () { if (!touchy() && !drawer.classList.contains("is-open")) { openedAt = Date.now(); setAbout(true); } });
       drawer.addEventListener("mouseleave", function () { if (!touchy()) setAbout(false); });
+      // Desktop: rolling onto the open circle tucks the About away, so the
+      // window onto the motion is clear.
+      document.getElementById("startOpen").addEventListener("mouseenter", function () { if (!touchy()) setAbout(false); });
       strip.addEventListener("click", function () {
         // a click straight after the rollover opened it shouldn't close it again
         if (Date.now() - openedAt < 400) return;
