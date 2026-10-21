@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-21 · bar=off links";
+  const APP_VERSION = "2026-10-22 · seamless 3D wrap";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3032,12 +3032,20 @@
       });
       const m = new T.Mesh(geo, material);
       m.userData = { k, spin: 0.4 + formsRand(k, 1) * 0.8, tilt: formsRand(k, 2) * Math.PI };
+      // Its twin on one screen: while a form crosses one edge, the twin
+      // shows the rest of it coming in at the other, so the wrap is seamless.
+      // Same geometry and material (and so the same picture), never its own.
+      m.userData.ghost = new T.Mesh(geo, material);
+      m.userData.ghost.visible = false;
+      forms3d.scene.add(m.userData.ghost);
       forms3d.scene.add(m);
       forms3d.meshes.push(m);
     }
     forms3d.meshes.forEach((m, i) => {
       m.visible = i < n;
       m.geometry = geo;
+      m.userData.ghost.geometry = geo;
+      if (i >= n) m.userData.ghost.visible = false;
     });
   }
 
@@ -3157,22 +3165,33 @@
       if (!m.material.uniforms.map.value && frame) formsSetTexture(m, frame);
       let a = forms3d.centre + forms3d.travel + (i - (n - 1) / 2) * spacing;
       // One screen (laptop / phone): the whole "room" is squeezed into the
-      // screen's width, so the group stays in view and wraps edge to edge.
+      // screen's width, so the group stays in view and wraps edge to edge,
+      // like the screen were a cylinder: as a form slides off one side its
+      // twin slides in at the other, exactly a screen-width away, so the two
+      // visible parts always add up to one whole form — no gap, no jump.
+      const ghost = m.userData.ghost;
+      let twin = null;
       if (!forms3d.room) {
         const u = (((a + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
-        // Wrap only once the whole form is past the edge: the band runs from
-        // one form-width beyond the left edge to one beyond the right, so it
-        // leaves fully, crosses the hidden gap, and slides back in from just
-        // off the other side. (1.6 = how far the shape can bulge past its
-        // unit sphere, as in the bounding sphere above.)
+        const W = forms3d.hfov;
+        a = (u / Math.PI) * (W / 2);
+        // how far either side of its centre the form can reach (1.6 = how far
+        // the shape can bulge past its unit sphere, as in its bounding sphere)
         const reach = Math.atan((H * 0.36 * size * 1.6) / FORMS_RING) * 1.05;
-        a = (u / Math.PI) * (forms3d.hfov / 2 + reach);
+        if (Math.abs(a) > W / 2 - reach) twin = a - Math.sign(a) * W;
       }
       const r = FORMS_RING * (1 + depth * (formsRand(k, 3) - 0.5) * 0.7);
-      m.position.set(Math.sin(a) * r, (formsRand(k, 4) - 0.5) * H * 0.25 * (1 - size * 0.6), -Math.cos(a) * r);
+      const y = (formsRand(k, 4) - 0.5) * H * 0.25 * (1 - size * 0.6);
+      m.position.set(Math.sin(a) * r, y, -Math.cos(a) * r);
       m.scale.setScalar(H * 0.36 * size * (r / FORMS_RING));
       m.rotation.y += run * spin * m.userData.spin * 1.2;
       m.rotation.x = m.userData.tilt + Math.sin(now / 5000 + k) * 0.3 * spin;
+      ghost.visible = twin !== null;
+      if (twin !== null) {
+        ghost.position.set(Math.sin(twin) * r, y, -Math.cos(twin) * r);
+        ghost.scale.copy(m.scale);
+        ghost.rotation.copy(m.rotation);
+      }
       const u = m.material.uniforms;
       u.time.value = now / 1000 + k * 7.3;
       u.form.value = Math.min(1, Math.max(0, organic + variety * (formsRand(k, 5) - 0.5)));
