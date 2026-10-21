@@ -1,6 +1,6 @@
 # Spot
 
-Spot is a generative photo-remix tool by Patrick Walker. It cycles through photographs and remixes them live in the browser: duotone, pixelate, halftone and ASCII effects, moving strips with echo trails, blend overlays, and 3D forms that wear the images or bend them like glass. It runs on a phone, a laptop or desktop, and across the six walls of an Igloo immersive room.
+Spot is a generative image-processing tool by Patrick Walker. It cycles through photographs and processes them live in the browser: duotone, pixelate, halftone and ASCII effects, moving strips with echo trails, blend overlays, and 3D forms that wear the images or bend them like glass. It runs on a phone, a laptop or desktop, and across the six walls of an Igloo immersive room.
 
 ## Open it
 

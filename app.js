@@ -1,5 +1,5 @@
 /*
- * Spot (generative photo remix) — app.js
+ * Spot (generative image processing) — app.js
  *
  * Plain JS, no build step, no framework. Sections below map to the spec's
  * build order:
@@ -36,7 +36,7 @@
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
   const APP_VERSION = "2026-10-22 · camera holds still";
-  console.info(`[photo-remix] version ${APP_VERSION}`);
+  console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
   // kind: "info" | "ok" | "error". Used for camera debugging so pressing V
