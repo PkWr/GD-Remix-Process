@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-17 · opening look";
+  const APP_VERSION = "2026-10-21 · smooth 3D wrap";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3157,7 +3157,13 @@
       // screen's width, so the group stays in view and wraps edge to edge.
       if (!forms3d.room) {
         const u = (((a + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
-        a = u * (forms3d.hfov / (2 * Math.PI)) * 1.15;
+        // Wrap only once the whole form is past the edge: the band runs from
+        // one form-width beyond the left edge to one beyond the right, so it
+        // leaves fully, crosses the hidden gap, and slides back in from just
+        // off the other side. (1.6 = how far the shape can bulge past its
+        // unit sphere, as in the bounding sphere above.)
+        const reach = Math.atan((H * 0.36 * size * 1.6) / FORMS_RING) * 1.05;
+        a = (u / Math.PI) * (forms3d.hfov / 2 + reach);
       }
       const r = FORMS_RING * (1 + depth * (formsRand(k, 3) - 0.5) * 0.7);
       m.position.set(Math.sin(a) * r, (formsRand(k, 4) - 0.5) * H * 0.25 * (1 - size * 0.6), -Math.cos(a) * r);
