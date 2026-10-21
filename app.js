@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-21 · smooth 3D wrap";
+  const APP_VERSION = "2026-10-21 · bar=off links";
   console.info(`[photo-remix] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -210,6 +210,9 @@
   };
 
   const pageParams = new URLSearchParams(location.search);
+  // ?bar=off — a clean screen: no bottom bar at all, not even on mouse move
+  // or tap (for projection, installs, embedding). Keys still work.
+  const NO_BAR = ["off", "0", "none", "hide", "false"].includes((pageParams.get("bar") || "").toLowerCase());
   // No ?stage= in the address: pick from the device. Phones (touch screen,
   // short side under 600px) get the phone profile; laptops, desktops and
   // tablets get desktop. The showreel is always desktop. The Profile menu
@@ -3919,7 +3922,7 @@
     pageParams.has("touch") || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
   // The same bar on laptops/desktops (shows when the mouse moves), but not
   // on the Igloo walls or in the showreel, which has its own bar.
-  const BAR_UI = TOUCH_UI || (!STAGE_PROFILE.seams && !pageParams.has("reel"));
+  const BAR_UI = !NO_BAR && (TOUCH_UI || (!STAGE_PROFILE.seams && !pageParams.has("reel")));
   const TOUCH_BAR_HIDE_MS = 5000;
   let touchBarTimer = null;
 
@@ -4608,7 +4611,7 @@
   }
 
   function showReelBar() {
-    if (!reel.bar) return;
+    if (!reel.bar || NO_BAR) return;
     document.body.classList.add("reel-bar-on");
     clearTimeout(reel.barTimer);
     reel.barTimer = setTimeout(() => {
@@ -4700,7 +4703,7 @@
   function applyOpeningLook() {
     // pageParams = the address as the page was opened (a scene link tidies
     // its ?scene away later, so location.search can't be trusted here).
-    if ([...pageParams.keys()].length) return;
+    if ([...pageParams.keys()].some((k) => k !== "bar")) return; // ?bar=off alone still gets it
     const values = sceneValuesFromDiff(OPENING_LOOK);
     delete values.ctrlLiveMode;
     delete values.ctrlCamera;
