@@ -1210,3 +1210,61 @@ body:not(.panel-open) #diagnostics { display: none; }
   }
 }
 @media (pointer: coarse) { #diagnostics .hint { display: none; } }
+
+/* ===== Bottom bars as a quiet pill — after the speed bar on the live
+   pieces at pkwr.co (e.g. /schwalbe/live): small, bottom centre, dark
+   translucent, light italic type, fades when idle. Replaces the full-width
+   yellow bar. ===== */
+#touchBar, #reelBar {
+  left: 50%;
+  right: auto;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+  transition: opacity 0.3s;
+}
+#touchBar button, #reelBar button {
+  flex: none;
+  min-height: 0;
+  padding: 6px 10px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 13px !important;
+  font-weight: 300 !important;
+  line-height: 1;
+  white-space: nowrap;
+}
+#touchBar button svg, #reelBar button svg { width: 16px; height: 16px; }
+#touchBar button:hover, #reelBar button:hover:not(:disabled),
+#touchBar button:active, #reelBar button:active { color: var(--spot-yellow); background: none; }
+#touchBar button:hover svg path, #reelBar button:hover:not(:disabled) svg path,
+#touchBar button:focus-visible svg path, #reelBar button:focus-visible svg path { stroke-width: 0; }
+#touchBar button:hover svg, #reelBar button:hover:not(:disabled) svg,
+#touchBar button:focus-visible svg, #reelBar button:focus-visible svg { transform: none; }
+#touchBar button[aria-pressed="true"],
+#reelBar button[aria-pressed="true"] { color: var(--spot-yellow); box-shadow: none; }
+#touchBar button:focus-visible, #reelBar button:focus-visible { outline: 1px solid var(--spot-yellow); outline-offset: -2px; }
+#reelBar #rbVersion { position: static; color: rgba(255, 255, 255, 0.5); font-size: 11px !important; padding: 0 10px 0 6px; white-space: nowrap; }
+body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
+/* Phones: smaller type; icons only on the narrowest screens (labels kept
+   for screen readers). */
+@media (max-width: 480px) {
+  #touchBar, #reelBar { padding: 3px 6px; gap: 0; }
+  #touchBar button, #reelBar button { padding: 9px 8px; gap: 5px; font-size: 11px !important; }
+}
+@media (max-width: 360px) {
+  #touchBar button span, #reelBar button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  #touchBar button svg, #reelBar button svg { width: 20px; height: 20px; }
+}

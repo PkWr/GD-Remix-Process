@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-23 · info beside controls";
+  const APP_VERSION = "2026-10-23 · quiet pill bar";
   console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -4289,7 +4289,7 @@
   // The same bar on laptops/desktops (shows when the mouse moves), but not
   // on the Igloo walls or in the showreel, which has its own bar.
   const BAR_UI = !NO_BAR && (TOUCH_UI || (!STAGE_PROFILE.seams && !pageParams.has("reel")));
-  const TOUCH_BAR_HIDE_MS = 5000;
+  const TOUCH_BAR_HIDE_MS = 3000;
   let touchBarTimer = null;
 
   function buildTouchBar() {
@@ -4402,6 +4402,7 @@
     bar.style.pointerEvents = "auto";
     clearTimeout(touchBarTimer);
     touchBarTimer = setTimeout(() => {
+      if (bar.matches(":hover, :focus-within")) return showTouchBar(); // not while it's in use
       bar.style.opacity = "0";
       bar.style.pointerEvents = "none";
     }, TOUCH_BAR_HIDE_MS);
