@@ -33,6 +33,18 @@
   dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding-top: 11px; }
   footer { margin-top: 48px; display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); }
 </style>
+<!-- Visit counts: GoatCounter (no cookies, no personal data). Scene
+     settings are left out of the counted address; only which kind of
+     link it was (?reel, ?scene, ?stage, ?bar). -->
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var tags = ["reel", "scene", "stage", "bar"].filter(function (k) { return q.has(k); });
+    var path = location.pathname + (tags.length ? "?" + tags.join("&") : "");
+    window.goatcounter = { path: function () { return path; } };
+  })();
+</script>
+<script data-goatcounter="https://pkwr.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
 <main>
@@ -83,12 +95,13 @@
 
   <section>
     <h2>Privacy</h2>
-    <p>Spot has no accounts, no sign-in, no cookies, no analytics or tracking and no ads. It runs entirely in your web browser; there is no server of its own.</p>
+    <p>Spot has no accounts, no sign-in, no cookies, no tracking and no ads. It runs entirely in your web browser; there is no server of its own.</p>
     <p><strong>Camera.</strong> If you turn the camera on, your browser asks first. The picture is processed live on your device and is not recorded, saved or sent anywhere; it stops when you turn the camera off or leave the page.</p>
     <p><strong>Your images.</strong> Images you choose or drop in stay on your device. Spot reads them in the browser and nothing is uploaded or copied. In Chrome and Edge it can remember where your chosen folder is (not the images themselves) so you can use it again; &ldquo;Forget this folder&rdquo; clears that.</p>
     <p><strong>Kept in your browser.</strong> Saved settings, scenes, the last panel tab and that folder reminder are stored in your browser&rsquo;s own storage on your device. They never leave it, and clearing the site&rsquo;s data in your browser removes them.</p>
     <p><strong>Scene links and QR codes</strong> carry settings only: no images and nothing about you.</p>
-    <p><strong>Hosting.</strong> The site is served by GitHub Pages. Like any web host, GitHub may record basic technical details of visits, such as IP address and browser; see <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub&rsquo;s privacy statement</a>. Everything Spot needs (code, fonts, demo images) comes from this site; it doesn&rsquo;t call other services.</p>
+    <p><strong>Hosting.</strong> The site is served by GitHub Pages. Like any web host, GitHub may record basic technical details of visits, such as IP address and browser; see <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub&rsquo;s privacy statement</a>. Everything Spot needs (code, fonts, demo images) comes from this site.</p>
+    <p><strong>Visit counts.</strong> Spot uses <a href="https://www.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a> to count visits, as daily totals: which page, the referring site, browser and system, screen width, language and country. It sets no cookies and stores nothing in your browser, doesn&rsquo;t follow you across sites and doesn&rsquo;t store your IP address. The counts are only seen by Patrick Walker. Scene settings, images and anything from the camera are never sent.</p>
     <p>Questions about privacy: get in touch via <a href="https://pkwr.co" target="_blank" rel="noopener">pkwr.co</a>.</p>
   </section>
 
