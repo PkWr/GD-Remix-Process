@@ -1040,8 +1040,8 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
 
 /* Start screen: yellow side strip + About panel, after the drawer on
    pkwr.github.io/projects (strip yellow while closed, white when open). */
-#startScreen { --strip-w: 44px; --panel-w: max(320px, calc(100vw / 3 - var(--strip-w))); }
-#startScreen .start-drawer {
+#startScreen, #appAbout { --strip-w: 44px; --panel-w: max(320px, calc(100vw / 3 - var(--strip-w))); }
+:is(#startScreen, #appAbout) .start-drawer {
   position: fixed;
   top: 0;
   right: 0;
@@ -1051,8 +1051,8 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
   transform: translateX(var(--panel-w));
   transition: transform 450ms cubic-bezier(.2, .7, .2, 1);
 }
-#startScreen .start-drawer.is-open { transform: translateX(0); }
-#startScreen .start-strip {
+:is(#startScreen, #appAbout) .start-drawer.is-open { transform: translateX(0); }
+:is(#startScreen, #appAbout) .start-strip {
   width: var(--strip-w);
   flex-shrink: 0;
   margin: 0;
@@ -1068,9 +1068,9 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.22);
   transition: background-color 500ms ease;
 }
-#startScreen .start-drawer.is-open .start-strip { background: #fff; }
-#startScreen .start-strip:focus-visible { outline: 2px solid var(--spot-ink); outline-offset: -4px; }
-#startScreen .strip-label {
+:is(#startScreen, #appAbout) .start-drawer.is-open .start-strip { background: #fff; }
+:is(#startScreen, #appAbout) .start-strip:focus-visible { outline: 2px solid var(--spot-ink); outline-offset: -4px; }
+:is(#startScreen, #appAbout) .strip-label {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   font-size: 12px !important;
@@ -1078,18 +1078,18 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
   text-transform: uppercase;
   white-space: nowrap;
 }
-#startScreen .strip-icon {
+:is(#startScreen, #appAbout) .strip-icon {
   font-size: 22px !important;
   line-height: 1;
   font-style: normal !important;
   transition: transform 300ms cubic-bezier(.2, .7, .2, 1);
 }
-#startScreen .start-drawer.is-open .strip-icon { transform: rotate(45deg); }
+:is(#startScreen, #appAbout) .start-drawer.is-open .strip-icon { transform: rotate(45deg); }
 @media (prefers-reduced-motion: no-preference) {
-  #startScreen .start-drawer:not(.is-open) .strip-icon { animation: spot-nudge 2.4s ease-in-out 1.2s 2; }
+  :is(#startScreen, #appAbout) .start-drawer:not(.is-open) .strip-icon { animation: spot-nudge 2.4s ease-in-out 1.2s 2; }
 }
 @keyframes spot-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
-#startScreen .start-panel {
+:is(#startScreen, #appAbout) .start-panel {
   width: var(--panel-w);
   max-width: calc(100vw - var(--strip-w));
   background: #fff;
@@ -1098,24 +1098,24 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
   display: flex;
   flex-direction: column;
 }
-#startScreen .sa-content { padding: 28px 28px 8px; }
-#startScreen .sa-content h1 { margin: 0 0 8px; font-size: clamp(30px, 2.6vw, 42px) !important; line-height: 1; letter-spacing: -0.03em; font-weight: 300 !important; }
-#startScreen .sa-content .subtitle { margin: 0 0 26px; font-size: 13px !important; color: #6b6862; }
-#startScreen .sa-content section { margin: 0 0 24px; }
-#startScreen .sa-content h2 { margin: 0 0 10px; font-size: 11px !important; letter-spacing: .08em; text-transform: uppercase; color: #6b6862; }
-#startScreen .sa-content p { margin: 0 0 0.9em; font-size: 13px !important; line-height: 1.6; }
-#startScreen .sa-content p.note { font-size: 11px !important; color: #777; }
-#startScreen .sa-content ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
-#startScreen .sa-content li { padding: 8px 0; border-bottom: 1px solid #d9d5ce; }
-#startScreen .sa-content dl { margin: 0; display: grid; grid-template-columns: 7em 1fr; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
-#startScreen .sa-content dt, #startScreen .sa-content dd { margin: 0; padding: 8px 0; border-bottom: 1px solid #d9d5ce; }
-#startScreen .sa-content dt { font-size: 11px !important; text-transform: uppercase; letter-spacing: .06em; color: #6b6862; }
-#startScreen .sa-content a, #startScreen .sp-foot a { color: inherit; text-underline-offset: 3px; }
-#startScreen .sa-content a:hover, #startScreen .sa-content a:focus-visible,
-#startScreen .sp-foot a:hover, #startScreen .sp-foot a:focus-visible { background: var(--spot-yellow); outline: none; }
-#startScreen .sa-content a[target="_blank"]::after { content: " \2197"; }
-#startScreen .sp-foot { margin-top: auto; padding: 16px 28px 22px; display: flex; justify-content: space-between; gap: 12px; font-size: 12px !important; color: #6b6862; }
-@media (prefers-reduced-motion: reduce) { #startScreen .start-drawer, #startScreen .strip-icon { transition: none; } }
+:is(#startScreen, #appAbout) .sa-content { padding: 28px 28px 8px; }
+:is(#startScreen, #appAbout) .sa-content h1 { margin: 0 0 8px; font-size: clamp(30px, 2.6vw, 42px) !important; line-height: 1; letter-spacing: -0.03em; font-weight: 300 !important; }
+:is(#startScreen, #appAbout) .sa-content .subtitle { margin: 0 0 26px; font-size: 13px !important; color: #6b6862; }
+:is(#startScreen, #appAbout) .sa-content section { margin: 0 0 24px; }
+:is(#startScreen, #appAbout) .sa-content h2 { margin: 0 0 10px; font-size: 11px !important; letter-spacing: .08em; text-transform: uppercase; color: #6b6862; }
+:is(#startScreen, #appAbout) .sa-content p { margin: 0 0 0.9em; font-size: 13px !important; line-height: 1.6; }
+:is(#startScreen, #appAbout) .sa-content p.note { font-size: 11px !important; color: #777; }
+:is(#startScreen, #appAbout) .sa-content ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
+:is(#startScreen, #appAbout) .sa-content li { padding: 8px 0; border-bottom: 1px solid #d9d5ce; }
+:is(#startScreen, #appAbout) .sa-content dl { margin: 0; display: grid; grid-template-columns: 7em 1fr; border-top: 1px solid var(--spot-ink); font-size: 12px !important; }
+:is(#startScreen, #appAbout) .sa-content dt, :is(#startScreen, #appAbout) .sa-content dd { margin: 0; padding: 8px 0; border-bottom: 1px solid #d9d5ce; }
+:is(#startScreen, #appAbout) .sa-content dt { font-size: 11px !important; text-transform: uppercase; letter-spacing: .06em; color: #6b6862; }
+:is(#startScreen, #appAbout) .sa-content a, :is(#startScreen, #appAbout) .sp-foot a { color: inherit; text-underline-offset: 3px; }
+:is(#startScreen, #appAbout) .sa-content a:hover, :is(#startScreen, #appAbout) .sa-content a:focus-visible,
+:is(#startScreen, #appAbout) .sp-foot a:hover, :is(#startScreen, #appAbout) .sp-foot a:focus-visible { background: var(--spot-yellow); outline: none; }
+:is(#startScreen, #appAbout) .sa-content a[target="_blank"]::after { content: " \2197"; }
+:is(#startScreen, #appAbout) .sp-foot { margin-top: auto; padding: 16px 28px 22px; display: flex; justify-content: space-between; gap: 12px; font-size: 12px !important; color: #6b6862; }
+@media (prefers-reduced-motion: reduce) { :is(#startScreen, #appAbout) .start-drawer, :is(#startScreen, #appAbout) .strip-icon { transition: none; } }
 
 /* Phone About panel: its own open circle, summary first, More to unfold. */
 #startScreen .sa-lead { display: flex; align-items: center; gap: 22px; margin: 4px 0 28px; }
@@ -1153,3 +1153,12 @@ body.drop-on::after {
   font-size: 18px;
   pointer-events: none;
 }
+
+
+/* About, reopened from the bottom bar inside the app: the start screen's
+   drawer, but tucked fully away (strip and all) until asked for. */
+#appAbout { position: fixed; inset: 0; z-index: 400; pointer-events: none; }
+#appAbout.is-on { pointer-events: auto; }
+#appAbout .start-drawer { transform: translateX(100%); }
+#appAbout .start-drawer.is-open { transform: translateX(0); }
+#appAbout .start-strip { box-shadow: none; }
