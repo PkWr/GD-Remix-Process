@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-23 · apply straight away";
+  const APP_VERSION = "2026-10-23 · About in the bar";
   console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3048,6 +3048,7 @@
       if (e.key === "p" || e.key === "P") {
         togglePause();
       }
+      if (e.key === "Escape") setAppAbout(false);
       if ((e.key === "n" || e.key === "N") && !e.metaKey && !e.ctrlKey) {
         const box = document.getElementById("ctrlApplyNow");
         if (box) {
@@ -4323,6 +4324,7 @@
       const panel = document.getElementById("controls");
       if (panel) panel.classList.toggle("hidden");
     });
+    mk("tbAbout", "About", "spot", () => setAppAbout(true));
     mk("tbInfo", "Info", "info", () => {
       const diag = document.getElementById("diagnostics");
       if (diag) diag.classList.toggle("hidden");
@@ -4330,6 +4332,48 @@
     document.body.appendChild(bar);
     updateTouchBar();
     showTouchBar();
+  }
+
+  // ABOUT inside the app — the start screen's About panel, slid in from
+  // the right over the motion. Same text (read from about.html, the one
+  // copy); the strip, Escape or a tap outside closes it.
+  let appAbout = null;
+  function buildAppAbout() {
+    if (appAbout) return appAbout;
+    const wrap = document.createElement("div");
+    wrap.id = "appAbout";
+    wrap.innerHTML =
+      `<div class="start-drawer">` +
+      `<button type="button" class="start-strip" aria-label="Close About"><span class="strip-label">Spot · About</span><span class="strip-icon" aria-hidden="true">+</span></button>` +
+      `<aside class="start-panel" aria-label="About Spot"><div class="sa-content"><p><a href="about.html" target="_blank" rel="noopener">About Spot</a></p></div>` +
+      `<footer class="sp-foot"><span>© 2026 pkwr</span><a href="about.html" target="_blank" rel="noopener">Open as a page</a></footer></aside></div>`;
+    document.body.appendChild(wrap);
+    const drawer = wrap.querySelector(".start-drawer");
+    wrap.querySelector(".start-strip").addEventListener("click", () => setAppAbout(false));
+    wrap.addEventListener("pointerdown", (e) => {
+      if (!drawer.contains(e.target)) setAppAbout(false);
+    });
+    fetch("about.html")
+      .then((r) => r.text())
+      .then((html) => {
+        const main = new DOMParser().parseFromString(html, "text/html").querySelector("main");
+        if (!main) return;
+        main.querySelectorAll("footer, .eyebrow, a[href='index.html']").forEach((n) => n.remove());
+        wrap.querySelector(".sa-content").innerHTML = main.innerHTML;
+      })
+      .catch(() => {
+        /* keeps the plain link to about.html */
+      });
+    void wrap.offsetWidth; // so the first open slides in rather than appearing
+    appAbout = wrap;
+    return wrap;
+  }
+  function setAppAbout(on) {
+    if (!on && !appAbout) return;
+    const wrap = buildAppAbout();
+    wrap.classList.toggle("is-on", on);
+    wrap.querySelector(".start-drawer").classList.toggle("is-open", on);
+    if (on) wrap.querySelector(".start-panel").scrollTop = 0;
   }
 
   function updateTouchBar() {
