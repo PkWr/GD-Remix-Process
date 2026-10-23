@@ -119,6 +119,8 @@
       help: "Off = always the lower value. On = random between the two each image." },
     { id: "ctrlAutoCycle", type: "switch", label: "Auto-advance", default: true, after: "autoCycle",
       help: "Same as P / the pause button" },
+    { id: "ctrlApplyNow", type: "switch", label: "Apply changes straight away", default: false, param: "applyNow",
+      help: "For demoing: each change redraws the picture on screen at once. Off = changes wait for the next image, for smooth sequencing. Same as N." },
     { id: "ctrlCrossfadeEnabled", type: "switch", label: "Crossfade", default: true, param: "crossfadeEnabled", after: "lookDiagnostic",
       help: "Off = hard cut between images" },
     { id: "ctrlOpacity", type: "range", label: "Layer opacity", min: 0.1, max: 1, step: 0.01, default: 1, format: "fixed2", param: "opacity" },
@@ -263,7 +265,7 @@
     { tab: "motion", label: "Motion", icon: "animation", blocks: [
       { section: "Timing", items: [
         { dual: ["ctrlSpeedMin", "ctrlSpeedMax"], label: "Hold each image" },
-        "ctrlSpeedRandomize", "ctrlAutoCycle",
+        "ctrlSpeedRandomize", "ctrlAutoCycle", "ctrlApplyNow",
       ] },
       { section: "Transitions", items: ["ctrlCrossfadeEnabled", "ctrlOpacity", { note: "The camera always hard-cuts." }] },
       { card: "Move", summary: "pan · tilt · zoom", summarize: "move", items: [
@@ -483,8 +485,11 @@
           `<div class="cp-btns">` +
           `<button type="button" class="cp-btn" id="cpMineFolder" title="Pick a folder on this computer — every image inside it (and its subfolders) joins the rotation">Choose a folder…</button>` +
           `<button type="button" class="cp-btn" id="cpMineFiles" title="Pick one or more images">Choose images…</button>` +
+          `<button type="button" class="cp-btn" id="cpMineAgain" hidden>Use your folder again</button>` +
           `<button type="button" class="cp-btn" id="cpMineOff" hidden>Back to demo</button>` +
-          `</div><p class="cp-note" id="cpMineStatus">Use images from this device instead of the demo set. Nothing is uploaded. You can also drop a folder onto the picture.</p>`
+          `</div><p class="cp-note" id="cpMineStatus">Use images from this device instead of the demo set. Nothing is uploaded. You can also drop a folder onto the picture.</p>` +
+          `<p class="cp-note" id="cpMineMemory" hidden></p>` +
+          `<div class="cp-btns"><button type="button" class="cp-btn" id="cpMineForget" hidden title="Stops this browser remembering the folder — nothing is deleted">Forget this folder</button></div>`
         );
       case "flip":
         return `<button type="button" class="cp-btn" id="cpFlip" hidden>Switch front / back camera</button>`;
