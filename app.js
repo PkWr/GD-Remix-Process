@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-23 · no info on phones";
+  const APP_VERSION = "2026-10-23 · info resets on reload";
   console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -4372,7 +4372,7 @@
   // INFO — the diagnostics read-out, a companion card in the Controls
   // style, opened from the (i) button in the Controls header (or D). It
   // has its own close and stays open independently of Controls. On
-  // desktop it can be dragged anywhere; the spot is remembered.
+  // desktop it can be dragged anywhere (until the page is reloaded).
   function toggleInfo(force) {
     const diag = document.getElementById("diagnostics");
     if (!diag) return;
@@ -4401,11 +4401,12 @@
     const diag = document.getElementById("diagnostics");
     if (!diag) return;
     const desktop = () => window.matchMedia("(pointer: fine) and (min-width: 601px)").matches;
+    // Each page load starts it back beside Controls; a dragged spot only
+    // lasts until the page is reloaded.
     try {
-      const saved = JSON.parse(localStorage.getItem(INFO_POS_KEY) || "null");
-      if (saved && desktop()) requestAnimationFrame(() => placeInfo(saved.x, saved.y));
+      localStorage.removeItem(INFO_POS_KEY); // tidy away the old remembered spot
     } catch (e) {
-      /* no saved spot */
+      /* fine */
     }
     let drag = null;
     diag.addEventListener("pointerdown", (e) => {
@@ -4423,11 +4424,6 @@
       if (!drag || e.pointerId !== drag.id) return;
       drag = null;
       diag.classList.remove("dragging");
-      try {
-        localStorage.setItem(INFO_POS_KEY, JSON.stringify({ x: parseFloat(diag.style.left), y: parseFloat(diag.style.top) }));
-      } catch (err) {
-        /* not remembered — fine */
-      }
     };
     diag.addEventListener("pointerup", end);
     diag.addEventListener("pointercancel", end);
@@ -4435,11 +4431,6 @@
     diag.addEventListener("dblclick", () => {
       diag.classList.remove("placed");
       diag.style.left = diag.style.top = "";
-      try {
-        localStorage.removeItem(INFO_POS_KEY);
-      } catch (err) {
-        /* fine */
-      }
     });
     window.addEventListener("resize", keepInfoOnScreen);
   }
