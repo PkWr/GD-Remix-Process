@@ -669,7 +669,6 @@ body.preview-pan #stage canvas {
 
   /* The sheet covers the touch buttons' corner — hide them while it's open. */
   body.panel-open #touchBar { display: none !important; }
-  body.panel-open #diagnostics { display: none; }
 }
 
 /* Phone / touch button bar (built in app.js) — matches the controls
@@ -1164,27 +1163,50 @@ body.drop-on::after {
 #appAbout .start-strip { box-shadow: none; }
 
 
-/* Info panel (D / Info button): yellow type in a black box, sitting
-   directly on top of the bottom bar; at the screen foot where there's no
-   bar (?bar=off, Igloo walls). */
+/* Info panel: a companion to Controls, in the same dark card style, beside
+   it on desktop and above the bottom sheet on phones. Opened from the (i)
+   in the Controls header (or D); hidden whenever Controls is closed. */
 #diagnostics {
-  left: 0;
-  bottom: 16px;
-  max-width: min(560px, 100vw);
-  padding: 12px 44px 12px 16px;
-  background: #000;
-  color: var(--spot-yellow);
-  border-radius: 0;
+  top: 16px;
+  right: calc(16px + 380px + 12px);
+  bottom: auto;
+  left: auto;
+  width: 330px;
+  max-width: none;
+  padding: 16px 44px 14px 18px;
+  background: #121315;
+  color: #ececec;
+  border: 1px solid #2a2d31;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   font-size: 12px !important;
   line-height: 1.6;
-  box-shadow: none;
+  z-index: 30;
+  overflow-wrap: anywhere;
 }
-body.has-bar #diagnostics { bottom: calc(65px + env(safe-area-inset-bottom)); }
-#diagnostics .k { color: var(--spot-yellow); opacity: 0.55; width: 64px; }
-#diagnostics .paused-line { color: var(--spot-yellow); font-weight: 400; text-decoration: underline; text-underline-offset: 3px; }
+body:not(.panel-open) #diagnostics { display: none; }
+#diagnostics .k { color: #a3a3a3; opacity: 1; width: 64px; }
+#diagnostics .paused-line { color: var(--spot-yellow); font-weight: 400; }
 #diagnostics .warn-line { color: #ff7a6b; font-weight: 400; }
 #diagEffect.error { color: #ff7a6b; font-weight: 400; }
-#diagnostics .hint { color: var(--spot-yellow); opacity: 0.55; }
-#diagnostics .diag-close { background: transparent; color: var(--spot-yellow); }
-#diagnostics .diag-close:hover, #diagnostics .diag-close:focus-visible { background: rgba(255, 225, 0, 0.15); outline: none; }
+#diagnostics .hint { color: #a3a3a3; opacity: 1; }
+#diagnostics .diag-close { top: 8px; right: 8px; background: transparent; color: #a3a3a3; }
+#diagnostics .diag-close:hover, #diagnostics .diag-close:focus-visible { background: rgba(255, 255, 255, 0.06); outline: none; }
+/* Not enough room beside Controls: sit it at the top-left instead. */
+@media (max-width: 760px) {
+  #diagnostics { right: auto; left: 16px; width: min(330px, calc(100vw - 32px)); }
+}
+/* Phones / narrow: the Controls bottom sheet — Info sits just above it. */
+@media (pointer: coarse), (max-width: 600px) {
+  #diagnostics {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: calc(min(64vh, 600px) + 10px);
+    max-height: calc(36vh - 30px);
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+}
 @media (pointer: coarse) { #diagnostics .hint { display: none; } }

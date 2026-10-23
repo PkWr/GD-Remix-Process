@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-23 · yellow info";
+  const APP_VERSION = "2026-10-23 · info beside controls";
   console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -3034,10 +3034,7 @@
       if (e.key === "c" || e.key === "C") {
         panel.classList.toggle("hidden");
       }
-      if (e.key === "d" || e.key === "D") {
-        const diag = document.getElementById("diagnostics");
-        if (diag) diag.classList.toggle("hidden");
-      }
+      if (e.key === "d" || e.key === "D") toggleInfo();
       if (e.key === "s" || e.key === "S") {
         const lockup = document.getElementById("brandLockup");
         if (lockup) {
@@ -4325,12 +4322,7 @@
       if (panel) panel.classList.toggle("hidden");
     });
     mk("tbAbout", "About", "spot", () => setAppAbout(true));
-    mk("tbInfo", "Info", "info", () => {
-      const diag = document.getElementById("diagnostics");
-      if (diag) diag.classList.toggle("hidden");
-    });
     document.body.appendChild(bar);
-    document.body.classList.add("has-bar"); // the Info panel sits on top of it
     updateTouchBar();
     showTouchBar();
   }
@@ -4375,6 +4367,21 @@
     wrap.classList.toggle("is-on", on);
     wrap.querySelector(".start-drawer").classList.toggle("is-open", on);
     if (on) wrap.querySelector(".start-panel").scrollTop = 0;
+  }
+
+  // INFO — the diagnostics read-out, a companion panel beside Controls,
+  // opened from the (i) button in the Controls header (or D). It only
+  // shows while Controls is open; D with Controls closed opens both.
+  function toggleInfo(force) {
+    const diag = document.getElementById("diagnostics");
+    if (!diag) return;
+    const panel = document.getElementById("controls");
+    const controlsShut = !panel || panel.classList.contains("hidden");
+    // With Controls shut, Info isn't on screen, so D means "show it".
+    const show = force === undefined ? controlsShut || diag.classList.contains("hidden") : force;
+    diag.classList.toggle("hidden", !show);
+    if (show && panel && panel.classList.contains("hidden")) panel.classList.remove("hidden");
+    panelSync();
   }
 
   function updateTouchBar() {
@@ -4496,6 +4503,9 @@
     const flip = document.getElementById("cpFlip");
     if (flip) flip.hidden = !camera.live;
     updateMineUi();
+    const infoBtn = document.getElementById("cpInfoHead");
+    const diag = document.getElementById("diagnostics");
+    if (infoBtn && diag) infoBtn.setAttribute("aria-pressed", String(!diag.classList.contains("hidden")));
 
     const pause = document.getElementById("cpPause");
     if (pause) {
@@ -4534,10 +4544,7 @@
     on("cpMineAgain", () => useRememberedFolder(true));
     on("cpMineForget", forgetFolder);
     on("cpFullscreen", toggleFullscreen);
-    on("cpInfoBtn", () => {
-      const diag = document.getElementById("diagnostics");
-      if (diag) diag.classList.toggle("hidden");
-    });
+    on("cpInfoHead", () => toggleInfo());
     on("cpBrandBtn", () => {
       const lockup = document.getElementById("brandLockup");
       if (lockup) {
@@ -5191,8 +5198,7 @@
       diagClose.innerHTML = iconSvg("close", 20);
       diagClose.addEventListener("click", (e) => {
         e.stopPropagation();
-        const diag = document.getElementById("diagnostics");
-        if (diag) diag.classList.add("hidden");
+        toggleInfo(false);
       });
     }
     setText("diagVersion", APP_VERSION);
