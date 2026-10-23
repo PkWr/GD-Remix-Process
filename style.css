@@ -1171,7 +1171,7 @@ body.drop-on::after {
   right: calc(16px + 380px + 12px);
   bottom: auto;
   left: auto;
-  width: 330px;
+  width: 380px;
   max-width: none;
   padding: 16px 44px 14px 18px;
   background: #121315;
@@ -1286,3 +1286,15 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
   #controls #cpInfoHead { display: none; }
   #diagnostics { display: none !important; }
 }
+
+/* Info panel rows: label column + value column, so wrapped values stay
+   lined up under their value instead of running back under the label. */
+#diagnostics > div:not(.paused-line):not(.warn-line):not(.hint) {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: baseline;
+}
+#diagnostics > div > .k { width: auto; }
+#diagnostics .paused-line, #diagnostics .warn-line, #diagnostics .hint { padding-left: 78px; max-width: none; }
+#diagnostics .hint { margin-top: 8px; }
