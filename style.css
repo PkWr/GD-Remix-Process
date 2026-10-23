@@ -1184,7 +1184,8 @@ body.drop-on::after {
   z-index: 30;
   overflow-wrap: anywhere;
 }
-body:not(.panel-open) #diagnostics { display: none; }
+/* Independent of Controls: with Controls shut it takes Controls' corner. */
+body:not(.panel-open) #diagnostics { right: 16px; }
 #diagnostics .k { color: #a3a3a3; opacity: 1; width: 64px; }
 #diagnostics .paused-line { color: var(--spot-yellow); font-weight: 400; }
 #diagnostics .warn-line { color: #ff7a6b; font-weight: 400; }
@@ -1267,4 +1268,21 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 @media (max-width: 360px) {
   #touchBar button span, #reelBar button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   #touchBar button svg, #reelBar button svg { width: 20px; height: 20px; }
+}
+
+/* Info panel: draggable on desktop (position remembered in this browser). */
+@media (pointer: fine) and (min-width: 601px) {
+  #diagnostics { pointer-events: auto; cursor: grab; user-select: none; touch-action: none; }
+  #diagnostics.dragging { cursor: grabbing; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6); }
+}
+#diagnostics.placed { right: auto !important; bottom: auto !important; }
+@media (pointer: coarse), (max-width: 600px) {
+  body:not(.panel-open) #diagnostics { bottom: calc(64px + env(safe-area-inset-bottom)); max-height: 50vh; }
+}
+
+/* Phones / narrow windows: no Info panel — the line under "Controls"
+   already shows the current effect, palette and hold. */
+@media (pointer: coarse), (max-width: 600px) {
+  #controls #cpInfoHead { display: none; }
+  #diagnostics { display: none !important; }
 }

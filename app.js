@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-23 · quiet pill bar";
+  const APP_VERSION = "2026-10-23 · no info on phones";
   console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -4369,19 +4369,79 @@
     if (on) wrap.querySelector(".start-panel").scrollTop = 0;
   }
 
-  // INFO — the diagnostics read-out, a companion panel beside Controls,
-  // opened from the (i) button in the Controls header (or D). It only
-  // shows while Controls is open; D with Controls closed opens both.
+  // INFO — the diagnostics read-out, a companion card in the Controls
+  // style, opened from the (i) button in the Controls header (or D). It
+  // has its own close and stays open independently of Controls. On
+  // desktop it can be dragged anywhere; the spot is remembered.
   function toggleInfo(force) {
     const diag = document.getElementById("diagnostics");
     if (!diag) return;
-    const panel = document.getElementById("controls");
-    const controlsShut = !panel || panel.classList.contains("hidden");
-    // With Controls shut, Info isn't on screen, so D means "show it".
-    const show = force === undefined ? controlsShut || diag.classList.contains("hidden") : force;
+    const show = force === undefined ? diag.classList.contains("hidden") : force;
     diag.classList.toggle("hidden", !show);
-    if (show && panel && panel.classList.contains("hidden")) panel.classList.remove("hidden");
+    if (show) keepInfoOnScreen();
     panelSync();
+  }
+
+  const INFO_POS_KEY = "spotInfoPosition";
+  function placeInfo(x, y) {
+    const diag = document.getElementById("diagnostics");
+    const w = diag.offsetWidth, h = diag.offsetHeight;
+    const nx = Math.min(Math.max(8, x), Math.max(8, innerWidth - w - 8));
+    const ny = Math.min(Math.max(8, y), Math.max(8, innerHeight - h - 8));
+    diag.style.left = `${nx}px`;
+    diag.style.top = `${ny}px`;
+    diag.classList.add("placed");
+    return { x: nx, y: ny };
+  }
+  function keepInfoOnScreen() {
+    const diag = document.getElementById("diagnostics");
+    if (diag && diag.classList.contains("placed")) placeInfo(parseFloat(diag.style.left), parseFloat(diag.style.top));
+  }
+  function wireInfoDrag() {
+    const diag = document.getElementById("diagnostics");
+    if (!diag) return;
+    const desktop = () => window.matchMedia("(pointer: fine) and (min-width: 601px)").matches;
+    try {
+      const saved = JSON.parse(localStorage.getItem(INFO_POS_KEY) || "null");
+      if (saved && desktop()) requestAnimationFrame(() => placeInfo(saved.x, saved.y));
+    } catch (e) {
+      /* no saved spot */
+    }
+    let drag = null;
+    diag.addEventListener("pointerdown", (e) => {
+      if (!desktop() || e.button !== 0 || e.target.closest("button, a")) return;
+      const r = diag.getBoundingClientRect();
+      drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId };
+      diag.setPointerCapture(e.pointerId);
+      diag.classList.add("dragging");
+      e.preventDefault();
+    });
+    diag.addEventListener("pointermove", (e) => {
+      if (drag && e.pointerId === drag.id) placeInfo(e.clientX - drag.dx, e.clientY - drag.dy);
+    });
+    const end = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag = null;
+      diag.classList.remove("dragging");
+      try {
+        localStorage.setItem(INFO_POS_KEY, JSON.stringify({ x: parseFloat(diag.style.left), y: parseFloat(diag.style.top) }));
+      } catch (err) {
+        /* not remembered — fine */
+      }
+    };
+    diag.addEventListener("pointerup", end);
+    diag.addEventListener("pointercancel", end);
+    // Double-click puts it back beside Controls.
+    diag.addEventListener("dblclick", () => {
+      diag.classList.remove("placed");
+      diag.style.left = diag.style.top = "";
+      try {
+        localStorage.removeItem(INFO_POS_KEY);
+      } catch (err) {
+        /* fine */
+      }
+    });
+    window.addEventListener("resize", keepInfoOnScreen);
   }
 
   function updateTouchBar() {
@@ -5203,6 +5263,7 @@
       });
     }
     setText("diagVersion", APP_VERSION);
+    wireInfoDrag();
     resetControlsToDefaults();
     wireControls();
     initPanel();
