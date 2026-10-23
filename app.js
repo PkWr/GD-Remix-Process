@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-22 · camera holds still";
+  const APP_VERSION = "2026-10-23 · your own images";
   console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -640,7 +640,12 @@
   // If the demo folder turns out to be empty (e.g. nobody populated it),
   // this falls through to "live" rather than leaving the display blank.
   async function loadImageSourcesForMode(mode) {
-    if (mode === "demo") {
+    if (mode === "mine" && mine.urls.length) {
+      setStatus(`using ${mine.urls.length} of your own image(s) — ${mine.name}`);
+      state.sourceType = "mine";
+      return mine.urls.slice();
+    }
+    if (mode === "demo" || mode === "mine") {
       setStatus("loading demo images…");
       const demoUrls = await discoverDemoImages();
       if (demoUrls.length > 0) {
@@ -1703,7 +1708,158 @@
     if (!state.paused) {
       cycleTimeoutId = setTimeout(cycle, 0);
     }
+    updateMineUi();
   }
+
+  // ---------------------------------------------------------------------
+  // YOUR IMAGES — a folder (or a handful of photos) from this device
+  // ---------------------------------------------------------------------
+  // The browser hands the chosen files to the page; nothing is uploaded or
+  // copied anywhere. Each file becomes a local blob: address, so the rest of
+  // the pipeline (cover-crop, effects, layouts, 3D forms) treats them like
+  // any other image list. Forgotten on reload — browsers don't let a page
+  // keep a folder without asking again.
+  const mine = { urls: [], name: "", inputs: null };
+  const IS_SAFARI = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
+  const MINE_EXT = /\.(jpe?g|png|webp|avif|gif|bmp)$/i;
+
+  // Folders can be chosen on desktop browsers; phones only offer photos.
+  function canPickFolder() {
+    const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    return !coarse && "webkitdirectory" in document.createElement("input");
+  }
+
+  function isUsableImage(f) {
+    const heic = /hei[cf]/i.test(f.type) || /\.hei[cf]$/i.test(f.name);
+    if (heic) return IS_SAFARI; // only Safari can draw iPhone HEIC photos
+    if (f.type) return f.type.startsWith("image/") && !/svg|tiff/i.test(f.type);
+    return MINE_EXT.test(f.name);
+  }
+
+  function mineInputs() {
+    if (mine.inputs) return mine.inputs;
+    const mk = (folder) => {
+      const el = document.createElement("input");
+      el.type = "file";
+      el.multiple = true;
+      el.hidden = true;
+      if (folder) el.webkitdirectory = true;
+      else el.accept = "image/*";
+      el.addEventListener("change", () => {
+        const files = [...el.files];
+        const root = folder && files[0] && files[0].webkitRelativePath ? files[0].webkitRelativePath.split("/")[0] : "";
+        useMyImages(files, root);
+        el.value = ""; // so choosing the same folder again still fires
+      });
+      document.body.appendChild(el);
+      return el;
+    };
+    mine.inputs = { folder: mk(true), files: mk(false) };
+    return mine.inputs;
+  }
+
+  // kind: "folder" | "files" | undefined (folder where the browser can).
+  function chooseMyImages(kind) {
+    const k = kind || (canPickFolder() ? "folder" : "files");
+    mineInputs()[k].click();
+  }
+
+  async function useMyImages(files, folderName) {
+    const images = files.filter(isUsableImage);
+    const looksLikeImage = (f) => (f.type && f.type.startsWith("image/")) || MINE_EXT.test(f.name) || /\.hei[cf]$/i.test(f.name);
+    const skipped = files.filter((f) => !isUsableImage(f) && looksLikeImage(f)).length;
+    if (!images.length) {
+      showToast(
+        skipped
+          ? `None of those images can be shown in this browser (${skipped} skipped — iPhone HEIC photos only open in Safari).`
+          : "No images found there — choose a folder with JPG, PNG, WebP or GIF files.",
+        "error",
+        7000
+      );
+      return;
+    }
+    mine.urls.forEach((u) => URL.revokeObjectURL(u));
+    mine.urls = images.map((f) => URL.createObjectURL(f));
+    mine.name = folderName ? `“${folderName}”` : `${images.length} chosen image${images.length === 1 ? "" : "s"}`;
+    params.sourceMode = null; // so a second folder replaces the first
+    await switchSourceMode("mine");
+    showToast(
+      `Using ${images.length} image${images.length === 1 ? "" : "s"}${folderName ? ` from ${mine.name}` : ""}` +
+        (skipped ? ` · ${skipped} skipped (HEIC only opens in Safari)` : "") +
+        ". Nothing is uploaded.",
+      "ok",
+      6000
+    );
+  }
+
+  function updateMineUi() {
+    const on = params.sourceMode === "mine" && mine.urls.length > 0;
+    const status = document.getElementById("cpMineStatus");
+    if (status) {
+      status.textContent = on
+        ? `Now showing ${mine.urls.length} of your own image${mine.urls.length === 1 ? "" : "s"} (${mine.name}). They stay on this device and are forgotten when the page reloads.`
+        : "Use images from this device instead of the demo set. Nothing is uploaded. You can also drop a folder onto the picture.";
+    }
+    const off = document.getElementById("cpMineOff");
+    if (off) off.hidden = !on;
+    const folderBtn = document.getElementById("cpMineFolder");
+    if (folderBtn) folderBtn.hidden = !canPickFolder();
+    const tb = document.getElementById("tbImages");
+    if (tb) tb.setAttribute("aria-pressed", String(on));
+  }
+
+  // Drop a folder (or some images) anywhere on the picture.
+  async function filesFromDrop(dt) {
+    const entries = [...(dt.items || [])]
+      .filter((i) => i.kind === "file" && i.webkitGetAsEntry)
+      .map((i) => i.webkitGetAsEntry())
+      .filter(Boolean);
+    if (!entries.length) return { files: [...(dt.files || [])], folder: "" };
+    const files = [];
+    const readAll = (reader) =>
+      new Promise((resolve) => {
+        const all = [];
+        const next = () =>
+          reader.readEntries(
+            (batch) => {
+              if (!batch.length) return resolve(all);
+              all.push(...batch);
+              next();
+            },
+            () => resolve(all)
+          );
+        next();
+      });
+    const walk = async (entry) => {
+      if (entry.isFile) {
+        const f = await new Promise((resolve) => entry.file(resolve, () => resolve(null)));
+        if (f) files.push(f);
+      } else if (entry.isDirectory) {
+        for (const child of await readAll(entry.createReader())) await walk(child);
+      }
+    };
+    for (const e of entries) await walk(e);
+    const folder = entries.length === 1 && entries[0].isDirectory ? entries[0].name : "";
+    return { files, folder };
+  }
+
+  let dropTimer = null;
+  const dragHasFiles = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes("Files");
+  window.addEventListener("dragover", (e) => {
+    if (!dragHasFiles(e) || document.documentElement.classList.contains("show-start")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    document.body.classList.add("drop-on");
+    clearTimeout(dropTimer);
+    dropTimer = setTimeout(() => document.body.classList.remove("drop-on"), 200);
+  });
+  window.addEventListener("drop", async (e) => {
+    if (!dragHasFiles(e) || document.documentElement.classList.contains("show-start")) return;
+    e.preventDefault();
+    document.body.classList.remove("drop-on");
+    const { files, folder } = await filesFromDrop(e.dataTransfer);
+    useMyImages(files, folder);
+  });
 
   // Picks `n` image indices for this cycle: images NOT on screen last cycle
   // first (shuffled), then last cycle's, repeating only if the pool is
@@ -3963,6 +4119,7 @@
       bar.appendChild(b);
       return b;
     };
+    mk("tbImages", "Images", "photo_library", () => chooseMyImages());
     mk("tbCamera", "Camera", "videocam", () => setCamera(!camera.live));
     mk("tbFlip", "Flip", "cameraswitch", flipCamera);
     mk("tbControls", "Controls", "tune", () => {
@@ -4096,6 +4253,7 @@
 
     const flip = document.getElementById("cpFlip");
     if (flip) flip.hidden = !camera.live;
+    updateMineUi();
 
     const pause = document.getElementById("cpPause");
     if (pause) {
@@ -4128,6 +4286,9 @@
     on("cpClose", hide);
     on("cpGrab", hide);
     on("cpFlip", () => flipCamera());
+    on("cpMineFolder", () => chooseMyImages("folder"));
+    on("cpMineFiles", () => chooseMyImages("files"));
+    on("cpMineOff", () => switchSourceMode("demo"));
     on("cpFullscreen", toggleFullscreen);
     on("cpInfoBtn", () => {
       const diag = document.getElementById("diagnostics");

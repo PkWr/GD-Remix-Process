@@ -218,6 +218,7 @@
   const LAYOUT = [
     { tab: "source", label: "Source", icon: "photo_library", blocks: [
       { section: "Image source", items: [
+        { widget: "mine" },
         "ctrlLiveMode", "ctrlCamera", { widget: "flip" },
         { note: "Off = the curated demo set. The front camera is mirrored; effects hard-cut while the camera is on." },
       ] },
@@ -476,6 +477,15 @@
   // so they're not settings and don't appear on the remote page.
   function widgetHtml(name) {
     switch (name) {
+      case "mine":
+        return (
+          `<p class="cp-field">Your images</p>` +
+          `<div class="cp-btns">` +
+          `<button type="button" class="cp-btn" id="cpMineFolder" title="Pick a folder on this computer — every image inside it (and its subfolders) joins the rotation">Choose a folder…</button>` +
+          `<button type="button" class="cp-btn" id="cpMineFiles" title="Pick one or more images">Choose images…</button>` +
+          `<button type="button" class="cp-btn" id="cpMineOff" hidden>Back to demo</button>` +
+          `</div><p class="cp-note" id="cpMineStatus">Use images from this device instead of the demo set. Nothing is uploaded. You can also drop a folder onto the picture.</p>`
+        );
       case "flip":
         return `<button type="button" class="cp-btn" id="cpFlip" hidden>Switch front / back camera</button>`;
       case "profile":

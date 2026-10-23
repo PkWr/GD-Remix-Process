@@ -1138,3 +1138,18 @@ body h1, body h2, body h3, body b, body strong, body th, body dt { font-weight: 
   #startScreen .sa-content.is-short .sa-lead ~ section,
   #startScreen .sa-content.is-short .sa-open-end { display: none; }
 }
+
+/* Your images: drop a folder or images onto the picture */
+body.drop-on::after {
+  content: "Drop images or a folder — nothing is uploaded";
+  position: fixed;
+  inset: 12px;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  border: 3px dashed var(--spot-yellow);
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--spot-yellow);
+  font-size: 18px;
+  pointer-events: none;
+}
