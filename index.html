@@ -12,6 +12,18 @@
      never run a cached old copy — GitHub Pages lets them cache for 10 min. -->
 <script>document.write('<link rel="stylesheet" href="style.css?t=' + Date.now() + '">');</script>
 <noscript><link rel="stylesheet" href="style.css"></noscript>
+<!-- Visit counts: GoatCounter (no cookies, no personal data). Scene
+     settings are left out of the counted address; only which kind of
+     link it was (?reel, ?scene, ?stage, ?bar). -->
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var tags = ["reel", "scene", "stage", "bar"].filter(function (k) { return q.has(k); });
+    var path = location.pathname + (tags.length ? "?" + tags.join("&") : "");
+    window.goatcounter = { path: function () { return path; } };
+  })();
+</script>
+<script data-goatcounter="https://pkwr.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
   <!-- Start screen: a plain visit (no ?stage / ?scene / ?reel … in the

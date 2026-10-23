@@ -1164,27 +1164,27 @@ body.drop-on::after {
 #appAbout .start-strip { box-shadow: none; }
 
 
-/* Info panel (D / Info button): yellow like the bars, sitting directly on
-   top of the bottom bar; at the screen foot where there's no bar
-   (?bar=off, Igloo walls). */
+/* Info panel (D / Info button): yellow type in a black box, sitting
+   directly on top of the bottom bar; at the screen foot where there's no
+   bar (?bar=off, Igloo walls). */
 #diagnostics {
   left: 0;
   bottom: 16px;
   max-width: min(560px, 100vw);
   padding: 12px 44px 12px 16px;
-  background: var(--spot-yellow);
-  color: var(--spot-ink);
+  background: #000;
+  color: var(--spot-yellow);
   border-radius: 0;
   font-size: 12px !important;
   line-height: 1.6;
   box-shadow: none;
 }
 body.has-bar #diagnostics { bottom: calc(65px + env(safe-area-inset-bottom)); }
-#diagnostics .k { color: var(--spot-ink); opacity: 0.55; width: 64px; }
-#diagnostics .paused-line { color: var(--spot-ink); font-weight: 400; text-decoration: underline; text-underline-offset: 3px; }
-#diagnostics .warn-line { color: #a40000; font-weight: 400; }
-#diagEffect.error { color: #a40000; font-weight: 400; }
-#diagnostics .hint { color: var(--spot-ink); opacity: 0.6; }
-#diagnostics .diag-close { background: transparent; color: var(--spot-ink); }
-#diagnostics .diag-close:hover, #diagnostics .diag-close:focus-visible { background: rgba(0, 0, 0, 0.08); outline: none; }
+#diagnostics .k { color: var(--spot-yellow); opacity: 0.55; width: 64px; }
+#diagnostics .paused-line { color: var(--spot-yellow); font-weight: 400; text-decoration: underline; text-underline-offset: 3px; }
+#diagnostics .warn-line { color: #ff7a6b; font-weight: 400; }
+#diagEffect.error { color: #ff7a6b; font-weight: 400; }
+#diagnostics .hint { color: var(--spot-yellow); opacity: 0.55; }
+#diagnostics .diag-close { background: transparent; color: var(--spot-yellow); }
+#diagnostics .diag-close:hover, #diagnostics .diag-close:focus-visible { background: rgba(255, 225, 0, 0.15); outline: none; }
 @media (pointer: coarse) { #diagnostics .hint { display: none; } }
