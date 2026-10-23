@@ -538,7 +538,6 @@
           `<div class="cp-btns">` +
           `<button type="button" class="cp-btn" id="cpFullscreen">Fullscreen</button>` +
           `<button type="button" class="cp-btn" id="openRecordingWindowLink" title="Opens a separate window at the output shape with your current settings, for screen recording. Same as R.">Recording window</button>` +
-          `<button type="button" class="cp-btn" id="cpInfoBtn">Info panel</button>` +
           `<button type="button" class="cp-btn" id="cpBrandBtn">SHU lockup</button>` +
           `</div>`
         );
@@ -630,7 +629,8 @@
       `<div class="cp-head"><div class="cp-title"><h2>${display ? "Controls" : "Remote controls"}</h2>` +
       `<div class="cp-now" id="cpNow">${display ? "starting…" : "mirrors the display page"}</div></div>` +
       (display
-        ? `<button type="button" class="cp-icon" id="cpPause" aria-label="Pause (P)" title="Pause (P)" data-icon="pause"></button>` +
+        ? `<button type="button" class="cp-icon" id="cpInfoHead" aria-label="Info (D)" title="Info (D)" aria-pressed="false" data-icon="info"></button>` +
+          `<button type="button" class="cp-icon" id="cpPause" aria-label="Pause (P)" title="Pause (P)" data-icon="pause"></button>` +
           `<button type="button" class="cp-icon cp-close" id="cpClose" aria-label="Close controls (C)" title="Close (C)" data-icon="close"></button>`
         : "") +
       `</div>` +
