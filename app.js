@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-23 · your own images";
+  const APP_VERSION = "2026-10-23 · apply straight away";
   console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -1681,6 +1681,10 @@
   async function switchSourceMode(mode) {
     if (mode === params.sourceMode) return;
     params.sourceMode = mode;
+    if (mode !== "mine" && mine.remembered && mine.remembered.active) {
+      mine.remembered.active = false; // next visit opens on the demo set
+      mineDbSet(mine.remembered);
+    }
 
     const liveModeBox = document.getElementById("ctrlLiveMode");
     if (liveModeBox) liveModeBox.checked = mode === "live";
@@ -1719,7 +1723,7 @@
   // the pipeline (cover-crop, effects, layouts, 3D forms) treats them like
   // any other image list. Forgotten on reload — browsers don't let a page
   // keep a folder without asking again.
-  const mine = { urls: [], name: "", inputs: null };
+  const mine = { urls: [], name: "", inputs: null, remembered: null };
   const IS_SAFARI = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
   const MINE_EXT = /\.(jpe?g|png|webp|avif|gif|bmp)$/i;
 
@@ -1759,9 +1763,123 @@
   }
 
   // kind: "folder" | "files" | undefined (folder where the browser can).
+  // Chrome and Edge get the folder-access picker, so the folder can be
+  // remembered for next time; other browsers use the plain file input.
   function chooseMyImages(kind) {
     const k = kind || (canPickFolder() ? "folder" : "files");
+    if (k === "folder" && canRememberFolder()) {
+      window
+        .showDirectoryPicker({ id: "spot-images", mode: "read" })
+        .then((dir) => useFolderHandle(dir))
+        .catch((err) => {
+          if (err && err.name === "AbortError") return; // picker closed
+          mineInputs().folder.click();
+        });
+      return;
+    }
     mineInputs()[k].click();
+  }
+
+  // ---- Remembering the folder (Chrome / Edge) -------------------------
+  // The browser can hand the page a folder *handle* that survives a reload
+  // when stored in IndexedDB. Reading it again needs the person's OK — the
+  // browser asks once ("Allow on every visit" makes later visits silent).
+  // Only the handle is stored: no images are copied anywhere.
+  function canRememberFolder() {
+    return canPickFolder() && typeof window.showDirectoryPicker === "function" && window.self === window.top;
+  }
+
+  const MINE_DB = { name: "spot-your-images", store: "folder", key: "last" };
+  function mineDb(mode, fn) {
+    return new Promise((resolve) => {
+      let req;
+      try {
+        req = indexedDB.open(MINE_DB.name, 1);
+      } catch (e) {
+        return resolve(null);
+      }
+      req.onupgradeneeded = () => req.result.createObjectStore(MINE_DB.store);
+      req.onerror = () => resolve(null);
+      req.onsuccess = () => {
+        try {
+          const tx = req.result.transaction(MINE_DB.store, mode);
+          const r = fn(tx.objectStore(MINE_DB.store));
+          tx.oncomplete = () => resolve(r && "result" in r ? r.result : null);
+          tx.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      };
+    });
+  }
+  const mineDbGet = () => mineDb("readonly", (st) => st.get(MINE_DB.key));
+  const mineDbSet = (v) => mineDb("readwrite", (st) => st.put(v, MINE_DB.key));
+  const mineDbClear = () => mineDb("readwrite", (st) => st.delete(MINE_DB.key));
+
+  async function filesFromHandle(dir) {
+    const files = [];
+    const walk = async (d) => {
+      for await (const h of d.values()) {
+        if (h.kind === "file") {
+          try {
+            files.push(await h.getFile());
+          } catch (e) {
+            /* unreadable file — skip */
+          }
+        } else if (h.kind === "directory") {
+          await walk(h);
+        }
+      }
+    };
+    await walk(dir);
+    return files;
+  }
+
+  async function useFolderHandle(dir) {
+    setStatus(`reading “${dir.name}”…`);
+    const files = await filesFromHandle(dir);
+    const ok = await useMyImages(files, dir.name);
+    if (!ok) return;
+    mine.remembered = { handle: dir, name: dir.name, active: true };
+    mineDbSet(mine.remembered);
+    updateMineUi();
+  }
+
+  // fromTap: the person just pressed a button, so the browser may ask.
+  async function useRememberedFolder(fromTap) {
+    const r = mine.remembered;
+    if (!r || !r.handle) return false;
+    try {
+      let perm = await r.handle.queryPermission({ mode: "read" });
+      if (perm !== "granted" && fromTap) perm = await r.handle.requestPermission({ mode: "read" });
+      if (perm !== "granted") return false;
+      await useFolderHandle(r.handle);
+      return true;
+    } catch (err) {
+      showToast(`Couldn't open “${r.name}” again — it may have been moved or renamed. Choose it again.`, "error", 7000);
+      forgetFolder();
+      return false;
+    }
+  }
+
+  function forgetFolder() {
+    mine.remembered = null;
+    mineDbClear();
+    updateMineUi();
+  }
+
+  // On load: if the folder was in use last time and the browser still has
+  // permission ("Allow on every visit"), carry straight on with it.
+  // Otherwise offer it in the panel with one tap.
+  async function restoreRememberedFolder() {
+    if (!canRememberFolder() || pageParams.has("reel")) return; // the showreel keeps its own images
+    const r = await mineDbGet();
+    if (!r || !r.handle) return;
+    mine.remembered = r;
+    updateMineUi();
+    if (!r.active) return;
+    const used = await useRememberedFolder(false);
+    if (!used) showToast(`Your folder “${r.name}” is remembered — Controls → Source → Use it again.`, "info", 7000);
   }
 
   async function useMyImages(files, folderName) {
@@ -1769,6 +1887,7 @@
     const looksLikeImage = (f) => (f.type && f.type.startsWith("image/")) || MINE_EXT.test(f.name) || /\.hei[cf]$/i.test(f.name);
     const skipped = files.filter((f) => !isUsableImage(f) && looksLikeImage(f)).length;
     if (!images.length) {
+      setStatus("no usable images there");
       showToast(
         skipped
           ? `None of those images can be shown in this browser (${skipped} skipped — iPhone HEIC photos only open in Safari).`
@@ -1776,7 +1895,7 @@
         "error",
         7000
       );
-      return;
+      return false;
     }
     mine.urls.forEach((u) => URL.revokeObjectURL(u));
     mine.urls = images.map((f) => URL.createObjectURL(f));
@@ -1790,6 +1909,13 @@
       "ok",
       6000
     );
+    // A folder picked the plain way (or loose images) replaces any
+    // remembered folder as what's on screen; the memory itself stays.
+    if (mine.remembered && mine.remembered.name !== folderName && mine.remembered.active) {
+      mine.remembered.active = false;
+      mineDbSet(mine.remembered);
+    }
+    return true;
   }
 
   function updateMineUi() {
@@ -1797,24 +1923,47 @@
     const status = document.getElementById("cpMineStatus");
     if (status) {
       status.textContent = on
-        ? `Now showing ${mine.urls.length} of your own image${mine.urls.length === 1 ? "" : "s"} (${mine.name}). They stay on this device and are forgotten when the page reloads.`
+        ? `Now showing ${mine.urls.length} of your own image${mine.urls.length === 1 ? "" : "s"} (${mine.name}). They stay on this device.`
         : "Use images from this device instead of the demo set. Nothing is uploaded. You can also drop a folder onto the picture.";
     }
     const off = document.getElementById("cpMineOff");
     if (off) off.hidden = !on;
+    const r = mine.remembered;
+    const again = document.getElementById("cpMineAgain");
+    if (again) {
+      const showing = on && r && mine.name === `“${r.name}”`;
+      again.hidden = !r || showing;
+      if (r) again.textContent = `Use “${r.name}” again`;
+    }
+    const forget = document.getElementById("cpMineForget");
+    if (forget) forget.hidden = !r;
+    const mem = document.getElementById("cpMineMemory");
+    if (mem) {
+      mem.hidden = !canRememberFolder();
+      mem.textContent = r
+        ? `“${r.name}” is remembered in this browser (just where it is, no copies).`
+        : "This browser can remember the folder you choose, so it's one tap next time.";
+    }
     const folderBtn = document.getElementById("cpMineFolder");
     if (folderBtn) folderBtn.hidden = !canPickFolder();
     const tb = document.getElementById("tbImages");
     if (tb) tb.setAttribute("aria-pressed", String(on));
   }
 
-  // Drop a folder (or some images) anywhere on the picture.
-  async function filesFromDrop(dt) {
-    const entries = [...(dt.items || [])]
-      .filter((i) => i.kind === "file" && i.webkitGetAsEntry)
-      .map((i) => i.webkitGetAsEntry())
-      .filter(Boolean);
-    if (!entries.length) return { files: [...(dt.files || [])], folder: "" };
+  // Drop a folder (or some images) anywhere on the picture. The drop's
+  // contents can only be read during the event, so this grabs them first
+  // (sync) and walks them after.
+  function grabDrop(dt) {
+    const items = [...(dt.items || [])].filter((i) => i.kind === "file");
+    return {
+      handle: items.length === 1 && items[0].getAsFileSystemHandle && canRememberFolder() ? items[0].getAsFileSystemHandle() : null,
+      entries: items.map((i) => (i.webkitGetAsEntry ? i.webkitGetAsEntry() : null)).filter(Boolean),
+      plain: [...(dt.files || [])],
+    };
+  }
+
+  async function filesFromDrop({ entries, plain }) {
+    if (!entries.length) return { files: plain, folder: "" };
     const files = [];
     const readAll = (reader) =>
       new Promise((resolve) => {
@@ -1857,7 +2006,16 @@
     if (!dragHasFiles(e) || document.documentElement.classList.contains("show-start")) return;
     e.preventDefault();
     document.body.classList.remove("drop-on");
-    const { files, folder } = await filesFromDrop(e.dataTransfer);
+    const grabbed = grabDrop(e.dataTransfer);
+    if (grabbed.handle) {
+      try {
+        const h = await grabbed.handle;
+        if (h && h.kind === "directory") return useFolderHandle(h); // remembered
+      } catch (err) {
+        /* fall through to the plain way */
+      }
+    }
+    const { files, folder } = await filesFromDrop(grabbed);
     useMyImages(files, folder);
   });
 
@@ -2377,7 +2535,7 @@
     // Live camera always hard-cuts between effects: a fade would show the
     // outgoing effect frozen on an old frame over the moving video. The
     // Crossfade setting itself is left alone and applies again for photos.
-    const fade = params.crossfadeEnabled && !camera.live && !stripActive();
+    const fade = params.crossfadeEnabled && !camera.live && !stripActive() && !state.instantCut;
     const transition = fade ? `opacity ${CONFIG.CROSSFADE_MS}ms ease-in-out` : "none";
     incoming.style.transition = transition;
     incoming.style.opacity = String(params.opacity);
@@ -2427,7 +2585,9 @@
     };
   }
 
-  async function cycle() {
+  // opts.keep: redraw the image(s) already on screen with the current
+  // settings (Apply changes straight away) — hard cut, no new picture.
+  async function cycle(opts = {}) {
     if (state.sources.length === 0 && !camera.live) return;
 
     // Resolved before anything renders, same reasoning as
@@ -2438,7 +2598,11 @@
     resolveMoveSpeeds();
     // Live camera: always one full-stage view of the camera, no photo picking.
     const layout = camera.live ? { ...layoutSpec("single"), kind: "camera" } : pickLayout();
-    const indices = camera.live ? [] : pickIndices(layout.slots, layout.pool);
+    const keep =
+      opts.keep && !camera.live && state.currentIndices.length === layout.slots &&
+      state.currentIndices.every((i) => i < state.sources.length);
+    const indices = camera.live ? [] : keep ? state.currentIndices.slice() : pickIndices(layout.slots, layout.pool);
+    state.instantCut = !!opts.keep;
     state.currentIndices = indices;
     state.currentIndex = camera.live ? -1 : indices[0];
     state.currentLayout = layout;
@@ -2813,6 +2977,31 @@
       if (span) span.textContent = PRS.formatValue(s, v);
     }
     if (s.after && SETTING_ACTIONS[s.after]) SETTING_ACTIONS[s.after](v, s);
+    if (params.applyNow) refreshSoon(s.id);
+  }
+
+  // "Apply changes straight away" (N): instead of waiting for the next
+  // image, redraw the current one with the new settings as soon as the
+  // control settles. Off = the usual smooth sequencing. Settings that
+  // already act live (3D forms, saturation/contrast, timers, sources)
+  // don't need a redraw.
+  const LIVE_ALREADY = new Set([
+    "ctrlApplyNow", "ctrlAutoCycle", "ctrlLiveMode", "ctrlCamera", "ctrlSaturation", "ctrlContrast",
+    "ctrlSpeedMin", "ctrlSpeedMax", "ctrlSpeedRandomize", "ctrlStartUnchanged",
+  ]);
+  let refreshTimer = null;
+  function refreshSoon(id) {
+    if (LIVE_ALREADY.has(id) || /^ctrlForms/.test(id) || !state.hasCycled) return;
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(refreshNow, 220); // let a slider drag settle
+  }
+  function refreshNow() {
+    if (state.sources.length === 0 && !camera.live) return;
+    if (cycleTimeoutId) {
+      clearTimeout(cycleTimeoutId);
+      cycleTimeoutId = null;
+    }
+    cycle({ keep: true });
   }
 
   function wireSettings() {
@@ -2858,6 +3047,14 @@
       }
       if (e.key === "p" || e.key === "P") {
         togglePause();
+      }
+      if ((e.key === "n" || e.key === "N") && !e.metaKey && !e.ctrlKey) {
+        const box = document.getElementById("ctrlApplyNow");
+        if (box) {
+          box.checked = !box.checked;
+          box.dispatchEvent(new Event("change", { bubbles: true }));
+          showToast(box.checked ? "N — changes apply straight away" : "N — changes wait for the next image");
+        }
       }
       if (e.key === "l" || e.key === "L") {
         switchSourceMode(params.sourceMode === "demo" ? "live" : "demo");
@@ -4289,6 +4486,8 @@
     on("cpMineFolder", () => chooseMyImages("folder"));
     on("cpMineFiles", () => chooseMyImages("files"));
     on("cpMineOff", () => switchSourceMode("demo"));
+    on("cpMineAgain", () => useRememberedFolder(true));
+    on("cpMineForget", forgetFolder);
     on("cpFullscreen", toggleFullscreen);
     on("cpInfoBtn", () => {
       const diag = document.getElementById("diagnostics");
@@ -4832,6 +5031,7 @@
     delete values.ctrlLiveMode;
     delete values.ctrlCamera;
     delete values.ctrlAutoCycle; // would undo Pause at every look change
+    delete values.ctrlApplyNow;
     applyingScene = true;
     try {
       applyControlState(values);
@@ -4884,6 +5084,7 @@
     delete values.ctrlLiveMode;
     delete values.ctrlCamera;
     delete values.ctrlAutoCycle;
+    delete values.ctrlApplyNow;
     applyingScene = true;
     try {
       applyControlState(values);
@@ -5019,6 +5220,7 @@
       // Pre-warm the first image so the first cycle isn't blank.
       await normalizeImage(state.sources[0]);
       cycle();
+      restoreRememberedFolder();
     } catch (err) {
       // Surface boot failures instead of leaving a silent black screen —
       // e.g. seed images failing to load, folder path wrong, etc.
