@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog — Spot</title>
+<style>
+  @font-face { font-family: "IBM Plex Mono"; font-style: italic; font-weight: 300; font-display: swap; src: url("vendor/fonts/ibm-plex-mono-latin-300-italic.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Mono"; font-style: italic; font-weight: 400; font-display: swap; src: url("vendor/fonts/ibm-plex-mono-latin-400-italic.woff2") format("woff2"); }
+  :root { --ink: #111; --paper: #f4f2ee; --muted: #6b6862; --rule: #d9d5ce; --yellow: #ffe100; --font: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
+  * { box-sizing: border-box; }
+  html { font-synthesis: none; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-style: italic; -webkit-font-smoothing: antialiased; }
+  h1, h2, strong, b { font-weight: 400; }
+  main { max-width: 620px; margin: 0 auto; padding: 56px 24px 72px; }
+  .eyebrow, h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1; letter-spacing: -0.03em; font-weight: 300; margin: 0 0 12px; }
+  .subtitle { margin: 0 0 40px; color: var(--muted); font-size: 14px; }
+  section { margin: 0 0 32px; }
+  p { margin: 0 0 1em; font-size: 14px; line-height: 1.6; }
+  p.note { font-size: 12px; color: var(--muted); }
+  ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); font-size: 13px; }
+  li { padding: 9px 0; border-bottom: 1px solid var(--rule); line-height: 1.5; }
+  a { color: inherit; text-underline-offset: 3px; }
+  a:hover, a:focus-visible { background: var(--yellow); outline: none; }
+  a[target="_blank"]::after { content: " \2197"; }
+  dl { margin: 0; display: grid; grid-template-columns: 7em 1fr; border-top: 1px solid var(--ink); font-size: 13px; }
+  dt, dd { margin: 0; padding: 9px 0; border-bottom: 1px solid var(--rule); line-height: 1.45; }
+  dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding-top: 11px; }
+  footer { margin-top: 48px; display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); }
+</style>
+<!-- Visit counts: GoatCounter (no cookies, no personal data). Scene
+     settings are left out of the counted address; only which kind of
+     link it was (?reel, ?scene, ?stage, ?bar). -->
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var tags = ["reel", "scene", "stage", "bar"].filter(function (k) { return q.has(k); });
+    var path = location.pathname + (tags.length ? "?" + tags.join("&") : "");
+    window.goatcounter = { path: function () { return path; } };
+  })();
+</script>
+<script data-goatcounter="https://pkwr.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Changelog</p>
+  <h1>Spot</h1>
+  <p class="subtitle">What&rsquo;s been added, newest first</p>
+
+  <section>
+    <h2>28 October 2026</h2>
+    <ul>
+      <li>Photos added at a workshop stay on the computer they were added on and are no longer published; live mode falls back to the demo images.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>23 October 2026</h2>
+    <ul>
+      <li><b>Your own images.</b> Choose a folder or some photos, or drop them onto the picture. Nothing is uploaded. Chrome and Edge remember the folder for next time.</li>
+      <li><b>Apply changes straight away</b> (N): each change redraws the picture on screen at once, for demoing.</li>
+      <li><b>About in the bottom bar</b>, with new Privacy and visit-count notes (GoatCounter: no cookies, no tracking).</li>
+      <li><b>Quieter bottom bar:</b> a small pill that fades when idle.</li>
+      <li><b>Info panel</b> beside Controls, with its own close; draggable on desktop.</li>
+      <li><b>Text forms sketch:</b> typed text as 3D forms (separate page, an experiment).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>21 October 2026</h2>
+    <ul>
+      <li>Opens on Patrick Walker&rsquo;s own images, from Concrete, Foxes and Schwalbe.</li>
+      <li>3D forms wrap seamlessly from one edge of the screen to the other.</li>
+      <li>With the camera on, the picture holds still.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>17 October 2026</h2>
+    <ul>
+      <li><b>House style:</b> IBM Plex Mono italic with a yellow accent.</li>
+      <li><b>Start screen:</b> an open circle that becomes a window onto the motion, and a side strip with About.</li>
+      <li><b>About page</b>, including energy and sustainability.</li>
+      <li>An opening look for first visits.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>16 October 2026</h2>
+    <ul>
+      <li>Named <b>Spot</b> (Spot Room on the Igloo walls, Spot Reel for the showreel).</li>
+      <li><b>Glass</b> surface for 3D forms: they magnify and bend the picture behind.</li>
+      <li>Bottom bar on desktop as well as phones; screen size picked to suit the device.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>15 October 2026</h2>
+    <ul>
+      <li><b>3D forms:</b> pictures wrapped round shapes that move through the space.</li>
+      <li><b>Showreel:</b> a sequence of looks with its own play bar.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>11–12 October 2026</h2>
+    <ul>
+      <li><b>New controls panel</b> with tabs, cards and a phone-friendly layout.</li>
+      <li><b>Move:</b> pan, tilt and zoom, with loop and strip modes and strip layers.</li>
+      <li><b>Echo trail</b> behind moving pictures.</li>
+      <li><b>Scenes:</b> save looks and share them by link or QR code.</li>
+      <li>Igloo test page for staff.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>10 October 2026</h2>
+    <ul>
+      <li><b>Igloo Immersive Suite</b> support: six-wall stage and a panning preview.</li>
+      <li><b>Live camera</b> through the effects.</li>
+      <li>Layouts that adapt to the screen&rsquo;s resolution; touch controls for phones.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>1 October 2026</h2>
+    <ul>
+      <li>Desktop screen size and an Igloo check page.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>July 2026</h2>
+    <ul>
+      <li>First version, for the outreach workshop on 10 July: students&rsquo; photos processed live on the wall with duotone, pixelate, halftone, crossfades and blends, a control panel, an image uploader and offline images in case the wifi failed.</li>
+    </ul>
+  </section>
+
+  <footer><span>© 2026 pkwr</span><a href="about.html">About</a><a href="index.html">Back to Spot</a></footer>
+</main>
+</body>
+</html>

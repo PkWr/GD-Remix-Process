@@ -514,6 +514,7 @@
           `<a href="controls.html" target="_blank" title="Opens in a new tab on this same device — won't reach a phone or another computer">Remote controls ↗</a>` +
           `<a href="igloo-check.html" target="_blank">Igloo check ↗</a>` +
           `<a href="about.html" target="_blank">About & credits ↗</a>` +
+          `<a href="changelog.html" target="_blank">Changelog ↗</a>` +
           `</p><p class="cp-note" id="statusLine">loading…</p>`
         );
       case "scenes":
