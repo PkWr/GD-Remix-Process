@@ -6,7 +6,7 @@ This repository is public so the web app can be hosted on GitHub Pages. That doe
 grant permission to copy, reuse or redistribute the code, images or other content.
 Please ask Patrick Walker first.
 
-Student work shown in the app is used with the students' permission and remains theirs.
+Photos taken by students at workshops are shown live on the day and are not published with the app.
 
 ## Third-party code
 

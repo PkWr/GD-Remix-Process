@@ -628,6 +628,14 @@
     }
 
     const seedUrls = await discoverSeedImages();
+    if (seedUrls.length === 0) {
+      // Workshop photos are only added locally on the day and never published,
+      // so on the public site the live pool is empty: show the demo images.
+      const demoUrls = await discoverDemoImages();
+      setStatus(`no live photos here — showing ${demoUrls.length} demo image(s)`);
+      state.sourceType = "demo";
+      return demoUrls;
+    }
     setStatus(`Drive unavailable — using ${seedUrls.length} local seed image(s)`);
     state.sourceType = "seed";
     return seedUrls;

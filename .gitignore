@@ -22,3 +22,8 @@ image-review/
 
 # Working notes (energy estimate etc.) — not published
 Spot-Build-Energy-Estimate.md
+
+# Workshop photos: added locally on the day for the live pool, never published
+# (participants may be under 18). Only the README in this folder is tracked.
+assets/seeds/*
+!assets/seeds/README.txt

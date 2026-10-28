@@ -42,7 +42,7 @@ Save a look in **Show → Scenes**; **Share** gives a link and a QR code (`?scen
 | `igloo-tests.html`, `igloo-check.html` | Igloo test page and diagnostic page |
 | `model-wrap-sketch.html` | Standalone sketch: photos wrapped round 3D models, drop in your own STL/OBJ |
 | `seed-loader.html` | Drag-and-drop uploader for new photos |
-| `assets/` | Demo and seed images, audio, branding |
+| `assets/` | Demo images (Patrick Walker's own), audio, branding. `assets/seeds/` is filled locally at a workshop and is never committed |
 | `vendor/` | three.js and qrcode-generator (MIT) |
 
 No build step: the files are served as they are by GitHub Pages.
@@ -59,4 +59,4 @@ The site updates a minute or two later. Press **D** in the app and check the ver
 
 ## Licence
 
-© 2026 Patrick Walker — all rights reserved. The repository is public so the app can be hosted; that is not permission to reuse it. See [LICENSE.md](LICENSE.md). Student work is shown with permission and remains the students'.
+© 2026 Patrick Walker — all rights reserved. The repository is public so the app can be hosted; that is not permission to reuse it. See [LICENSE.md](LICENSE.md). Photos taken by students at workshops are shown live on the day and are not published with the app.
