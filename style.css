@@ -1298,3 +1298,10 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 #diagnostics > div > .k { width: auto; }
 #diagnostics .paused-line, #diagnostics .warn-line, #diagnostics .hint { padding-left: 78px; max-width: none; }
 #diagnostics .hint { margin-top: 8px; }
+
+/* Version number, small, bottom left of the start screen (links to the changelog). */
+#startScreen .start-version {
+  position: fixed; left: 16px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 3;
+  font-size: 11px !important; color: rgba(255, 255, 255, 0.55); text-decoration: none;
+}
+#startScreen .start-version:hover, #startScreen .start-version:focus-visible { color: var(--spot-yellow); outline: none; }

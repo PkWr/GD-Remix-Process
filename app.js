@@ -5261,7 +5261,8 @@
         toggleInfo(false);
       });
     }
-    setText("diagVersion", APP_VERSION);
+    const SPOT_VERSION = ((document.getElementById("spotVersion") || {}).textContent || "").trim();
+    setText("diagVersion", SPOT_VERSION ? `${SPOT_VERSION} · ${APP_VERSION}` : APP_VERSION);
     wireInfoDrag();
     resetControlsToDefaults();
     wireControls();
