@@ -133,7 +133,7 @@
       help: "Every image rolls its own random direction and speed per axis, leaving the sliders where they are" },
     { id: "ctrlMoveEnd", type: "select", label: "At the edge", default: "strip", param: "moveEndMode",
       help: "What happens when the picture reaches the end of its travel",
-      options: [["strip", "Strip — new images follow on"], ["mirror", "Keep going — mirrored repeat"], ["tile", "Keep going — repeat"], ["next", "Next image arrives"], ["stop", "Stop"]] },
+      options: [["strip", "Strip — new images follow on"], ["roam", "Roam — images wander freely"], ["mirror", "Keep going — mirrored repeat"], ["tile", "Keep going — repeat"], ["next", "Next image arrives"], ["stop", "Stop"]] },
     { id: "ctrlStripLayers", type: "range", label: "Strip layers", min: 1, max: 3, step: 1, default: 1, int: true, format: "int", param: "stripLayers",
       help: "How many strips run at once, overlapping" },
     { id: "ctrlStripRelation", type: "select", label: "Layers move", default: "opposing", param: "stripRelation",
@@ -143,6 +143,14 @@
     { id: "ctrlStripOpacity", type: "range", label: "Layer opacity", min: 0.1, max: 1, step: 0.05, default: 0.7, format: "fixed2", param: "stripOpacity" },
     { id: "ctrlStripGap", type: "range", label: "Gap between images", min: 0, max: 100, step: 1, default: 0, int: true, format: "percent", param: "stripGap",
       help: "Dark space between images in the strip, as a share of the screen — the echo trail shows in it" },
+    { id: "ctrlRoamCount", type: "range", label: "Images at once", min: 1, max: 8, step: 1, default: 4, int: true, format: "int", param: "roamCount",
+      help: "How many images wander at the same time, overlapping. Speed comes from the biggest of Pan / Tilt / Zoom" },
+    { id: "ctrlRoamSize", type: "range", label: "Size", min: 0.2, max: 1, step: 0.05, default: 0.5, format: "fixed2", param: "roamSize",
+      help: "How big each image is, as a share of the screen (each varies a little)" },
+    { id: "ctrlRoamSpin", type: "range", label: "Spin", min: 0, max: 100, step: 1, default: 30, int: true, format: "percent", param: "roamSpin",
+      help: "How much each image turns as it travels. 0 keeps them upright" },
+    { id: "ctrlRoamBreath", type: "range", label: "Swell", min: 0, max: 100, step: 1, default: 40, int: true, format: "percent", param: "roamBreath",
+      help: "How much each image slowly grows and shrinks" },
     { id: "ctrlEchoOn", type: "switch", label: "Echo trail on", default: false, param: "echoOn" },
     { id: "ctrlEchoMode", type: "select", label: "Style", default: "even", param: "echoMode",
       help: "Moving pictures leave fading echoes of themselves, like a brush smear",
@@ -281,6 +289,10 @@
         { when: { id: "ctrlStripLayers", not: ["1"] }, items: [
           "ctrlStripRelation", "ctrlStripBlend", "ctrlStripOpacity",
         ] },
+      ] },
+      // Only while Move "At the edge" is Roam.
+      { card: "Roam", summary: "images wander", summarize: "roam", when: { id: "ctrlMoveEnd", is: ["roam"] }, items: [
+        "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpin", "ctrlRoamBreath",
       ] },
       { card: "Echo trail", summary: "off", summarize: "echo", switch: "ctrlEchoOn", items: [
         { when: { id: "ctrlEchoOn", is: ["off"] }, items: [
@@ -584,6 +596,9 @@
       if (!parts.length) return "still";
       const end = byId.ctrlMoveEnd.options.find(([v]) => v === inputState("ctrlMoveEnd"));
       return `${parts.join(" · ")} · ${end ? end[0] : ""}`;
+    },
+    roam() {
+      return `${inputState("ctrlRoamCount")} wandering · spin ${inputState("ctrlRoamSpin")}%`;
     },
     strip() {
       const n = +inputState("ctrlStripLayers"), gap = +inputState("ctrlStripGap");

@@ -27,3 +27,6 @@ Spot-Build-Energy-Estimate.md
 # (participants may be under 18). Only the README in this folder is tracked.
 assets/seeds/*
 !assets/seeds/README.txt
+
+# Source TTFs for tools/fonts/convert-fonts.py — downloaded as needed, not published
+tools/fonts/ttf/

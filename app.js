@@ -35,7 +35,7 @@
 
   // Bump on every push — shown in the info panel (D) and the console, so a
   // cached old copy is easy to spot.
-  const APP_VERSION = "2026-10-23 · info resets on reload";
+  const APP_VERSION = "2026-10-29 · roaming images";
   console.info(`[spot] version ${APP_VERSION}`);
 
   // Small on-screen message, top centre, independent of the info panel.
@@ -492,6 +492,11 @@
     formsSurface: "photo",
     // Strip gap: dark space between strip images (% of the screen).
     stripGap: 0,
+    // Roam: images wander freely, each on its own path, spin and size.
+    roamCount: 4,
+    roamSize: 0.5,
+    roamSpin: 30,
+    roamBreath: 40,
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
     // | "even" | "ragged"), with length and strength 0–100.
     echoOn: false,
@@ -1621,6 +1626,7 @@
     // layers), each { axis, dir, factor, frames, s, nextK } — see
     // stripLaneSpecs().
     strip: { lanes: [], sig: "", started: false },
+    roam: { items: [], spawned: 0 },
     stripPending: false,
     stripTarget: 0, // which lane the image being rendered right now will join
   };
@@ -2281,7 +2287,98 @@
 
   // Off with the live camera (one continuous feed, nothing to line up).
   function stripActive() {
-    return params.moveEndMode === "strip" && !camera.live && stripAxis() !== null;
+    return roamActive() || (params.moveEndMode === "strip" && !camera.live && stripAxis() !== null);
+  }
+
+  // Roam: every image wanders on its own — own heading (with a slow
+  // wander), speed, size, spin and size-breathing — overlapping freely.
+  // Speed comes from the biggest of Pan / Tilt / Zoom.
+  function roamActive() {
+    return (
+      params.moveEndMode === "roam" &&
+      !camera.live &&
+      (state.moveResolvedPan !== 0 || state.moveResolvedTilt !== 0 || state.moveResolvedZoom !== 0)
+    );
+  }
+
+  function pushRoamItem(canvas) {
+    const W = STAGE.w;
+    const H = STAGE.h;
+    const r = state.roam;
+    const size = Math.max(0.15, params.roamSize * (0.7 + Math.random() * 0.6));
+    const rad = 0.5 * Math.hypot(W * size, H * size) * 1.3;
+    const initial = r.spawned < Math.round(params.roamCount);
+    r.spawned++;
+    let x, y, ang;
+    if (initial) {
+      // First few appear already on screen so it doesn't start empty.
+      x = W * (0.1 + 0.8 * Math.random());
+      y = H * (0.1 + 0.8 * Math.random());
+      ang = Math.random() * Math.PI * 2;
+    } else {
+      const side = Math.floor(Math.random() * 4);
+      x = side === 0 ? -rad : side === 1 ? W + rad : Math.random() * W;
+      y = side === 2 ? -rad : side === 3 ? H + rad : Math.random() * H;
+      ang = Math.atan2(H * (0.2 + 0.6 * Math.random()) - y, W * (0.2 + 0.6 * Math.random()) - x);
+    }
+    const top = Math.max(Math.abs(state.moveResolvedPan), Math.abs(state.moveResolvedTilt), Math.abs(state.moveResolvedZoom));
+    const sp = CONFIG.MOVE_TILE_RATE * H * (top / 100) * (0.5 + Math.random());
+    const spin = (params.roamSpin || 0) / 100;
+    r.items.push({
+      canvas, x, y, rad, size,
+      vx: Math.cos(ang) * sp,
+      vy: Math.sin(ang) * sp,
+      turn: (Math.random() * 2 - 1) * 0.15,
+      rot: (Math.random() * 2 - 1) * 0.5 * spin,
+      vrot: (Math.random() * 2 - 1) * 0.6 * spin,
+      phase: Math.random() * Math.PI * 2,
+      prate: 0.2 + Math.random() * 0.4,
+      age: 0,
+    });
+    state.strip.started = true;
+  }
+
+  const ROAM_LIFE = 90; // seconds; fades out after this even if still on screen
+
+  function advanceRoam(dt) {
+    const r = state.roam;
+    const W = STAGE.w;
+    const H = STAGE.h;
+    if (!state.paused) {
+      for (const it of r.items) {
+        it.age += dt;
+        const c = Math.cos(it.turn * dt);
+        const s = Math.sin(it.turn * dt);
+        const vx = it.vx * c - it.vy * s;
+        it.vy = it.vx * s + it.vy * c;
+        it.vx = vx;
+        it.x += it.vx * dt;
+        it.y += it.vy * dt;
+        it.rot += it.vrot * dt;
+        it.phase += it.prate * dt;
+      }
+    }
+    r.items = r.items.filter(
+      (it) =>
+        it.age < ROAM_LIFE &&
+        (it.age < 3 || (it.x > -it.rad && it.x < W + it.rad && it.y > -it.rad && it.y < H + it.rad))
+    );
+  }
+
+  function applyRoam(ctx) {
+    ctx.clearRect(0, 0, STAGE.w, STAGE.h);
+    ctx.imageSmoothingEnabled = true;
+    const breath = (params.roamBreath || 0) / 100;
+    for (const it of state.roam.items) {
+      const s = it.size * (1 + breath * 0.35 * Math.sin(it.phase));
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, it.age / 1.2, (ROAM_LIFE - it.age) / 2);
+      ctx.translate(it.x, it.y);
+      ctx.rotate(it.rot);
+      ctx.scale(s, s);
+      ctx.drawImage(it.canvas, -STAGE.w / 2, -STAGE.h / 2);
+      ctx.restore();
+    }
   }
 
   // Strip layers ("lanes"): 1–3 strips at once, each its own line of
@@ -2322,6 +2419,8 @@
     state.strip.sig = "";
     state.strip.started = false;
     state.stripTarget = 0;
+    state.roam.items = [];
+    state.roam.spawned = 0;
   }
 
   function laneLength(lane) {
@@ -2362,13 +2461,17 @@
   }
 
   function pushStripFrame(canvas) {
+    if (params.moveEndMode === "roam") {
+      pushRoamItem(canvas);
+      return;
+    }
     if (!ensureStripLanes()) return;
     const lane = state.strip.lanes[state.stripTarget] || state.strip.lanes[0];
     lane.frames.push({ k: lane.nextK++, canvas });
   }
 
   function stripHasFrames() {
-    return state.strip.lanes.some((lane) => lane.frames.length);
+    return state.roam.items.length > 0 || state.strip.lanes.some((lane) => lane.frames.length);
   }
 
   function applyStripMove(ctx) {
@@ -2410,6 +2513,20 @@
       }
       return;
     }
+    if (roamActive()) {
+      if (!state.hasCycled) return;
+      advanceRoam(dt);
+      if (state.paused || state.stripPending) return;
+      if (state.roam.items.length >= Math.round(params.roamCount)) return;
+      state.stripPending = true;
+      if (cycleTimeoutId) {
+        clearTimeout(cycleTimeoutId);
+        cycleTimeoutId = null;
+      }
+      cycle();
+      return;
+    }
+    if (state.roam.items.length) state.roam = { items: [], spawned: 0 };
     if (!state.hasCycled || !ensureStripLanes()) return;
     const base = stripAxis();
     const lanes = state.strip.lanes;
@@ -2445,6 +2562,8 @@
     destCtx.clearRect(0, 0, STAGE.w, STAGE.h);
     if (moveState === null) {
       destCtx.drawImage(state.lastEffectFrame, 0, 0);
+    } else if (roamActive() && state.roam.items.length) {
+      applyRoam(destCtx);
     } else if (stripActive() && stripHasFrames()) {
       applyStripMove(destCtx);
     } else if (params.moveEndMode === "tile" || params.moveEndMode === "mirror") {
