@@ -36,10 +36,12 @@
   let selPal = 1; // which palette the colour pads edit
   const padsOf = (f) =>
     f.palettes
-      ? [...f.pads, { color: "Fg", x: "Hue", y: "Brightness", title: "Foreground" }, { color: "Bg", x: "Hue", y: "Brightness", title: "Background" }]
+      ? [...f.pads, { map: true, x: "Hue", y: "Brightness" }]
       : f.pads;
   const colId = (p) => `ctrlPalette${selPal}${p.color}`;
-  const idsOf = (p) => (p.color ? [colId(p)] : p.xy || p.cs);
+  const mapId = (k) => (k === "Sc" ? "ctrlBackground" : `ctrlPalette${selPal}${k}`);
+  const idsOf = (p) => (p.map ? [mapId("Fg"), mapId("Bg"), mapId("Sc")] : p.color ? [colId(p)] : p.xy || p.cs);
+  let mapTarget = "Fg"; // the dot being dragged on the colour map
 
   function hexToHsl(hex) {
     const n = parseInt(hex.slice(1), 16);
@@ -115,6 +117,13 @@
   }
 
   function padSet(p, fx, fy) {
+    if (p.map) {
+      const el = $(mapId(mapTarget));
+      if (!el) return;
+      el.value = hslToHex(Math.min(359.9, fx * 360), 1, fy); // full colour; top is white, bottom black
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
+    }
     if (p.color) {
       const el = $(colId(p));
       if (!el) return;
@@ -196,7 +205,12 @@
     padsEl.innerHTML = padsOf(f)
       .map(
         (p, i) =>
-          `<div class="lv-pad${p.color ? " lv-hue" : ""}" data-i="${i}" tabindex="0" role="group" aria-label="${p.title ? p.title + " " : ""}${p.x} and ${p.y}">` +
+          p.map
+            ? `<div class="lv-pad lv-hue lv-map" data-i="${i}" tabindex="0" role="group" aria-label="Colour map: foreground, background and screen colours">` +
+              `<span class="lv-md" data-k="Fg">F</span><span class="lv-md" data-k="Bg">B</span><span class="lv-md" data-k="Sc">S</span>` +
+              `<span class="lv-tag lv-tx">Hue →</span><span class="lv-tag lv-ty">↑ Brightness</span>` +
+              `<span class="lv-tag lv-tv">F foreground · B background · S screen</span></div>`
+            : `<div class="lv-pad${p.color ? " lv-hue" : ""}" data-i="${i}" tabindex="0" role="group" aria-label="${p.title ? p.title + " " : ""}${p.x} and ${p.y}">` +
           `<span class="lv-zero lv-zx" hidden></span><span class="lv-zero lv-zy" hidden></span>` +
           `<span class="lv-dot"></span>` +
           `<span class="lv-tag lv-tx">${p.x} →</span><span class="lv-tag lv-ty">${p.title ? p.title + " · " : ""}↑ ${p.y}</span>` +
@@ -210,6 +224,17 @@
     const f = FUNCS.find((x) => x.id === current);
     padsEl.querySelectorAll(".lv-pad").forEach((pad) => {
       const p = padsOf(f)[+pad.dataset.i];
+      if (p.map) {
+        pad.querySelectorAll(".lv-md").forEach((d) => {
+          const el = $(mapId(d.dataset.k));
+          if (!el) return;
+          const [h, , lum] = hexToHsl(el.value);
+          d.style.left = `${(h / 360) * 100}%`;
+          d.style.top = `${(1 - lum) * 100}%`;
+          d.style.setProperty("--c", el.value);
+        });
+        return;
+      }
       const pos = padPos(p);
       if (!pos) return;
       pad.style.setProperty("--px", `${pos[0] * 100}%`);
@@ -340,6 +365,19 @@
     if (!pad) return;
     pad.setPointerCapture(e.pointerId);
     drag = pad;
+    if (pad.classList.contains("lv-map")) {
+      // Grab the nearest of the three dots, wherever you touch.
+      const r = pad.getBoundingClientRect();
+      let best = Infinity;
+      pad.querySelectorAll(".lv-md").forEach((d) => {
+        const b = d.getBoundingClientRect();
+        const dist = Math.hypot(e.clientX - (b.left + b.width / 2), e.clientY - (b.top + b.height / 2));
+        if (dist < best - 0.5) {
+          best = dist;
+          mapTarget = d.dataset.k;
+        }
+      });
+    }
     fromPointer(e, pad);
     e.preventDefault();
   });
