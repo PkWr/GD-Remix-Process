@@ -2324,9 +2324,27 @@
     const W = STAGE.w;
     const H = STAGE.h;
     const r = state.roam;
+    // On a multi-image stage (the Igloo's tiles or walls) the frame is a whole
+    // row of pictures. A roaming image must be ONE of them, not a miniature of
+    // the whole row (which reads as a thin strip), so cut one out.
+    const lay = state.currentLayout;
+    let src = canvas;
+    let bw = W; // the size the picture is drawn at before the Size scaling
+    let bh = H;
+    if (lay && lay.slots > 1 && lay.kind !== "camera") {
+      const i = Math.floor(Math.random() * lay.slots);
+      const x0 = Math.round((i * W) / lay.slots);
+      const x1 = Math.round(((i + 1) * W) / lay.slots);
+      src = document.createElement("canvas");
+      src.width = Math.max(1, x1 - x0);
+      src.height = H;
+      src.getContext("2d").drawImage(canvas, x0, 0, x1 - x0, H, 0, 0, x1 - x0, H);
+      bw = src.width * 1.6;
+      bh = H * 1.6;
+    }
     const szf = 0.7 + Math.random() * 0.6; // this image's own size factor
     const size = Math.max(0.15, params.roamSize * szf);
-    const rad = 0.5 * Math.hypot(W * size, H * size) * 1.3;
+    const rad = 0.5 * Math.hypot(bw * size, bh * size) * 1.3;
     const initial = roamWraps() || r.spawned < Math.round(params.roamCount);
     r.spawned++;
     let x, y, ang;
@@ -2366,14 +2384,14 @@
     // A smaller copy of the picture, sized for how big it will be shown
     // (with room for Swell): drawing it every frame costs far less than
     // sampling a full-size canvas down each time.
-    const sw = Math.max(64, Math.min(W, Math.round(W * size * 1.4)));
-    const sh = Math.max(64, Math.min(H, Math.round(H * size * 1.4)));
+    const sw = Math.max(64, Math.min(src.width, Math.round(bw * size * 1.4)));
+    const sh = Math.max(64, Math.min(src.height, Math.round(bh * size * 1.4)));
     const sprite = document.createElement("canvas");
     sprite.width = sw;
     sprite.height = sh;
     const sctx = sprite.getContext("2d");
     sctx.imageSmoothingQuality = "high";
-    sctx.drawImage(canvas, 0, 0, sw, sh);
+    sctx.drawImage(src, 0, 0, sw, sh);
     // Each image keeps its own random speed / spin factor; the actual speed
     // and spin follow the sliders live (see advanceRoam).
     const sf = 0.6 + Math.random() * 0.8;
@@ -2381,7 +2399,7 @@
     const sp = CONFIG.MOVE_TILE_RATE * H * (params.roamSpeed / 100) * sf;
     const spin = (params.roamSpin || 0) / 100; // signed: negative turns anticlockwise
     r.items.push({
-      canvas: sprite, x, y, rad, size, szf,
+      canvas: sprite, x, y, rad, size, szf, bw, bh,
       vx: Math.cos(ang) * sp,
       vy: Math.sin(ang) * sp,
       turn: set ? 0 : tr,
@@ -2421,7 +2439,7 @@
         // Size follows its slider live too (the picture copy was cut for the
         // size at spawn, so a much bigger setting is a little soft).
         it.size = Math.max(0.15, params.roamSize * (it.szf || 1));
-        it.rad = 0.5 * Math.hypot(W * it.size, H * it.size) * 1.3;
+        it.rad = 0.5 * Math.hypot((it.bw || W) * it.size, (it.bh || H) * it.size) * 1.3;
         // Together ↔ Wandering and Heading act live too: together = steer
         // (eased) towards Heading + this image's stray; wandering = curve freely.
         if (setNow) {
@@ -2497,7 +2515,9 @@
           ctx.translate(x, y);
           ctx.rotate(it.rot);
           ctx.scale(s, s);
-          ctx.drawImage(it.canvas, -STAGE.w / 2, -STAGE.h / 2, STAGE.w, STAGE.h);
+          const dw = it.bw || STAGE.w;
+          const dh = it.bh || STAGE.h;
+          ctx.drawImage(it.canvas, -dw / 2, -dh / 2, dw, dh);
           ctx.restore();
         }
       }
