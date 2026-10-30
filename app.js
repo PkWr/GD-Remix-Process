@@ -3325,6 +3325,7 @@
         panel.classList.toggle("hidden");
       }
       if (e.key === "d" || e.key === "D") toggleInfo();
+      if ((e.key === "q" || e.key === "Q") && !e.metaKey && !e.ctrlKey && !e.altKey) setRemoteQrShown(!remoteQrShown);
       if (e.key === "s" || e.key === "S") {
         const lockup = document.getElementById("brandLockup");
         if (lockup) {
@@ -5432,6 +5433,7 @@
   function remoteLinkPresence(p) {
     const was = remotePresence.remote || 0;
     remotePresence = p;
+    pokeRemoteQr(); // restarts the fade: once a phone is connected the Igloo code fades like any other
     if (p.remote > was) showToast("Phone connected", "ok", 2500);
     else if (p.remote < was) showToast("Phone disconnected", "info", 3500);
     renderRemotePanel();
@@ -5462,7 +5464,11 @@
     if (!el) return;
     el.classList.add("active");
     clearTimeout(remoteQrTimer);
-    remoteQrTimer = setTimeout(() => el.classList.remove("active"), typeof ms === "number" ? ms : QR_IDLE_MS);
+    remoteQrTimer = setTimeout(() => {
+      // On the Igloo nobody may be at a mouse: the code stays up until a phone connects.
+      if (STAGE.profile === "igloo" && remoteQrShown && !(remotePresence.remote > 0)) return;
+      el.classList.remove("active");
+    }, typeof ms === "number" ? ms : QR_IDLE_MS);
   }
   function setRemoteQrShown(on) {
     remoteQrShown = on;

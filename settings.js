@@ -603,7 +603,7 @@
         return (
           `<dl class="cp-keys">` +
           [["C", "Controls"], ["P", "Pause / resume"], ["V", "Camera on / off"], ["L", "Live student photos"],
-            ["F", "Fullscreen"], ["D", "Info panel"], ["S", "SHU lockup"], ["R", "Recording window"], ["1–9", "Scenes"], ["?", "This list"]]
+            ["F", "Fullscreen"], ["D", "Info panel"], ["Q", "Remote code"], ["S", "SHU lockup"], ["R", "Recording window"], ["1–9", "Scenes"], ["?", "This list"]]
             .map(([k, l]) => `<dt><kbd>${k}</kbd></dt><dd>${l}</dd>`)
             .join("") +
           `</dl>`
