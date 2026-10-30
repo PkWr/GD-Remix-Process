@@ -67,7 +67,7 @@
   <section>
     <h2>How it&rsquo;s made</h2>
     <p>It began as a background piece for a two-hour outreach workshop with technical college students on 10 July 2026: a single web page that took the photos students shot during the session and processed them live on the wall while they photographed and drew by hand. The first version was built in six days, by Patrick Walker working with an AI coding assistant to a fixed written brief: three files, no server, no login, and a set of seed images so it would still run if the wifi failed.</p>
-    <p>It has grown through use since. Pixelation, halftone, ASCII and duotone effects; 3D forms that wrap each image round a shape; a live camera layer; a second window for controls; and stage sizes for a phone, a desktop and the Igloo&rsquo;s six walls. In October 2026 it was named Spot; Spot Room is the Igloo version, Spot Reel the showreel. Scenes can be saved as links. It is still plain HTML, CSS and JavaScript, with no server and no build step.</p>
+    <p>It has grown through use since. Pixelation, halftone, ASCII and duotone effects; 3D forms that wrap each image round a shape; a live camera layer; a phone remote and a second window for controls; and stage sizes for a phone, a desktop and the Igloo&rsquo;s six walls. In October 2026 it was named Spot; Spot Room is the Igloo version, Spot Reel the showreel. Scenes can be saved as links. It is still plain HTML, CSS and JavaScript, with no server and no build step.</p>
     <p>Making it was a collaboration. Patrick Walker brought creative practice, context and insight; working with the AI elevated them, extending what could be built and how quickly. The AI is in the making, not the running: every effect is a drawing technique, not a generative model.</p>
   </section>
 
@@ -77,7 +77,7 @@
     <p>Industry motion tools assume high-spec hardware. Adobe After Effects asks for at least 16&nbsp;GB of memory and, on Windows, a dedicated graphics card with 4&nbsp;GB of its own memory. For 4K work it recommends 32&nbsp;GB or more, fast SSDs and extra high-speed drives for media. TouchDesigner, widely used for live and immersive work, needs a graphics card with at least 4&nbsp;GB, recommends 8&nbsp;GB or more, and keeps several features for recent Nvidia cards. Large immersive shows run Notch content on dedicated media servers such as disguise&rsquo;s GX&nbsp;3+, built round a graphics card with 96&nbsp;GB of memory. Top-end graphics cards can draw up to 575&nbsp;watts on their own, before the rest of the computer. Specs like these also push people to upgrade, and making new hardware has an energy cost of its own.</p>
     <p>Spot asks for none of this: a web browser on the device already in the room, a phone included.</p>
     <p class="note">Requirements as published by Adobe (After Effects 26, 2026), Derivative (TouchDesigner) and disguise (GX&nbsp;3+); graphics card figure for Nvidia&rsquo;s RTX&nbsp;5090.</p>
-    <p>It does as little as the look needs. Most effects are simple 2D drawing techniques applied to one image at a time. The 3D library only loads when 3D forms are switched on, and the images ship with the page rather than coming from a cloud service.</p>
+    <p>It does as little as the look needs. Most effects are simple 2D drawing techniques applied to one image at a time. The 3D library only loads when 3D forms are switched on, and the demo images ship with the page (live student photos, when used, come from a shared Google Drive folder).</p>
     <p>AI enters the same question, as it did in Concrete. Here it was used to build the tool, not to run it. Its energy was spent once, in development, and not again each time Spot plays. That matters in a current discourse focused on the growing electricity and water demands of data centres.</p>
     <p>Spot is designed to use far less energy than a render-based workflow; measuring that, in the studio and in the Igloo, is part of the project.</p>
   </section>
@@ -95,13 +95,14 @@
 
   <section>
     <h2>Privacy</h2>
-    <p>Spot has no accounts, no sign-in, no cookies, no tracking and no ads. It runs entirely in your web browser; there is no server of its own.</p>
+    <p>Spot has no accounts, no sign-in, no cookies, no tracking and no ads. It runs in your web browser and has no server of its own that stores anything. The only server-side parts are a shared Google Drive folder for live photos and a small relay for the optional phone remote, both described below.</p>
     <p><strong>Camera.</strong> If you turn the camera on, your browser asks first. The picture is processed live on your device and is not recorded, saved or sent anywhere; it stops when you turn the camera off or leave the page.</p>
     <p><strong>Your images.</strong> Images you choose or drop in stay on your device. Spot reads them in the browser and nothing is uploaded or copied. In Chrome and Edge it can remember where your chosen folder is (not the images themselves) so you can use it again; &ldquo;Forget this folder&rdquo; clears that.</p>
     <p><strong>Kept in your browser.</strong> Saved settings, scenes, the last panel tab and that folder reminder are stored in your browser&rsquo;s own storage on your device. They never leave it, and clearing the site&rsquo;s data in your browser removes them.</p>
     <p><strong>Scene links and QR codes</strong> carry settings only: no images and nothing about you.</p>
-    <p><strong>Hosting.</strong> The site is served by GitHub Pages. Like any web host, GitHub may record basic technical details of visits, such as IP address and browser; see <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub&rsquo;s privacy statement</a>. Everything Spot needs (code, fonts, demo images) comes from this site.</p>
+    <p><strong>Hosting.</strong> The site is served by GitHub Pages. Like any web host, GitHub may record basic technical details of visits, such as IP address and browser; see <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub&rsquo;s privacy statement</a>. The code, fonts and demo images come from this site.</p>
     <p><strong>Visit counts.</strong> Spot uses <a href="https://www.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a> to count visits, as daily totals: which page, the referring site, browser and system, screen width, language and country. It sets no cookies and stores nothing in your browser, doesn&rsquo;t follow you across sites and doesn&rsquo;t store your IP address. The counts are only seen by Patrick Walker. Scene settings, images and anything from the camera are never sent.</p>
+    <p><strong>Live student photos.</strong> When &ldquo;Live student photos&rdquo; is switched on, Spot fetches the images in a shared Google Drive folder directly from Google. Google can see those requests, including the IP address of the device showing Spot. Nothing is uploaded from Spot, and the images are not stored by it.</p>
     <p><strong>Phone remote.</strong> If you scan the QR code on the Show tab to control Spot from a phone, the control settings (slider positions and switches) pass through a small relay on Cloudflare, which can see the IP addresses of the two devices while they are connected. It stores nothing. Images, scenes and anything from the camera never go through it.</p>
     <p>Questions about privacy: get in touch via <a href="https://pkwr.co" target="_blank" rel="noopener">pkwr.co</a>.</p>
   </section>
@@ -117,7 +118,9 @@
     <h2>Third-party</h2>
     <ul>
       <li><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> r128 — 3D forms. MIT licence, © 2010–2021 three.js authors.</li>
-      <li><a href="https://github.com/kazuhikoarase/qrcode-generator" target="_blank" rel="noopener">qrcode-generator</a> 1.4.4 — scene QR codes. MIT licence, © Kazuhiko Arase.</li>
+      <li><a href="https://github.com/kazuhikoarase/qrcode-generator" target="_blank" rel="noopener">qrcode-generator</a> 1.4.4 — scene and phone-remote QR codes. MIT licence, © Kazuhiko Arase.</li>
+      <li><a href="https://developers.google.com/drive" target="_blank" rel="noopener">Google Drive API</a> — fetches live student photos from a shared folder. A service run by Google.</li>
+      <li><a href="https://workers.cloudflare.com" target="_blank" rel="noopener">Cloudflare Workers</a> — the small relay behind the phone remote. A service run by Cloudflare.</li>
       <li><a href="https://github.com/IBM/plex" target="_blank" rel="noopener">IBM Plex Mono</a> — type. SIL Open Font Licence, © 2017 IBM Corp.</li>
     </ul>
   </section>

@@ -9,3 +9,4 @@
 - **Port to Spot Type** (not started): the slider merges (Roam, ranges replacing the Random switches, 3D forms range, Lens ↔ Liquid), Roam live updates, and the phone remote (relay.js, Live view, QR). Use `tools/sync-from-spot.sh --diff` in `spot-type`; set the same `RELAY_URL` in its `relay.js`.
 - **Test the phone Live view** on a real phone (pad size, Next image timing, scene highlight).
 - **Test the relay on the Igloo machine's network.**
+- **Mitigate the third-party exposure later** (noted in About > Privacy as of 30 Oct 2026): (1) Google Drive sees the display's IP when Live student photos is on — could serve the photos from our own storage or through the relay instead; (2) the Cloudflare relay sees the IPs of the display and phone. Revisit before wider use, and when writing the SoTL/ethics notes. Also re-read the About text whenever a feature adds a new service.
