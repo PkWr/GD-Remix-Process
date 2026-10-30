@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-30T09:54:46.742Z",
+  "exportedAt": "2026-10-30T10:45:10.902Z",
   "scenes": [
     {
       "name": "T1 Plain photos",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -181,7 +181,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -316,7 +316,7 @@
     },
     {
       "name": "T2 Duotone, still",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -493,7 +493,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -628,7 +628,7 @@
     },
     {
       "name": "T3 Pixelate, quick changes",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -805,7 +805,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -940,7 +940,7 @@
     },
     {
       "name": "T4 Halftone",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1117,7 +1117,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -1252,7 +1252,7 @@
     },
     {
       "name": "T5 ASCII, flickering",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1429,7 +1429,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -1564,7 +1564,7 @@
     },
     {
       "name": "T6 Slow strip around the room",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1741,7 +1741,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -1876,7 +1876,7 @@
     },
     {
       "name": "T7 Two strips crossing",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -2053,7 +2053,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -2188,7 +2188,7 @@
     },
     {
       "name": "T8 Strip with echo trail",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -2365,7 +2365,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -2500,7 +2500,7 @@
     },
     {
       "name": "T9 Everything at once",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -2677,7 +2677,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -2812,7 +2812,7 @@
     },
     {
       "name": "T10 3D forms round the room",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -2989,7 +2989,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -3124,7 +3124,7 @@
     },
     {
       "name": "T11 3D blobs, crowded, over the picture",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -3301,7 +3301,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"
@@ -3436,7 +3436,7 @@
     },
     {
       "name": "T12 Glass forms over the strip",
-      "savedAt": 1793354086743,
+      "savedAt": 1793357110903,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -3613,7 +3613,7 @@
           "value": "4"
         },
         "ctrlRoamSize": {
-          "value": "0.5"
+          "value": "0.35"
         },
         "ctrlRoamSpeed": {
           "value": "40"

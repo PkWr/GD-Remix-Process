@@ -490,7 +490,7 @@
     // Roam: images wander freely, each on its own path, spin and size.
     roamOn: false,
     roamCount: 4,
-    roamSize: 0.5,
+    roamSize: 0.35,
     roamSpeed: 40,
     roamSpin: 0,
     roamAngle: 90,
@@ -2324,7 +2324,8 @@
     const W = STAGE.w;
     const H = STAGE.h;
     const r = state.roam;
-    const size = Math.max(0.15, params.roamSize * (0.7 + Math.random() * 0.6));
+    const szf = 0.7 + Math.random() * 0.6; // this image's own size factor
+    const size = Math.max(0.15, params.roamSize * szf);
     const rad = 0.5 * Math.hypot(W * size, H * size) * 1.3;
     const initial = roamWraps() || r.spawned < Math.round(params.roamCount);
     r.spawned++;
@@ -2380,7 +2381,7 @@
     const sp = CONFIG.MOVE_TILE_RATE * H * (params.roamSpeed / 100) * sf;
     const spin = (params.roamSpin || 0) / 100; // signed: negative turns anticlockwise
     r.items.push({
-      canvas: sprite, x, y, rad, size,
+      canvas: sprite, x, y, rad, size, szf,
       vx: Math.cos(ang) * sp,
       vy: Math.sin(ang) * sp,
       turn: set ? 0 : tr,
@@ -2417,6 +2418,10 @@
           it.vy *= k;
         }
         it.vrot = spinNow * (it.sr || 1);
+        // Size follows its slider live too (the picture copy was cut for the
+        // size at spawn, so a much bigger setting is a little soft).
+        it.size = Math.max(0.15, params.roamSize * (it.szf || 1));
+        it.rad = 0.5 * Math.hypot(W * it.size, H * it.size) * 1.3;
         // Together ↔ Wandering and Heading act live too: together = steer
         // (eased) towards Heading + this image's stray; wandering = curve freely.
         if (setNow) {
@@ -2492,7 +2497,7 @@
           ctx.translate(x, y);
           ctx.rotate(it.rot);
           ctx.scale(s, s);
-          ctx.drawImage(it.canvas, -STAGE.w / 2, -STAGE.h / 2);
+          ctx.drawImage(it.canvas, -STAGE.w / 2, -STAGE.h / 2, STAGE.w, STAGE.h);
           ctx.restore();
         }
       }

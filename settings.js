@@ -139,7 +139,7 @@
     { id: "ctrlRoamOn", type: "switch", label: "Roam on", default: false, param: "roamOn" },
     { id: "ctrlRoamCount", type: "range", label: "Images at once", min: 1, max: 8, step: 1, default: 4, int: true, format: "int", param: "roamCount",
       help: "How many images wander at the same time, overlapping" },
-    { id: "ctrlRoamSize", type: "range", label: "Size", min: 0.2, max: 1, step: 0.05, default: 0.5, format: "fixed2", param: "roamSize",
+    { id: "ctrlRoamSize", type: "range", label: "Size", min: 0.1, max: 1, step: 0.05, default: 0.35, format: "fixed2", param: "roamSize",
       help: "How big each image is, as a share of the screen (each varies a little)" },
     { id: "ctrlRoamSpeed", type: "range", label: "Travel speed", min: 0, max: 100, step: 5, default: 40, int: true, format: "int", param: "roamSpeed",
       help: "How fast each image crosses the screen (about the same scale as Pan / Tilt). 0 holds them still" },
