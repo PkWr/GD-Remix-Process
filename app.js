@@ -2323,6 +2323,30 @@
     return params.moveEndMode === "tile" || params.moveEndMode === "mirror";
   }
 
+  // Where a new roaming image starts across the width: of several random
+  // tries, the one furthest from the images already there (best-candidate
+  // sampling), so they spread out along the whole width instead of
+  // clumping — on the Igloo, across all six walls.
+  function pickRoamX(W, items) {
+    const wrap = roamWraps();
+    let best = W / 2;
+    let bestD = -1;
+    for (let k = 0; k < 14; k++) {
+      const x = wrap ? Math.random() * W : W * (0.05 + 0.9 * Math.random());
+      let d = Infinity;
+      for (const it of items) {
+        let dx = Math.abs(x - it.x);
+        if (wrap) dx = Math.min(dx, W - dx);
+        if (dx < d) d = dx;
+      }
+      if (d > bestD) {
+        bestD = d;
+        best = x;
+      }
+    }
+    return best;
+  }
+
   function pushRoamItem(canvas) {
     const W = STAGE.w;
     const H = STAGE.h;
@@ -2361,7 +2385,7 @@
       const dx = Math.sin(th);
       const dy = -Math.cos(th);
       ang = Math.atan2(dy, dx);
-      const px = W * (0.1 + 0.8 * Math.random());
+      const px = pickRoamX(W, r.items);
       const py = H * (0.1 + 0.8 * Math.random());
       if (initial) {
         x = px;
@@ -2375,14 +2399,14 @@
       }
     } else if (initial) {
       // First few appear already on screen so it doesn't start empty.
-      x = W * (0.1 + 0.8 * Math.random());
+      x = pickRoamX(W, r.items);
       y = H * (0.1 + 0.8 * Math.random());
       ang = Math.random() * Math.PI * 2;
     } else {
       const side = Math.floor(Math.random() * 4);
       x = side === 0 ? -rad : side === 1 ? W + rad : Math.random() * W;
       y = side === 2 ? -rad : side === 3 ? H + rad : Math.random() * H;
-      ang = Math.atan2(H * (0.2 + 0.6 * Math.random()) - y, W * (0.2 + 0.6 * Math.random()) - x);
+      ang = Math.atan2(H * (0.2 + 0.6 * Math.random()) - y, pickRoamX(W, r.items) - x);
     }
     // A smaller copy of the picture, sized for how big it will be shown
     // (with room for Swell): drawing it every frame costs far less than
