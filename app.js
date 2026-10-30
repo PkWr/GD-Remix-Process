@@ -2530,6 +2530,25 @@
 
   // Draws every roaming image. With a blend mode (not for the mask pass) each
   // image after the first blends with what is already under it.
+  // The saturation / contrast look applied to a roaming image's own small picture,
+  // once, then reused every frame until the look changes. Filtering at draw time
+  // (ctx.filter on every image, every frame) was far too slow.
+  function filteredSprite(it, filter) {
+    if (it.fcanvas && it.fkey === filter) return it.fcanvas;
+    if (!it.fcanvas) {
+      it.fcanvas = document.createElement("canvas");
+      it.fcanvas.width = it.canvas.width;
+      it.fcanvas.height = it.canvas.height;
+    }
+    const c = it.fcanvas.getContext("2d");
+    c.clearRect(0, 0, it.fcanvas.width, it.fcanvas.height);
+    c.filter = filter;
+    c.drawImage(it.canvas, 0, 0);
+    c.filter = "none";
+    it.fkey = filter;
+    return it.fcanvas;
+  }
+
   function drawRoamItems(ctx, blend, blendOpacity, breath, filter) {
     let first = true;
     for (const it of state.roam.items) {
@@ -2546,7 +2565,6 @@
           const y = it.y + oy * STAGE.h;
           if (wrap && (x < -rad || x > STAGE.w + rad || y < -rad || y > STAGE.h + rad)) continue;
           ctx.save();
-          if (filter) ctx.filter = filter;
           ctx.globalAlpha = blended ? alpha * blendOpacity : alpha;
           ctx.globalCompositeOperation = blended ? blend : "source-over";
           ctx.translate(x, y);
@@ -2554,7 +2572,7 @@
           ctx.scale(s, s);
           const dw = it.bw || STAGE.w;
           const dh = it.bh || STAGE.h;
-          ctx.drawImage(it.canvas, -dw / 2, -dh / 2, dw, dh);
+          ctx.drawImage(filter ? filteredSprite(it, filter) : it.canvas, -dw / 2, -dh / 2, dw, dh);
           ctx.restore();
         }
       }
