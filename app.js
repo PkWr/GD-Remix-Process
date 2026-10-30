@@ -206,6 +206,9 @@
       seams: 6,
       layouts: ["tiles", "walls"],
       animateIntervalMs: 360,
+      // Start-up settings for this stage, on top of the site defaults: Roam on,
+      // 12 images. (Control id -> value; applied at boot and by Reset all controls.)
+      defaults: { ctrlRoamOn: true, ctrlRoamCount: 12 },
     },
   };
 
@@ -3405,6 +3408,17 @@
   }
 
   // Every control back to its starting value (saved settings and scenes are left alone).
+  // This stage's own start-up settings (STAGE_PROFILES[...].defaults), set
+  // as if changed by hand so every listener runs.
+  function applyProfileDefaults() {
+    for (const [id, v] of Object.entries(STAGE_PROFILE.defaults || {})) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      if (typeof v === "boolean") applyControlValue(el, { checked: v });
+      else applyControlValue(el, { value: String(v) });
+    }
+  }
+
   function resetAllControls() {
     for (const s of PRS.SETTINGS) {
       const el = document.getElementById(s.id);
@@ -3413,6 +3427,7 @@
       else el.value = String(s.default);
       applySetting(s, el);
     }
+    applyProfileDefaults();
     resetStrip();
     broadcastState();
     showToast("All controls reset", "info", 2500);
@@ -5786,6 +5801,7 @@
     resetControlsToDefaults();
     wireControls();
     initPanel();
+    applyProfileDefaults();
     initScenes();
     startPreviewPan();
     window.addEventListener("resize", scheduleStageRebuild);
