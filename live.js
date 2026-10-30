@@ -18,7 +18,7 @@
     { id: "pixelate", label: "Pixelate", on: "ctrlEffectPixelate", pads: [{ cs: ["ctrlPixelateMin", "ctrlPixelateMax"], x: "Cell size", y: "Variation" }] },
     { id: "halftone", label: "Halftone", on: "ctrlEffectHalftone", pads: [{ cs: ["ctrlHalftoneMin", "ctrlHalftoneMax"], x: "Dot grid", y: "Variation" }] },
     { id: "ascii", label: "ASCII", on: "ctrlEffectAscii", pads: [{ cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" }] },
-    { id: "colour", label: "Colour", on: "ctrlEffectDuotone", onLabel: "Duotone", palettes: true, pads: [{ xy: ["ctrlSaturation", "ctrlContrast"], x: "Saturation", y: "Contrast" }] },
+    { id: "colour", label: "Colour", on: "ctrlEffectDuotone", onLabel: "Duotone", palettes: true, pads: [] },
     { id: "move", label: "Move", pads: [
       { xy: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed"], x: "Pan", y: "Tilt" },
       { xy: ["ctrlMoveZoomSpeed", "ctrlStripGap"], x: "Zoom", y: "Strip gap" } ] },
@@ -40,8 +40,12 @@
       : f.pads;
   const colId = (p) => `ctrlPalette${selPal}${p.color}`;
   const mapId = (k) => (k === "Sc" ? "ctrlBackground" : `ctrlPalette${selPal}${k}`);
-  const idsOf = (p) => (p.map ? [mapId("Fg"), mapId("Bg"), mapId("Sc")] : p.color ? [colId(p)] : p.xy || p.cs);
-  let mapTarget = "Fg"; // the dot being dragged on the colour map
+  let mapTarget = "Fg"; // the colour dot being dragged on the map: Fg, Bg or Sc
+  let mapMode = "colour"; // "colour" (hue × brightness) or "sc" (saturation × contrast)
+  const idsOf = (p) =>
+    p.map
+      ? mapMode === "sc" ? ["ctrlSaturation", "ctrlContrast"] : [mapId(mapTarget)]
+      : p.color ? [colId(p)] : p.xy || p.cs;
 
   function hexToHsl(hex) {
     const n = parseInt(hex.slice(1), 16);
@@ -117,6 +121,13 @@
   }
 
   function padSet(p, fx, fy) {
+    if (p.map && mapMode === "sc") {
+      const [s, c] = ["ctrlSaturation", "ctrlContrast"].map($);
+      if (!s || !c) return;
+      put(s, lim(s).lo + fx * (lim(s).hi - lim(s).lo));
+      put(c, lim(c).lo + fy * (lim(c).hi - lim(c).lo));
+      return;
+    }
     if (p.map) {
       const el = $(mapId(mapTarget));
       if (!el) return;
@@ -161,6 +172,7 @@
   root.innerHTML =
     `<div class="lv-funcs" id="lvFuncs"></div>` +
     `<div id="lvOn"></div>` +
+    `<div class="lv-chips" id="lvChips"></div>` +
     `<div class="lv-pads" id="lvPads"></div>` +
     `<div id="lvPal"></div>` +
     `<div class="lv-row"><button type="button" class="lv-btn" id="lvPause">Pause</button>` +
@@ -170,6 +182,7 @@
   const funcsEl = $("lvFuncs");
   const onEl = $("lvOn");
   const padsEl = $("lvPads");
+  const chipsEl = $("lvChips");
   const palEl = $("lvPal");
 
   function renderFuncs() {
@@ -202,14 +215,18 @@
       : "";
     padsEl.className = "lv-pads" + (padsOf(f).length === 1 ? " one" : "");
     palEl.innerHTML = f.palettes ? paletteHtml() : "";
+    chipsEl.innerHTML = f.palettes
+      ? [["Fg", "Foreground"], ["Bg", "Background"], ["Sc", "Screen"], ["SC", "Saturation · Contrast"]]
+          .map(([k, n]) => `<button type="button" class="lv-chip" data-m="${k}">${n}</button>`)
+          .join("")
+      : "";
     padsEl.innerHTML = padsOf(f)
       .map(
         (p, i) =>
           p.map
             ? `<div class="lv-pad lv-hue lv-map" data-i="${i}" tabindex="0" role="group" aria-label="Colour map: foreground, background and screen colours">` +
-              `<span class="lv-md" data-k="Fg">F</span><span class="lv-md" data-k="Bg">B</span><span class="lv-md" data-k="Sc">S</span>` +
-              `<span class="lv-tag lv-tx">Hue →</span><span class="lv-tag lv-ty">↑ Brightness</span>` +
-              `<span class="lv-tag lv-tv">F foreground · B background · S screen</span></div>`
+              `<span class="lv-md" data-k="Fg">F</span><span class="lv-md" data-k="Bg">B</span><span class="lv-md" data-k="Sc">S</span><span class="lv-md lv-mdsc" data-k="SC">◐</span>` +
+              `<span class="lv-tag lv-tx"></span><span class="lv-tag lv-ty"></span><span class="lv-tag lv-tv"></span></div>`
             : `<div class="lv-pad${p.color ? " lv-hue" : ""}" data-i="${i}" tabindex="0" role="group" aria-label="${p.title ? p.title + " " : ""}${p.x} and ${p.y}">` +
           `<span class="lv-zero lv-zx" hidden></span><span class="lv-zero lv-zy" hidden></span>` +
           `<span class="lv-dot"></span>` +
@@ -225,14 +242,32 @@
     padsEl.querySelectorAll(".lv-pad").forEach((pad) => {
       const p = padsOf(f)[+pad.dataset.i];
       if (p.map) {
+        const sc = mapMode === "sc";
+        pad.classList.toggle("lv-sc", sc);
         pad.querySelectorAll(".lv-md").forEach((d) => {
+          const isSC = d.dataset.k === "SC";
+          d.hidden = sc !== isSC;
+          if (isSC) {
+            const [s, c] = ["ctrlSaturation", "ctrlContrast"].map($);
+            if (s && c) {
+              d.style.left = `${frac(s) * 100}%`;
+              d.style.top = `${(1 - frac(c)) * 100}%`;
+            }
+            return;
+          }
           const el = $(mapId(d.dataset.k));
           if (!el) return;
           const [h, , lum] = hexToHsl(el.value);
           d.style.left = `${(h / 360) * 100}%`;
           d.style.top = `${(1 - lum) * 100}%`;
           d.style.setProperty("--c", el.value);
+          d.classList.toggle("is-active", d.dataset.k === mapTarget);
         });
+        pad.querySelector(".lv-tx").textContent = sc ? "Saturation →" : "Hue →";
+        pad.querySelector(".lv-ty").textContent = sc ? "↑ Contrast" : "↑ Brightness";
+        pad.querySelector(".lv-tv").textContent = sc
+          ? `${valText("ctrlSaturation")} · ${valText("ctrlContrast")}`
+          : "F foreground · B background · S screen";
         return;
       }
       const pos = padPos(p);
@@ -268,6 +303,10 @@
       const sw = $(`ctrlPalette${b.dataset.n}Enabled`);
       b.classList.toggle("is-on", !!(sw && sw.checked));
       b.classList.toggle("is-sel", +b.dataset.n === selPal);
+    });
+    chipsEl.querySelectorAll(".lv-chip").forEach((c) => {
+      const on = mapMode === "sc" ? c.dataset.m === "SC" : c.dataset.m === mapTarget;
+      c.classList.toggle("is-on", on);
     });
     const po = $("lvPalOn");
     if (po) {
@@ -350,6 +389,17 @@
     else if (e.target.closest("#lvPalRand")) flip("ctrlPaletteRandomize");
   });
 
+  chipsEl.addEventListener("click", (e) => {
+    const c = e.target.closest(".lv-chip");
+    if (!c) return;
+    if (c.dataset.m === "SC") mapMode = "sc";
+    else {
+      mapMode = "colour";
+      mapTarget = c.dataset.m;
+    }
+    refresh();
+  });
+
   let drag = null;
   function fromPointer(e, pad) {
     const f = FUNCS.find((x) => x.id === current);
@@ -365,11 +415,12 @@
     if (!pad) return;
     pad.setPointerCapture(e.pointerId);
     drag = pad;
-    if (pad.classList.contains("lv-map")) {
-      // Grab the nearest of the three dots, wherever you touch.
+    if (pad.classList.contains("lv-map") && mapMode === "colour") {
+      // Grab the nearest of the three colour dots, wherever you touch.
       const r = pad.getBoundingClientRect();
       let best = Infinity;
       pad.querySelectorAll(".lv-md").forEach((d) => {
+        if (d.hidden || d.dataset.k === "SC") return;
         const b = d.getBoundingClientRect();
         const dist = Math.hypot(e.clientX - (b.left + b.width / 2), e.clientY - (b.top + b.height / 2));
         if (dist < best - 0.5) {
