@@ -1393,3 +1393,12 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 #remoteQrOverlay p { margin: 5px 0 0; }
 #remoteQrOverlay.big { padding: 10px; border-radius: 14px; font-size: 14px; }
 #remoteQrOverlay.big .q { width: 180px; border-radius: 6px; }
+
+/* Background colour picker: outlined like the Duotone palette chips (a bordered card with the colour inside). */
+#controls .cp-colour-swatch {
+  width: 58px; height: 40px; padding: 8px; box-sizing: border-box;
+  border: 1px solid #33363b; border-radius: 10px; background: var(--cp-sunk); overflow: hidden;
+}
+#controls .cp-colour-swatch input[type="color"] { border-radius: 11px; }
+#controls .cp-colour-swatch input[type="color"]::-webkit-color-swatch { border-radius: inherit; }
+#controls .cp-colour-swatch input[type="color"]::-moz-color-swatch { border-radius: inherit; }

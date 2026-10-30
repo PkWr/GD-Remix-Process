@@ -2369,6 +2369,7 @@
       bw = src.width * 1.6;
       bh = H * 1.6;
     }
+    state.roamBlend = null; // a new image: roll the overlap blend mode again
     const szf = 0.7 + Math.random() * 0.6; // this image's own size factor
     const size = Math.max(0.15, params.roamSize * szf);
     const rad = 0.5 * Math.hypot(bw * size, bh * size) * 1.3;
@@ -2509,6 +2510,21 @@
     );
   }
 
+  // The blend mode used between roaming images. Read live (not frozen at the
+  // last image change): once Roam has its images it stops changing pictures,
+  // so a mode picked per image would never follow the Blend overlay switch,
+  // the mode chips or Opacity. A mode is kept until a new image arrives or
+  // it is switched off, so it doesn't flicker from frame to frame.
+  function roamBlendMode() {
+    if (!params.blendOverlayEnabled) return null;
+    const modes = Object.keys(params.enabledBlendModes).filter((m) => params.enabledBlendModes[m]);
+    if (!modes.length) return null;
+    if (!state.roamBlend || !modes.includes(state.roamBlend)) {
+      state.roamBlend = modes[Math.floor(Math.random() * modes.length)];
+    }
+    return state.roamBlend;
+  }
+
   function applyRoam(ctx) {
     ctx.clearRect(0, 0, STAGE.w, STAGE.h);
     ctx.imageSmoothingEnabled = true;
@@ -2516,8 +2532,8 @@
     // Overlap blend uses the Blend overlay panel (this cycle's mode and
     // opacity): the oldest image is laid down normally on the background
     // colour; every later one blends with what's under it.
-    const blend = state.lastBlendMode && state.lastBlendMode !== "source-over" ? state.lastBlendMode : null;
-    const blendOpacity = state.lastBlendOpacity;
+    const blend = roamBlendMode();
+    const blendOpacity = params.opacity;
     if (blend) {
       ctx.fillStyle = params.backgroundColor || "#000000";
       ctx.fillRect(0, 0, STAGE.w, STAGE.h);
