@@ -2527,7 +2527,7 @@
 
   // Draws every roaming image. With a blend mode (not for the mask pass) each
   // image after the first blends with what is already under it.
-  function drawRoamItems(ctx, blend, blendOpacity, breath) {
+  function drawRoamItems(ctx, blend, blendOpacity, breath, filter) {
     let first = true;
     for (const it of state.roam.items) {
       const blended = blend && !first;
@@ -2543,6 +2543,7 @@
           const y = it.y + oy * STAGE.h;
           if (wrap && (x < -rad || x > STAGE.w + rad || y < -rad || y > STAGE.h + rad)) continue;
           ctx.save();
+          if (filter) ctx.filter = filter;
           ctx.globalAlpha = blended ? alpha * blendOpacity : alpha;
           ctx.globalCompositeOperation = blended ? blend : "source-over";
           ctx.translate(x, y);
@@ -2561,12 +2562,21 @@
     ctx.clearRect(0, 0, STAGE.w, STAGE.h);
     ctx.imageSmoothingEnabled = true;
     const breath = (params.roamBreath || 0) / 100;
-    // The blend mode (live, from the Blend overlay controls) acts between the
-    // roaming images where they overlap: each image after the first blends with
-    // what is already drawn. Over empty canvas a blended image simply shows as
-    // itself, and the gaps stay see-through so the page's Background colour
-    // shows there untouched by the saturation / contrast filter.
-    drawRoamItems(ctx, roamBlendMode(), params.opacity, breath);
+    const blend = roamBlendMode();
+    if (blend && state.lookInCanvas) {
+      // The Background colour is painted under the images and each image after the
+      // first blends with what is under it (so Multiply tints the images by the
+      // colour). Saturation / contrast apply to the images only, so the colour and
+      // the blend against it come out as chosen, not desaturated with the picture.
+      ctx.fillStyle = params.backgroundColor || "#000000";
+      ctx.fillRect(0, 0, STAGE.w, STAGE.h);
+      drawRoamItems(ctx, blend, params.opacity, breath, lookFilterString());
+      return;
+    }
+    // No blend (or a browser that can't filter inside the canvas): gaps stay
+    // see-through so the page's own Background colour shows, and blends act only
+    // between overlapping images.
+    drawRoamItems(ctx, blend, params.opacity, breath);
   }
 
   // Strip layers ("lanes"): 1–3 strips at once, each its own line of
@@ -2748,6 +2758,7 @@
   }
 
   function composeFrame(destCtx, moveState) {
+    syncLookMode();
     destCtx.clearRect(0, 0, STAGE.w, STAGE.h);
     if (moveState === null) {
       destCtx.drawImage(state.lastEffectFrame, 0, 0);
@@ -3083,10 +3094,27 @@
   // or Move pan position) with zero changes to the render pipeline, and
   // updates instantly as the sliders move rather than waiting for the next
   // cycle. 100/100 = filter is a no-op (matches CSS's own defaults).
+  const lookFilterString = () => `saturate(${params.saturation}%) contrast(${params.contrast}%)`;
+  const CANVAS_FILTER_OK = typeof CanvasRenderingContext2D !== "undefined" && "filter" in CanvasRenderingContext2D.prototype;
+
+  // True while Roam is drawing with a blend and the browser can filter inside the canvas.
+  function wantLookInCanvas() {
+    return CANVAS_FILTER_OK && roamActive() && state.roam.items.length > 0 && !!roamBlendMode();
+  }
+  function syncLookMode() {
+    const want = wantLookInCanvas();
+    if (want !== !!state.lookInCanvas) {
+      state.lookInCanvas = want;
+      applyLookFilter();
+    }
+  }
+
   function applyLookFilter() {
     const stage = document.getElementById("stage");
     if (stage) {
-      stage.style.filter = `saturate(${params.saturation}%) contrast(${params.contrast}%)`;
+      // With Roam + a blend, the look is applied inside the picture instead (to the
+      // images only), so the Background colour and the blend against it aren't filtered.
+      stage.style.filter = state.lookInCanvas ? "none" : lookFilterString();
     }
   }
 
