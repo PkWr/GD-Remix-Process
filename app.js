@@ -3094,7 +3094,9 @@
   // or Move pan position) with zero changes to the render pipeline, and
   // updates instantly as the sliders move rather than waiting for the next
   // cycle. 100/100 = filter is a no-op (matches CSS's own defaults).
-  const lookFilterString = () => `saturate(${params.saturation}%) contrast(${params.contrast}%)`;
+  // "" when both are at 100% (a filter that does nothing isn't worth running).
+  const lookFilterString = () =>
+    params.saturation === 100 && params.contrast === 100 ? "" : `saturate(${params.saturation}%) contrast(${params.contrast}%)`;
   const CANVAS_FILTER_OK = typeof CanvasRenderingContext2D !== "undefined" && "filter" in CanvasRenderingContext2D.prototype;
 
   // True while Roam is drawing with a blend and the browser can filter inside the canvas.
@@ -3114,7 +3116,7 @@
     if (stage) {
       // With Roam + a blend, the look is applied inside the picture instead (to the
       // images only), so the Background colour and the blend against it aren't filtered.
-      stage.style.filter = state.lookInCanvas ? "none" : lookFilterString();
+      stage.style.filter = state.lookInCanvas ? "none" : lookFilterString() || "none";
     }
   }
 
@@ -5876,6 +5878,35 @@
   }
 
 
+
+  // Frame rate readout for the Info panel (D). Counts only while the panel is
+  // open, so it costs nothing otherwise. A drop here means drawing is slow.
+  (function fpsMeter() {
+    let frames = 0;
+    let worst = 0;
+    let last = performance.now();
+    let prev = last;
+    function tick(now) {
+      requestAnimationFrame(tick);
+      const panel = document.getElementById("diagnostics");
+      if (!panel || panel.classList.contains("hidden")) {
+        frames = 0;
+        worst = 0;
+        prev = last = now;
+        return;
+      }
+      frames++;
+      worst = Math.max(worst, now - prev);
+      prev = now;
+      if (now - last >= 1000) {
+        setText("diagFps", `${Math.round((frames * 1000) / (now - last))} fps · slowest frame ${Math.round(worst)} ms`);
+        frames = 0;
+        worst = 0;
+        last = now;
+      }
+    }
+    requestAnimationFrame(tick);
+  })();
 
   async function boot() {
     // Build the controls panel from settings.js before anything looks for
