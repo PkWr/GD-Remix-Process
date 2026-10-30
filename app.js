@@ -2534,10 +2534,11 @@
     // colour; every later one blends with what's under it.
     const blend = roamBlendMode();
     const blendOpacity = params.opacity;
-    if (blend) {
-      ctx.fillStyle = params.backgroundColor || "#000000";
-      ctx.fillRect(0, 0, STAGE.w, STAGE.h);
-    }
+    // The Background colour is painted in the canvas itself (not left to show
+    // through from the page behind), so it applies in the gaps whatever is
+    // underneath, with or without a blend.
+    ctx.fillStyle = params.backgroundColor || "#000000";
+    ctx.fillRect(0, 0, STAGE.w, STAGE.h);
     let first = true;
     for (const it of state.roam.items) {
       const blended = blend && !first;
