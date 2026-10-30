@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-15T19:36:07.387Z",
+  "exportedAt": "2026-10-30T09:23:27.695Z",
   "scenes": [
     {
       "name": "T1 Plain photos",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -33,9 +33,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -48,9 +45,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -62,9 +56,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -126,8 +117,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -141,11 +132,11 @@
         "ctrlSpeedMax": {
           "value": "8"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -183,6 +174,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -209,6 +224,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -296,15 +314,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T2 Duotone, still",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -333,9 +348,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -348,9 +360,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -362,9 +371,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -426,8 +432,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -441,11 +447,11 @@
         "ctrlSpeedMax": {
           "value": "6"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -483,6 +489,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -509,6 +539,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -596,15 +629,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T3 Pixelate, quick changes",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -633,9 +663,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -648,9 +675,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -662,9 +686,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -726,8 +747,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -741,11 +762,11 @@
         "ctrlSpeedMax": {
           "value": "3"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -783,6 +804,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -809,6 +854,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -896,15 +944,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T4 Halftone",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -933,9 +978,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -948,9 +990,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -962,9 +1001,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -1026,8 +1062,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -1041,11 +1077,11 @@
         "ctrlSpeedMax": {
           "value": "6"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -1083,6 +1119,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -1109,6 +1169,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -1196,15 +1259,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T5 ASCII, flickering",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1233,9 +1293,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -1248,9 +1305,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -1262,9 +1316,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -1326,8 +1377,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -1341,11 +1392,11 @@
         "ctrlSpeedMax": {
           "value": "7"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -1383,6 +1434,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -1409,6 +1484,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -1496,15 +1574,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T6 Slow strip around the room",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1533,9 +1608,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -1548,9 +1620,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -1562,9 +1631,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -1626,8 +1692,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -1641,11 +1707,11 @@
         "ctrlSpeedMax": {
           "value": "9"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -1683,6 +1749,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -1709,6 +1799,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -1796,15 +1889,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T7 Two strips crossing",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -1833,9 +1923,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -1848,9 +1935,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -1862,9 +1946,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -1926,8 +2007,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -1941,11 +2022,11 @@
         "ctrlSpeedMax": {
           "value": "9"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -1983,6 +2064,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -2009,6 +2114,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -2096,15 +2204,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T8 Strip with echo trail",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -2133,9 +2238,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -2148,9 +2250,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -2162,9 +2261,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -2226,8 +2322,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -2241,11 +2337,11 @@
         "ctrlSpeedMax": {
           "value": "9"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -2281,6 +2377,30 @@
           "value": "0.7"
         },
         "ctrlStripGap": {
+          "value": "40"
+        },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
           "value": "40"
         },
         "ctrlEchoOn": {
@@ -2310,6 +2430,9 @@
         "ctrlFormsOrganic": {
           "value": "0"
         },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
+        },
         "ctrlFormsDrift": {
           "checked": false
         },
@@ -2396,15 +2519,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T9 Everything at once",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -2433,9 +2553,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -2448,9 +2565,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -2462,9 +2576,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -2526,8 +2637,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -2541,11 +2652,11 @@
         "ctrlSpeedMax": {
           "value": "4"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -2583,6 +2694,30 @@
         "ctrlStripGap": {
           "value": "25"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": true
         },
@@ -2609,6 +2744,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -2696,15 +2834,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "55"
         }
       }
     },
     {
       "name": "T10 3D forms round the room",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -2733,9 +2868,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -2748,9 +2880,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -2762,9 +2891,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -2826,8 +2952,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -2841,11 +2967,11 @@
         "ctrlSpeedMax": {
           "value": "9"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -2883,6 +3009,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -2909,6 +3059,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "0"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "65"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -2996,15 +3149,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "65"
         }
       }
     },
     {
       "name": "T11 3D blobs, crowded, over the picture",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -3033,9 +3183,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -3048,9 +3195,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -3062,9 +3206,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -3126,8 +3267,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -3141,11 +3282,11 @@
         "ctrlSpeedMax": {
           "value": "5"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -3183,6 +3324,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -3209,6 +3374,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "75"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "100"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -3296,15 +3464,12 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "100"
         }
       }
     },
     {
       "name": "T12 Glass forms over the strip",
-      "savedAt": 1792092967388,
+      "savedAt": 1793352207702,
       "values": {
         "ctrlLiveMode": {
           "checked": false
@@ -3333,9 +3498,6 @@
         "ctrlPixelateMax": {
           "value": "17"
         },
-        "ctrlPixelateRandomize": {
-          "checked": true
-        },
         "ctrlPixelateAnimate": {
           "checked": false
         },
@@ -3348,9 +3510,6 @@
         "ctrlHalftoneMax": {
           "value": "11"
         },
-        "ctrlHalftoneRandomize": {
-          "checked": true
-        },
         "ctrlHalftoneRandomCellSize": {
           "checked": false
         },
@@ -3362,9 +3521,6 @@
         },
         "ctrlAsciiRamp": {
           "value": "density"
-        },
-        "ctrlAsciiRandomize": {
-          "checked": true
         },
         "ctrlAsciiRampRandomize": {
           "checked": false
@@ -3426,8 +3582,8 @@
         "ctrlAnimatePaletteDensityMax": {
           "value": "20"
         },
-        "ctrlAnimatePaletteDensityRandomize": {
-          "checked": false
+        "ctrlBackground": {
+          "value": "#000000"
         },
         "ctrlSaturation": {
           "value": "100"
@@ -3441,11 +3597,11 @@
         "ctrlSpeedMax": {
           "value": "5"
         },
-        "ctrlSpeedRandomize": {
-          "checked": true
-        },
         "ctrlAutoCycle": {
           "checked": true
+        },
+        "ctrlApplyNow": {
+          "checked": false
         },
         "ctrlCrossfadeEnabled": {
           "checked": true
@@ -3483,6 +3639,30 @@
         "ctrlStripGap": {
           "value": "0"
         },
+        "ctrlRoamOn": {
+          "checked": false
+        },
+        "ctrlRoamCount": {
+          "value": "4"
+        },
+        "ctrlRoamSize": {
+          "value": "0.5"
+        },
+        "ctrlRoamSpeed": {
+          "value": "40"
+        },
+        "ctrlRoamSpin": {
+          "value": "0"
+        },
+        "ctrlRoamAngle": {
+          "value": "90"
+        },
+        "ctrlRoamSpread": {
+          "value": "180"
+        },
+        "ctrlRoamBreath": {
+          "value": "40"
+        },
         "ctrlEchoOn": {
           "checked": false
         },
@@ -3509,6 +3689,9 @@
         },
         "ctrlFormsOrganic": {
           "value": "20"
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "100"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -3596,9 +3779,6 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
-        },
-        "ctrlFormsOrganicMax": {
-          "value": "100"
         }
       }
     }

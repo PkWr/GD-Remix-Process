@@ -52,11 +52,11 @@
         "FormsSpin": 60,
         "FormsShape": "form",
         "FormsOrganic": 0,
+        "FormsOrganicMax": 35,
         "FormsWrap": "box",
         "FormsBehind": "picture",
         "SpeedMin": 2,
-        "SpeedMax": 3,
-        "FormsOrganicMax": 35
+        "SpeedMax": 3
       }
     },
     {
@@ -106,12 +106,12 @@
         "FormsSpin": 30,
         "FormsShape": "form",
         "FormsOrganic": 65,
+        "FormsOrganicMax": 100,
         "FormsSurface": "glass",
         "FormsMagnify": 35,
         "FormsBend": 80,
         "FormsRim": 70,
-        "FormsBehind": "picture",
-        "FormsOrganicMax": 100
+        "FormsBehind": "picture"
       }
     },
     {
@@ -281,14 +281,14 @@
         "FormsSpin": 45,
         "FormsShape": "form",
         "FormsOrganic": 20,
+        "FormsOrganicMax": 80,
         "FormsSurface": "glass",
         "FormsMagnify": 70,
         "FormsBend": 25,
         "FormsRim": 60,
         "FormsBehind": "picture",
         "SpeedMin": 2,
-        "SpeedMax": 3,
-        "FormsOrganicMax": 80
+        "SpeedMax": 3
       }
     },
     {
@@ -344,14 +344,14 @@
         "FormsSpin": 50,
         "FormsShape": "form",
         "FormsOrganic": 0,
+        "FormsOrganicMax": 35,
         "FormsSurface": "glass",
         "FormsMagnify": 20,
         "FormsBend": 45,
         "FormsRim": 80,
         "FormsBehind": "black",
         "SpeedMin": 1.5,
-        "SpeedMax": 2.5,
-        "FormsOrganicMax": 35
+        "SpeedMax": 2.5
       }
     },
     {
@@ -384,11 +384,11 @@
         "FormsSpin": 35,
         "FormsShape": "form",
         "FormsOrganic": 60,
+        "FormsOrganicMax": 100,
         "FormsWrap": "globe",
         "FormsBehind": "picture",
         "SpeedMin": 2,
-        "SpeedMax": 3,
-        "FormsOrganicMax": 100
+        "SpeedMax": 3
       }
     }
   ]
