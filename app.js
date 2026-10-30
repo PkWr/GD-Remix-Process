@@ -2950,7 +2950,7 @@
   function updateLookDiagnostic() {
     setText(
       "diagLook",
-      `crossfade ${params.crossfadeEnabled ? (camera.live ? "on (hard cuts while camera is on)" : "on") : "off (hard cut)"} · sat ${params.saturation}% · con ${params.contrast}%${params.formsOn ? ` · 3D forms ${forms3d.ready ? `${params.formsCount}× ${params.formsShape}${params.formsShape === "form" ? ` ${params.formsDrift ? "drift" : params.formsOrganic}` : ""} ${params.formsSurface === "glass" ? "glass" : params.formsWrap} · ${forms3d.cams.length} camera${forms3d.cams.length > 1 ? "s" : ""}` : "loading…"}` : ""}`
+      `crossfade ${params.crossfadeEnabled ? (camera.live ? "on (hard cuts while camera is on)" : "on") : "off (hard cut)"} · sat ${params.saturation}% · con ${params.contrast}%${params.formsOn ? ` · 3D forms ${forms3d.ready ? `${params.formsCount}× ${params.formsShape}${params.formsShape === "form" ? ` ${params.formsDrift ? "drift" : params.formsOrganic === params.formsOrganicMax ? params.formsOrganic : params.formsOrganic + "-" + params.formsOrganicMax}` : ""} ${params.formsSurface === "glass" ? "glass" : params.formsWrap} · ${forms3d.cams.length} camera${forms3d.cams.length > 1 ? "s" : ""}` : "loading…"}` : ""}`
     );
   }
 
@@ -3748,11 +3748,15 @@
       sh.rimAmt.value = params.formsRim / 100;
       sh.fringe.value = params.formsFringe ? 1 : 0;
     }
-    const organic = params.formsDrift ? 0.5 - 0.5 * Math.cos(now / 3500) : params.formsOrganic / 100; // drift: cube → blob → cube in ~22 s
+    // Geometric ↔ Organic is a range: each form lands somewhere between the
+    // handles. Drift slides that window across the whole scale (cube → blob
+    // → cube in ~22 s).
+    const oLo = Math.min(params.formsOrganic, params.formsOrganicMax) / 100;
+    const oW = Math.abs(params.formsOrganicMax - params.formsOrganic) / 100;
+    const organicBase = params.formsDrift ? (0.5 - 0.5 * Math.cos(now / 3500)) * (1 - oW) : oLo;
     const spacing = (params.formsSpacing * Math.PI) / 180;
     const size = params.formsSize / 100;
     const depth = params.formsDepth / 100;
-    const variety = params.formsVariety / 100;
     const spin = params.formsSpin / 100;
     forms3d.travel += run * (params.formsTravel / 100) * 0.12;
     const H = forms3d.visibleH;
@@ -3792,7 +3796,7 @@
       }
       const u = m.material.uniforms;
       u.time.value = now / 1000 + k * 7.3;
-      u.form.value = Math.min(1, Math.max(0, organic + variety * (formsRand(k, 5) - 0.5)));
+      u.form.value = organicBase + oW * formsRand(k, 5);
     });
 
     const R = forms3d.renderer;
@@ -3991,6 +3995,15 @@
   // checked, display}) — used to restore a saved-settings snapshot. display
   // is ignored; each control's own listener recomputes its .val text.
   function applyControlState(values) {
+    // Older saved scenes/presets: Organic + Variety became an Organic range.
+    if (values.ctrlFormsVariety && !values.ctrlFormsOrganicMax) {
+      const o = +(values.ctrlFormsOrganic ? values.ctrlFormsOrganic.value : 25);
+      const v = +values.ctrlFormsVariety.value;
+      values = { ...values };
+      values.ctrlFormsOrganic = { value: String(Math.max(0, Math.round((o - v / 2) / 5) * 5)) };
+      values.ctrlFormsOrganicMax = { value: String(Math.min(100, Math.round((o + v / 2) / 5) * 5)) };
+      delete values.ctrlFormsVariety;
+    }
     for (const [id, info] of Object.entries(values)) {
       const el = document.getElementById(id);
       if (el) applyControlValue(el, info);
@@ -5423,7 +5436,7 @@
     Saturation: 0,
     SpeedMax: 14.5,
     MovePanSpeed: 33, MoveEnd: "tile",
-    FormsOn: 1, FormsOrganic: 100, FormsCount: 1, FormsSize: 100, FormsTravel: 100, FormsSpin: 14,
+    FormsOn: 1, FormsOrganic: 70, FormsOrganicMax: 100, FormsCount: 1, FormsSize: 100, FormsTravel: 100, FormsSpin: 14,
     FormsSurface: "glass", FormsBehind: "picture",
   };
 

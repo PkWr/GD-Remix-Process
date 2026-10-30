@@ -208,7 +208,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -224,9 +224,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -299,6 +296,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -508,7 +508,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -524,9 +524,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -599,6 +596,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -808,7 +808,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -824,9 +824,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -899,6 +896,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -1108,7 +1108,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -1124,9 +1124,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -1199,6 +1196,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -1408,7 +1408,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -1424,9 +1424,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -1499,6 +1496,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -1708,7 +1708,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -1724,9 +1724,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -1799,6 +1796,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -2008,7 +2008,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -2024,9 +2024,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -2099,6 +2096,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -2308,7 +2308,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -2324,9 +2324,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -2399,6 +2396,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -2608,7 +2608,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "25"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -2624,9 +2624,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "60"
         },
         "ctrlFormsTravel": {
           "value": "20"
@@ -2699,6 +2696,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "55"
         }
       }
     },
@@ -2908,7 +2908,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "30"
+          "value": "0"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -2924,9 +2924,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "70"
         },
         "ctrlFormsTravel": {
           "value": "25"
@@ -2999,6 +2996,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "65"
         }
       }
     },
@@ -3208,7 +3208,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "90"
+          "value": "75"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -3224,9 +3224,6 @@
         },
         "ctrlFormsDepth": {
           "value": "70"
-        },
-        "ctrlFormsVariety": {
-          "value": "30"
         },
         "ctrlFormsTravel": {
           "value": "40"
@@ -3299,6 +3296,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "100"
         }
       }
     },
@@ -3508,7 +3508,7 @@
           "value": "form"
         },
         "ctrlFormsOrganic": {
-          "value": "60"
+          "value": "20"
         },
         "ctrlFormsDrift": {
           "checked": false
@@ -3524,9 +3524,6 @@
         },
         "ctrlFormsDepth": {
           "value": "40"
-        },
-        "ctrlFormsVariety": {
-          "value": "80"
         },
         "ctrlFormsTravel": {
           "value": "25"
@@ -3599,6 +3596,9 @@
         },
         "ctrlStartUnchanged": {
           "checked": false
+        },
+        "ctrlFormsOrganicMax": {
+          "value": "100"
         }
       }
     }

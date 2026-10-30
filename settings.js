@@ -166,16 +166,15 @@
     { id: "ctrlFormsOn", type: "switch", label: "3D forms on", default: false, param: "formsOn", after: "forms3d" },
     { id: "ctrlFormsShape", type: "select", label: "Shape", default: "form", param: "formsShape", after: "forms3d",
       options: [["form", "Form — geometric to organic"], ["rock", "Rock"], ["knot", "Knot"], ["vase", "Vase"]] },
-    { id: "ctrlFormsOrganic", type: "range", label: "Geometric ↔ Organic", min: 0, max: 100, step: 1, default: 25, int: true, format: "formName", param: "formsOrganic",
-      help: "0 cube · 50 sphere · 100 globular blob" },
-    { id: "ctrlFormsDrift", type: "switch", label: "Drift slowly between them", default: false, param: "formsDrift" },
+    { id: "ctrlFormsOrganic", type: "range", label: "Geometric ↔ Organic, from", min: 0, max: 100, step: 5, default: 0, int: true, format: "formName", param: "formsOrganic" },
+    { id: "ctrlFormsOrganicMax", type: "range", label: "Geometric ↔ Organic, to", min: 0, max: 100, step: 5, default: 55, int: true, format: "formName", param: "formsOrganicMax" },
+    { id: "ctrlFormsDrift", type: "switch", label: "Drift slowly cube ↔ blob", default: false, param: "formsDrift" },
     { id: "ctrlFormsCount", type: "range", label: "How many", min: 1, max: 24, step: 1, default: 6, int: true, format: "int", param: "formsCount", after: "forms3d" },
     { id: "ctrlFormsSpacing", type: "range", label: "Spacing", min: 4, max: 90, step: 1, default: 45, int: true, format: "degrees", param: "formsSpacing",
       help: "Degrees round the room between neighbours — small values overlap" },
     { id: "ctrlFormsSize", type: "range", label: "Size", min: 15, max: 100, step: 1, default: 55, int: true, format: "percent", param: "formsSize" },
     { id: "ctrlFormsDepth", type: "range", label: "Near / far spread", min: 0, max: 100, step: 1, default: 40, int: true, format: "percent", param: "formsDepth",
       help: "Pushes some forms closer, so overlaps stack instead of merging" },
-    { id: "ctrlFormsVariety", type: "range", label: "Mix of forms", min: 0, max: 100, step: 1, default: 60, int: true, format: "percent", param: "formsVariety" },
     { id: "ctrlFormsTravel", type: "range", label: "Travel round the room", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "formsTravel" },
     { id: "ctrlFormsSpin", type: "range", label: "Spin", min: 0, max: 100, step: 1, default: 30, int: true, format: "percent", param: "formsSpin" },
     { id: "ctrlFormsWrap", type: "select", label: "Wrap", default: "globe", param: "formsWrap",
@@ -312,9 +311,9 @@
         ] },
         { when: { id: "ctrlFormsOn", is: ["on"] }, items: [
           "ctrlFormsShape",
-          { when: { id: "ctrlFormsShape", is: ["form"] }, items: ["ctrlFormsOrganic", "ctrlFormsDrift"] },
+          { when: { id: "ctrlFormsShape", is: ["form"] }, items: [{ dual: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], label: "Geometric ↔ Organic" }, { note: "Handles apart: each form lands somewhere between them. Together: all alike. 0 cube · 50 sphere · 100 blob." }, "ctrlFormsDrift"] },
           "ctrlFormsCount",
-          { when: { id: "ctrlFormsCount", not: ["1"] }, items: ["ctrlFormsSpacing", "ctrlFormsDepth", "ctrlFormsVariety"] },
+          { when: { id: "ctrlFormsCount", not: ["1"] }, items: ["ctrlFormsSpacing", "ctrlFormsDepth"] },
           "ctrlFormsSize", "ctrlFormsTravel", "ctrlFormsSpin",
           "ctrlFormsSurface",
           { when: { id: "ctrlFormsSurface", is: ["photo"] }, items: ["ctrlFormsWrap", "ctrlFormsShade"] },
@@ -626,7 +625,7 @@
       if (inputState("ctrlFormsOn") !== "on") return "off";
       const n = +inputState("ctrlFormsCount");
       const shape = inputState("ctrlFormsShape");
-      const what = shape === "form" ? FORMATS.formName(+inputState("ctrlFormsOrganic")) : shape;
+      const what = shape === "form" ? (inputState("ctrlFormsOrganic") === inputState("ctrlFormsOrganicMax") ? FORMATS.formName(+inputState("ctrlFormsOrganic")) : `${FORMATS.formName(+inputState("ctrlFormsOrganic"))} to ${FORMATS.formName(+inputState("ctrlFormsOrganicMax"))}`) : shape;
       const glass = inputState("ctrlFormsSurface") === "glass" ? " · glass" : "";
       return `${n} × ${what}${glass}${inputState("ctrlFormsBehind") === "picture" ? " · over picture" : ""}`;
     },
