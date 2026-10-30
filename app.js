@@ -3995,7 +3995,19 @@
   // ever sends "state" messages — so there's no possibility of the two
   // pages echoing a change back and forth in a loop.
   // ---------------------------------------------------------------------
-  const remoteChannel = "BroadcastChannel" in window ? new BroadcastChannel("photoRemixControls") : null;
+  // One link carries both routes (see relay.js): another tab on this device
+  // (BroadcastChannel) and, once the relay is set up, a phone via its QR code.
+  let remotePresence = { remote: 0 };
+  let remoteStatus = "";
+  const remoteLink = window.SpotLink
+    ? window.SpotLink.open({
+        role: "display",
+        code: window.SpotLink.code(),
+        onMessage: (msg) => handleRemoteMessage(msg),
+        onStatus: (st) => remoteLinkStatus(st),
+        onPresence: (p) => remoteLinkPresence(p),
+      })
+    : null;
 
   // Every control's current value/checked state, plus whatever formatted
   // text its `.val` span is currently showing (e.g. "12px", "6s") — sent
@@ -4015,10 +4027,28 @@
     return values;
   }
 
-  function broadcastState() {
-    if (remoteChannel) {
-      remoteChannel.postMessage({ type: "state", values: gatherControlState() });
-    }
+  // Sends only what changed since the last send (the first send, and any
+  // "requestState", is everything), at most about 12 times a second — a
+  // phone dragging a slider would otherwise flood the relay with the whole
+  // panel on every tick.
+  let lastSentState = {};
+  let stateTimer = 0;
+  function broadcastState(full) {
+    if (!remoteLink) return;
+    if (full === true) lastSentState = {};
+    if (stateTimer) return;
+    stateTimer = setTimeout(() => {
+      stateTimer = 0;
+      const all = gatherControlState();
+      const changed = {};
+      for (const id in all) {
+        const now = all[id];
+        const was = lastSentState[id];
+        if (!was || was.value !== now.value || was.checked !== now.checked || was.display !== now.display) changed[id] = now;
+      }
+      lastSentState = all;
+      if (Object.keys(changed).length) remoteLink.post({ type: "state", values: changed });
+    }, 80);
   }
 
   // Applies a single {value, checked} pair to a control exactly as if it
@@ -4117,16 +4147,16 @@
     }
   }
 
-  if (remoteChannel) {
-    remoteChannel.onmessage = (evt) => {
-      const msg = evt.data;
-      if (msg.type === "requestState") {
-        broadcastState();
-      } else if (msg.type === "input") {
-        const el = document.getElementById(msg.id);
-        if (el) applyControlValue(el, msg);
-      }
-    };
+  function handleRemoteMessage(msg) {
+    if (msg.type === "requestState") {
+      broadcastState(true);
+    } else if (msg.type === "input") {
+      const el = document.getElementById(msg.id);
+      if (el) applyControlValue(el, msg);
+    }
+  }
+
+  if (remoteLink) {
 
     // Delegated on the panel container rather than added to every individual
     // control — fires after each control's own listener already updated
@@ -4907,6 +4937,21 @@
     on("cpMineAgain", () => useRememberedFolder(true));
     on("cpMineForget", forgetFolder);
     on("cpFullscreen", toggleFullscreen);
+    on("remoteNewCode", () => {
+      if (!remoteLink) return;
+      remoteLink.setCode(window.SpotLink.code(true)); // a new code disconnects any phone
+      remotePresence = { remote: 0 };
+      renderRemotePanel();
+    });
+    on("remoteCopy", async () => {
+      const el = document.getElementById("remoteQr");
+      try {
+        await navigator.clipboard.writeText(el ? el.dataset.link || "" : "");
+        showToast("Remote link copied.", "ok", 2500);
+      } catch (e) {
+        showToast("Couldn't copy — scan the code instead.", "info", 3500);
+      }
+    });
     on("cpInfoHead", () => toggleInfo());
     on("cpBrandBtn", () => {
       const lockup = document.getElementById("brandLockup");
@@ -5307,6 +5352,53 @@
     return dlg;
   }
 
+  // Phone remote (Show tab): a QR for this running instance. The code is
+  // random per tab, so each instance has its own; "New code" replaces it.
+  function remoteLinkStatus(st) {
+    remoteStatus = st;
+    renderRemotePanel();
+  }
+  function remoteLinkPresence(p) {
+    remotePresence = p;
+    renderRemotePanel();
+    if (p.remote) broadcastState(true); // a phone just joined: give it everything
+  }
+  async function renderRemotePanel() {
+    const box = document.getElementById("remoteQr");
+    const note = document.getElementById("remoteNote");
+    if (!box || !note) return;
+    const btns = document.getElementById("remoteBtns");
+    if (!window.SpotLink || !window.SpotLink.enabled) {
+      box.innerHTML = "";
+      box.dataset.link = "";
+      if (btns) btns.hidden = true;
+      note.textContent = "The phone remote needs its relay set up first. See relay/README.md.";
+      return;
+    }
+    if (btns) btns.hidden = false;
+    const link = new URL("controls.html?s=" + window.SpotLink.code(), location.href).href;
+    if (box.dataset.link !== link) {
+      box.dataset.link = link;
+      box.innerHTML = "";
+      try {
+        const qrcode = await loadQrLib();
+        const qr = qrcode(0, "M");
+        qr.addData(link);
+        qr.make();
+        box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+      } catch (e) {
+        note.textContent = `Couldn't draw the QR code (${e.message}).`;
+        return;
+      }
+    }
+    note.textContent =
+      remoteStatus === "offline" || remoteStatus === "connecting"
+        ? "Reaching the relay…"
+        : remotePresence.remote
+          ? "A phone is connected. New code disconnects it."
+          : "Scan with a phone camera to control this display. One phone at a time.";
+  }
+
   async function shareScene(scene) {
     if (!scene) return;
     const dlg = shareDialog();
@@ -5556,6 +5648,7 @@
     // its inputs.
     PRS.buildPanel(document.getElementById("controls"), { mode: "display" });
     buildTouchBar();
+    renderRemotePanel();
     const diagClose = document.getElementById("diagClose");
     if (diagClose) {
       diagClose.innerHTML = iconSvg("close", 20);

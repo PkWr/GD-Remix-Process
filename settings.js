@@ -333,6 +333,7 @@
       { section: "Scenes", displayOnly: true, items: [{ widget: "scenes" }] },
       { section: "Start-up", items: ["ctrlStartUnchanged"] },
       { section: "Output", displayOnly: true, items: [{ widget: "output" }] },
+      { section: "Phone remote", displayOnly: true, items: [{ widget: "remote" }] },
       { section: "Keyboard", displayOnly: true, className: "cp-keys-sec", items: [{ widget: "keys" }] },
     ] },
   ];
@@ -590,6 +591,13 @@
           `<button type="button" class="cp-btn" id="openRecordingWindowLink" title="Opens a separate window at the output shape with your current settings, for screen recording. Same as R.">Recording window</button>` +
           `<button type="button" class="cp-btn" id="cpBrandBtn">SHU lockup</button>` +
           `</div>`
+        );
+      case "remote":
+        return (
+          `<div class="cp-remote"><div class="cp-qr" id="remoteQr"></div>` +
+          `<p class="cp-note" id="remoteNote"></p>` +
+          `<div class="cp-btns" id="remoteBtns"><button type="button" class="cp-btn" id="remoteNewCode" title="Makes a new QR code and disconnects any phone">New code</button>` +
+          `<button type="button" class="cp-btn" id="remoteCopy">Copy link</button></div></div>`
         );
       case "keys":
         return (

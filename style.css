@@ -1372,3 +1372,8 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 #controls .cp-twin-key { margin: 0 0 8px; font-size: 11px; color: var(--cp-muted); }
 #controls .cp-twin-key i { display: inline-block; width: 9px; height: 9px; margin: 0 4px 0 0; border-radius: 50%; background: #f4f4f4; }
 #controls .cp-twin-key i.k2 { margin-left: 10px; background: var(--cp-accent); }
+
+/* --- phone remote QR (Show tab) ------------------------------------ */
+#controls .cp-qr { width: 168px; margin: 4px 0 6px; background: #fff; border-radius: 8px; }
+#controls .cp-qr:empty { display: none; }
+#controls .cp-qr svg { display: block; width: 100%; height: auto; }
