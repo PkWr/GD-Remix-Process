@@ -197,7 +197,7 @@
   function getFont(key) {
     if (L.fonts[key]) return Promise.resolve(L.fonts[key]);
     return new Promise((res, rej) =>
-      new T.FontLoader().load(`vendor/fonts/typeface/${key}.typeface.json`, (f) => { L.fonts[key] = f; res(f); }, undefined, rej)
+      new T.FontLoader().load(`vendor/fonts/typeface/${key}.typeface.json?t=${Date.now()}`, (f) => { L.fonts[key] = f; res(f); }, undefined, rej)
     );
   }
 
