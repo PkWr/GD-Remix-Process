@@ -135,7 +135,7 @@
       help: "Every image rolls its own random direction and speed per axis, leaving the sliders where they are" },
     { id: "ctrlMoveEnd", type: "select", label: "At the edge", default: "strip", param: "moveEndMode",
       help: "What happens when the picture reaches the end of its travel",
-      options: [["strip", "Strip — new images follow on"], ["roam", "Roam — images wander freely"], ["mirror", "Keep going — mirrored repeat"], ["tile", "Keep going — repeat"], ["next", "Next image arrives"], ["stop", "Stop"]] },
+      options: [["strip", "Strip — new images follow on"], ["mirror", "Keep going — mirrored repeat"], ["tile", "Keep going — repeat"], ["next", "Next image arrives"], ["stop", "Stop"]] },
     { id: "ctrlStripLayers", type: "range", label: "Strip layers", min: 1, max: 3, step: 1, default: 1, int: true, format: "int", param: "stripLayers",
       help: "How many strips run at once, overlapping" },
     { id: "ctrlStripRelation", type: "select", label: "Layers move", default: "opposing", param: "stripRelation",
@@ -145,13 +145,14 @@
     { id: "ctrlStripOpacity", type: "range", label: "Layer opacity", min: 0.1, max: 1, step: 0.05, default: 0.7, format: "fixed2", param: "stripOpacity" },
     { id: "ctrlStripGap", type: "range", label: "Gap between images", min: 0, max: 100, step: 1, default: 0, int: true, format: "percent", param: "stripGap",
       help: "Dark space between images in the strip, as a share of the screen — the echo trail shows in it" },
+    { id: "ctrlRoamOn", type: "switch", label: "Roam on", default: false, param: "roamOn" },
     { id: "ctrlRoamCount", type: "range", label: "Images at once", min: 1, max: 8, step: 1, default: 4, int: true, format: "int", param: "roamCount",
-      help: "How many images wander at the same time, overlapping. Speed comes from the biggest of Pan / Tilt / Zoom" },
+      help: "How many images wander at the same time, overlapping" },
     { id: "ctrlRoamSize", type: "range", label: "Size", min: 0.2, max: 1, step: 0.05, default: 0.5, format: "fixed2", param: "roamSize",
       help: "How big each image is, as a share of the screen (each varies a little)" },
     { id: "ctrlRoamSpeed", type: "range", label: "Travel speed", min: 0, max: 100, step: 1, default: 40, int: true, format: "int", param: "roamSpeed",
       help: "How fast each image crosses the screen (about the same scale as Pan / Tilt). 0 holds them still" },
-    { id: "ctrlRoamSpin", type: "range", label: "Spin speed", min: -100, max: 100, step: 1, default: 30, int: true, format: "int", centre: true, param: "roamSpin",
+    { id: "ctrlRoamSpin", type: "range", label: "Spin speed", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "roamSpin",
       help: "How fast each image turns. Negative = anticlockwise, 0 keeps them from turning" },
     { id: "ctrlRoamDirection", type: "select", label: "Direction", default: "any", param: "roamDirection",
       help: "Any way: each image heads off on its own and slowly curves. Set: they all travel roughly the same way",
@@ -288,9 +289,9 @@
       ] },
       { section: "Transitions", items: ["ctrlCrossfadeEnabled", "ctrlOpacity", { note: "The camera always hard-cuts." }] },
       { card: "Move", summary: "pan · tilt · zoom", summarize: "move", items: [
-        { when: { id: "ctrlMoveEnd", not: ["roam"] }, items: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed"] },
+        { when: { id: "ctrlRoamOn", is: ["off"] }, items: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed"] },
         "ctrlMoveEnd",
-        { when: { id: "ctrlMoveEnd", not: ["roam"] }, items: [
+        { when: { id: "ctrlRoamOn", is: ["off"] }, items: [
           "ctrlMoveRandomize",
           { when: { id: "ctrlMoveRandomize", is: ["on"] }, items: [
             { dual: ["ctrlMoveSpeedMin", "ctrlMoveSpeedMax"], label: "Random strength" },
@@ -304,11 +305,16 @@
           "ctrlStripRelation", "ctrlStripBlend", "ctrlStripOpacity",
         ] },
       ] },
-      // Only while Move "At the edge" is Roam.
-      { card: "Roam", summary: "images wander", summarize: "roam", when: { id: "ctrlMoveEnd", is: ["roam"] }, items: [
-        "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpeed", "ctrlRoamSpin", "ctrlRoamDirection",
-        { when: { id: "ctrlRoamDirection", is: ["set"] }, items: ["ctrlRoamAngle", "ctrlRoamSpread"] },
-        "ctrlRoamBreath",
+      { card: "Roam", summary: "off", summarize: "roam", switch: "ctrlRoamOn", items: [
+        { when: { id: "ctrlRoamOn", is: ["off"] }, items: [
+          { note: "Switch on: images wander freely and overlap, ignoring Pan / Tilt / Zoom. Set Move's \"At the edge\" to a repeat to make them wrap round the screen." },
+        ] },
+        { when: { id: "ctrlRoamOn", is: ["on"] }, items: [
+          "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpeed", "ctrlRoamSpin", "ctrlRoamDirection",
+          { when: { id: "ctrlRoamDirection", is: ["set"] }, items: ["ctrlRoamAngle", "ctrlRoamSpread"] },
+          "ctrlRoamBreath",
+          { note: "Move's \"At the edge\": a repeat option wraps images round the screen; the others let them leave and be replaced." },
+        ] },
       ] },
       { card: "Echo trail", summary: "off", summarize: "echo", switch: "ctrlEchoOn", items: [
         { when: { id: "ctrlEchoOn", is: ["off"] }, items: [
@@ -453,7 +459,7 @@
       case "color":
         // Palette colours are placed by the palette block; a loose one gets a row with a swatch.
         if (/^ctrlPalette/.test(s.id)) return `<!-- ${esc(s.id)} is placed by its block -->`;
-        return `<div class="cp-row"${titleAttr(s)}><span>${esc(s.label)}</span><label class="cp-pal-swatch"><input type="color" id="${s.id}" value="${s.default}" aria-label="${esc(s.label)}"></label></div>`;
+        return `<div class="cp-row"${titleAttr(s)}><span>${esc(s.label)}</span><label class="cp-colour-swatch"><input type="color" id="${s.id}" value="${s.default}" aria-label="${esc(s.label)}"></label></div>`;
       case "hidden":
         return `<input type="checkbox" class="cp-hidden-input" id="${s.id}" tabindex="-1" aria-hidden="true"${checkedAttr(s)}>`;
       case "chip":
@@ -607,7 +613,7 @@
   // Live one-line summaries in card headers, so the tab reads at a glance.
   const SUMMARIES = {
     move() {
-      if (inputState("ctrlMoveEnd") === "roam") return "roam · images wander";
+      if (inputState("ctrlRoamOn") === "on") return "roam · images wander";
       const p = +inputState("ctrlMovePanSpeed"), t = +inputState("ctrlMoveTiltSpeed"), z = +inputState("ctrlMoveZoomSpeed");
       const parts = [];
       if (p) parts.push(`pan ${formatValue(byId.ctrlMovePanSpeed, p)}`);
@@ -619,6 +625,7 @@
       return `${parts.join(" · ")} · ${end ? end[0] : ""}`;
     },
     roam() {
+      if (inputState("ctrlRoamOn") !== "on") return "off";
       const dir = inputState("ctrlRoamDirection") === "set" ? `${inputState("ctrlRoamAngle")}°` : "any way";
       return `${inputState("ctrlRoamCount")} images · speed ${inputState("ctrlRoamSpeed")} · ${dir}`;
     },

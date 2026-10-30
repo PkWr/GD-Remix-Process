@@ -493,10 +493,11 @@
     // Strip gap: dark space between strip images (% of the screen).
     stripGap: 0,
     // Roam: images wander freely, each on its own path, spin and size.
+    roamOn: false,
     roamCount: 4,
     roamSize: 0.5,
     roamSpeed: 40,
-    roamSpin: 30,
+    roamSpin: 0,
     roamDirection: "any",
     roamAngle: 90,
     roamSpread: 30,
@@ -2214,7 +2215,7 @@
   // for no reason).
   function moveIsActive() {
     return (
-      (params.moveEndMode === "roam" && !camera.live) ||
+      (params.roamOn && !camera.live) ||
       state.moveResolvedPan !== 0 || state.moveResolvedTilt !== 0 || state.moveResolvedZoom !== 0
     );
   }
@@ -2303,7 +2304,13 @@
   // Its own settings (travel speed, spin, direction) — Pan / Tilt / Zoom
   // are not used.
   function roamActive() {
-    return params.moveEndMode === "roam" && !camera.live && params.roamSpeed > 0;
+    return params.roamOn && !camera.live && params.roamSpeed > 0;
+  }
+
+  // "At the edge" = repeat / mirrored repeat makes roaming images wrap round
+  // the screen (leave one side, come back in the other) instead of leaving.
+  function roamWraps() {
+    return params.moveEndMode === "tile" || params.moveEndMode === "mirror";
   }
 
   function pushRoamItem(canvas) {
@@ -2312,7 +2319,7 @@
     const r = state.roam;
     const size = Math.max(0.15, params.roamSize * (0.7 + Math.random() * 0.6));
     const rad = 0.5 * Math.hypot(W * size, H * size) * 1.3;
-    const initial = r.spawned < Math.round(params.roamCount);
+    const initial = roamWraps() || r.spawned < Math.round(params.roamCount);
     r.spawned++;
     let x, y, ang;
     const set = params.roamDirection === "set";
@@ -2353,7 +2360,7 @@
       vx: Math.cos(ang) * sp,
       vy: Math.sin(ang) * sp,
       turn: set ? 0 : (Math.random() * 2 - 1) * 0.15,
-      rot: (Math.random() * 2 - 1) * 0.5,
+      rot: spin === 0 ? 0 : (Math.random() * 2 - 1) * 0.5, // 0 spin = upright
       vrot: spin * 0.6 * (0.5 + Math.random()),
       phase: Math.random() * Math.PI * 2,
       prate: 0.2 + Math.random() * 0.4,
@@ -2382,6 +2389,14 @@
         it.phase += it.prate * dt;
       }
     }
+    if (roamWraps()) {
+      for (const it of r.items) {
+        it.x = ((it.x % W) + W) % W;
+        it.y = ((it.y % H) + H) % H;
+      }
+      r.items = r.items.filter((it) => it.age < ROAM_LIFE);
+      return;
+    }
     r.items = r.items.filter(
       (it) =>
         it.age < ROAM_LIFE &&
@@ -2395,13 +2410,24 @@
     const breath = (params.roamBreath || 0) / 100;
     for (const it of state.roam.items) {
       const s = it.size * (1 + breath * 0.35 * Math.sin(it.phase));
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, it.age / 1.2, (ROAM_LIFE - it.age) / 2);
-      ctx.translate(it.x, it.y);
-      ctx.rotate(it.rot);
-      ctx.scale(s, s);
-      ctx.drawImage(it.canvas, -STAGE.w / 2, -STAGE.h / 2);
-      ctx.restore();
+      const alpha = Math.min(1, it.age / 1.2, (ROAM_LIFE - it.age) / 2);
+      const wrap = roamWraps();
+      const rad = it.rad * (s / it.size);
+      // When wrapping, an image near an edge is also drawn on the far side.
+      for (let ox = wrap ? -1 : 0; ox <= (wrap ? 1 : 0); ox++) {
+        for (let oy = wrap ? -1 : 0; oy <= (wrap ? 1 : 0); oy++) {
+          const x = it.x + ox * STAGE.w;
+          const y = it.y + oy * STAGE.h;
+          if (wrap && (x < -rad || x > STAGE.w + rad || y < -rad || y > STAGE.h + rad)) continue;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.translate(x, y);
+          ctx.rotate(it.rot);
+          ctx.scale(s, s);
+          ctx.drawImage(it.canvas, -STAGE.w / 2, -STAGE.h / 2);
+          ctx.restore();
+        }
+      }
     }
   }
 
@@ -2485,7 +2511,7 @@
   }
 
   function pushStripFrame(canvas) {
-    if (params.moveEndMode === "roam") {
+    if (params.roamOn) {
       pushRoamItem(canvas);
       return;
     }
