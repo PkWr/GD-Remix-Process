@@ -495,7 +495,11 @@
     // Roam: images wander freely, each on its own path, spin and size.
     roamCount: 4,
     roamSize: 0.5,
+    roamSpeed: 40,
     roamSpin: 30,
+    roamDirection: "any",
+    roamAngle: 90,
+    roamSpread: 30,
     roamBreath: 40,
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
     // | "even" | "ragged"), with length and strength 0–100.
@@ -2208,7 +2212,10 @@
   // slider at 0" visually since zoom would otherwise sit at MOVE_ZOOM_BASE
   // for no reason).
   function moveIsActive() {
-    return state.moveResolvedPan !== 0 || state.moveResolvedTilt !== 0 || state.moveResolvedZoom !== 0;
+    return (
+      (params.moveEndMode === "roam" && !camera.live) ||
+      state.moveResolvedPan !== 0 || state.moveResolvedTilt !== 0 || state.moveResolvedZoom !== 0
+    );
   }
 
   // Draws the currently-visible frame into destCtx from cached state: the
@@ -2292,13 +2299,10 @@
 
   // Roam: every image wanders on its own — own heading (with a slow
   // wander), speed, size, spin and size-breathing — overlapping freely.
-  // Speed comes from the biggest of Pan / Tilt / Zoom.
+  // Its own settings (travel speed, spin, direction) — Pan / Tilt / Zoom
+  // are not used.
   function roamActive() {
-    return (
-      params.moveEndMode === "roam" &&
-      !camera.live &&
-      (state.moveResolvedPan !== 0 || state.moveResolvedTilt !== 0 || state.moveResolvedZoom !== 0)
-    );
+    return params.moveEndMode === "roam" && !camera.live && params.roamSpeed > 0;
   }
 
   function pushRoamItem(canvas) {
@@ -2310,7 +2314,27 @@
     const initial = r.spawned < Math.round(params.roamCount);
     r.spawned++;
     let x, y, ang;
-    if (initial) {
+    const set = params.roamDirection === "set";
+    if (set) {
+      // Compass heading: 0 = up, 90 = right. Each image strays by up to
+      // "spread" degrees; it enters from the side it's heading away from.
+      const th = ((params.roamAngle + (Math.random() * 2 - 1) * params.roamSpread) * Math.PI) / 180;
+      const dx = Math.sin(th);
+      const dy = -Math.cos(th);
+      ang = Math.atan2(dy, dx);
+      const px = W * (0.1 + 0.8 * Math.random());
+      const py = H * (0.1 + 0.8 * Math.random());
+      if (initial) {
+        x = px;
+        y = py;
+      } else {
+        const tx = dx > 1e-6 ? (px + rad) / dx : dx < -1e-6 ? (W + rad - px) / -dx : Infinity;
+        const ty = dy > 1e-6 ? (py + rad) / dy : dy < -1e-6 ? (H + rad - py) / -dy : Infinity;
+        const t = Math.min(tx, ty);
+        x = px - dx * t;
+        y = py - dy * t;
+      }
+    } else if (initial) {
       // First few appear already on screen so it doesn't start empty.
       x = W * (0.1 + 0.8 * Math.random());
       y = H * (0.1 + 0.8 * Math.random());
@@ -2321,16 +2345,15 @@
       y = side === 2 ? -rad : side === 3 ? H + rad : Math.random() * H;
       ang = Math.atan2(H * (0.2 + 0.6 * Math.random()) - y, W * (0.2 + 0.6 * Math.random()) - x);
     }
-    const top = Math.max(Math.abs(state.moveResolvedPan), Math.abs(state.moveResolvedTilt), Math.abs(state.moveResolvedZoom));
-    const sp = CONFIG.MOVE_TILE_RATE * H * (top / 100) * (0.5 + Math.random());
-    const spin = (params.roamSpin || 0) / 100;
+    const sp = CONFIG.MOVE_TILE_RATE * H * (params.roamSpeed / 100) * (0.6 + Math.random() * 0.8);
+    const spin = (params.roamSpin || 0) / 100; // signed: negative turns anticlockwise
     r.items.push({
       canvas, x, y, rad, size,
       vx: Math.cos(ang) * sp,
       vy: Math.sin(ang) * sp,
-      turn: (Math.random() * 2 - 1) * 0.15,
-      rot: (Math.random() * 2 - 1) * 0.5 * spin,
-      vrot: (Math.random() * 2 - 1) * 0.6 * spin,
+      turn: set ? 0 : (Math.random() * 2 - 1) * 0.15,
+      rot: (Math.random() * 2 - 1) * 0.5,
+      vrot: spin * 0.6 * (0.5 + Math.random()),
       phase: Math.random() * Math.PI * 2,
       prate: 0.2 + Math.random() * 0.4,
       age: 0,

@@ -147,8 +147,17 @@
       help: "How many images wander at the same time, overlapping. Speed comes from the biggest of Pan / Tilt / Zoom" },
     { id: "ctrlRoamSize", type: "range", label: "Size", min: 0.2, max: 1, step: 0.05, default: 0.5, format: "fixed2", param: "roamSize",
       help: "How big each image is, as a share of the screen (each varies a little)" },
-    { id: "ctrlRoamSpin", type: "range", label: "Spin", min: 0, max: 100, step: 1, default: 30, int: true, format: "percent", param: "roamSpin",
-      help: "How much each image turns as it travels. 0 keeps them upright" },
+    { id: "ctrlRoamSpeed", type: "range", label: "Travel speed", min: 0, max: 100, step: 1, default: 40, int: true, format: "int", param: "roamSpeed",
+      help: "How fast each image crosses the screen (about the same scale as Pan / Tilt). 0 holds them still" },
+    { id: "ctrlRoamSpin", type: "range", label: "Spin speed", min: -100, max: 100, step: 1, default: 30, int: true, format: "int", centre: true, param: "roamSpin",
+      help: "How fast each image turns. Negative = anticlockwise, 0 keeps them from turning" },
+    { id: "ctrlRoamDirection", type: "select", label: "Direction", default: "any", param: "roamDirection",
+      help: "Any way: each image heads off on its own and slowly curves. Set: they all travel roughly the same way",
+      options: [["any", "Any way — wandering"], ["set", "Set heading"]] },
+    { id: "ctrlRoamAngle", type: "range", label: "Heading", min: 0, max: 359, step: 1, default: 90, int: true, format: "int", param: "roamAngle",
+      help: "Degrees: 0 = up, 90 = right, 180 = down, 270 = left" },
+    { id: "ctrlRoamSpread", type: "range", label: "Spread", min: 0, max: 180, step: 1, default: 30, int: true, format: "int", param: "roamSpread",
+      help: "How far each image may stray from the heading, in degrees" },
     { id: "ctrlRoamBreath", type: "range", label: "Swell", min: 0, max: 100, step: 1, default: 40, int: true, format: "percent", param: "roamBreath",
       help: "How much each image slowly grows and shrinks" },
     { id: "ctrlEchoOn", type: "switch", label: "Echo trail on", default: false, param: "echoOn" },
@@ -277,10 +286,13 @@
       ] },
       { section: "Transitions", items: ["ctrlCrossfadeEnabled", "ctrlOpacity", { note: "The camera always hard-cuts." }] },
       { card: "Move", summary: "pan · tilt · zoom", summarize: "move", items: [
-        "ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed", "ctrlMoveEnd",
-        "ctrlMoveRandomize",
-        { when: { id: "ctrlMoveRandomize", is: ["on"] }, items: [
-          { dual: ["ctrlMoveSpeedMin", "ctrlMoveSpeedMax"], label: "Random strength" },
+        { when: { id: "ctrlMoveEnd", not: ["roam"] }, items: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed", "ctrlMoveZoomSpeed"] },
+        "ctrlMoveEnd",
+        { when: { id: "ctrlMoveEnd", not: ["roam"] }, items: [
+          "ctrlMoveRandomize",
+          { when: { id: "ctrlMoveRandomize", is: ["on"] }, items: [
+            { dual: ["ctrlMoveSpeedMin", "ctrlMoveSpeedMax"], label: "Random strength" },
+          ] },
         ] },
       ] },
       // Only while Move "At the edge" is Strip.
@@ -292,7 +304,9 @@
       ] },
       // Only while Move "At the edge" is Roam.
       { card: "Roam", summary: "images wander", summarize: "roam", when: { id: "ctrlMoveEnd", is: ["roam"] }, items: [
-        "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpin", "ctrlRoamBreath",
+        "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpeed", "ctrlRoamSpin", "ctrlRoamDirection",
+        { when: { id: "ctrlRoamDirection", is: ["set"] }, items: ["ctrlRoamAngle", "ctrlRoamSpread"] },
+        "ctrlRoamBreath",
       ] },
       { card: "Echo trail", summary: "off", summarize: "echo", switch: "ctrlEchoOn", items: [
         { when: { id: "ctrlEchoOn", is: ["off"] }, items: [
@@ -587,6 +601,7 @@
   // Live one-line summaries in card headers, so the tab reads at a glance.
   const SUMMARIES = {
     move() {
+      if (inputState("ctrlMoveEnd") === "roam") return "roam · images wander";
       const p = +inputState("ctrlMovePanSpeed"), t = +inputState("ctrlMoveTiltSpeed"), z = +inputState("ctrlMoveZoomSpeed");
       const parts = [];
       if (p) parts.push(`pan ${formatValue(byId.ctrlMovePanSpeed, p)}`);
@@ -598,7 +613,8 @@
       return `${parts.join(" · ")} · ${end ? end[0] : ""}`;
     },
     roam() {
-      return `${inputState("ctrlRoamCount")} wandering · spin ${inputState("ctrlRoamSpin")}%`;
+      const dir = inputState("ctrlRoamDirection") === "set" ? `${inputState("ctrlRoamAngle")}°` : "any way";
+      return `${inputState("ctrlRoamCount")} images · speed ${inputState("ctrlRoamSpeed")} · ${dir}`;
     },
     strip() {
       const n = +inputState("ctrlStripLayers"), gap = +inputState("ctrlStripGap");
