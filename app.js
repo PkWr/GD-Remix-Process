@@ -5428,7 +5428,7 @@
     el = document.createElement("div");
     el.id = "remoteQrOverlay";
     el.setAttribute("aria-hidden", "true");
-    el.innerHTML = '<div class="q" id="remoteQr"></div><p>Scan to control Spot</p>';
+    el.innerHTML = '<div class="q" id="remoteQr"></div><p>Spot Remote</p>';
     if (STAGE.profile === "igloo") el.classList.add("big");
     document.body.appendChild(el);
     ["mousemove", "pointerdown", "touchstart", "keydown"].forEach((ev) =>
