@@ -47,47 +47,6 @@
     { id: "ctrlCamera", type: "switch", label: "Live camera", default: false, after: "camera",
       help: "This computer's camera live through the effects. Nothing is recorded or uploaded. Same as V." },
 
-    // Type — 3D text layer (text3d.js)
-    { id: "ctrlTextOn", type: "switch", label: "Text on", default: false, param: "textOn", after: "text3d" },
-    { id: "ctrlTextValue", type: "text", label: "Words", default: "Spot", maxlength: 24, param: "textValue", after: "textBuild" },
-    { id: "ctrlTextFace", type: "select", label: "Typeface", default: "archivo-black", param: "textFace", after: "textBuild",
-      options: [
-        ["archivo-black", "Archivo Black — grotesque"], ["space-grotesk-bold", "Space Grotesk Bold — grotesque"], ["anton", "Anton — condensed grotesque"],
-        ["tomorrow-bold", "Tomorrow Bold — angular"],
-        ["dm-serif-display", "DM Serif Display — serif"],
-        ["unifraktur-maguntia", "UnifrakturMaguntia — fraktur"], ["pirata-one", "Pirata One — fraktur"],
-        ["kaushan-script", "Kaushan Script — brush"], ["caveat-brush", "Caveat Brush — brush"],
-        ["ibm-plex-mono-italic", "IBM Plex Mono Italic — mono"], ["space-mono-bold", "Space Mono Bold — mono"], ["dm-mono-medium", "DM Mono Medium — mono"], ["major-mono-display", "Major Mono Display — mono"],
-      ] },
-    { id: "ctrlTextLook", type: "select", label: "Quick looks", default: "custom", after: "textLook",
-      help: "Sets the sliders below in one go",
-      options: [["custom", "Custom — as set below"], ["flat", "Flat"], ["extruded", "Extruded"], ["balloon", "Balloon"], ["ribbon", "Ribbon"], ["glass", "Glass"]] },
-    { id: "ctrlTextForm", type: "range", label: "Form", min: 0, max: 50, step: 1, default: 45, int: true, format: "textForm", param: "textForm",
-      help: "Flat → extruded → inflated" },
-    { id: "ctrlTextSize", type: "range", label: "Size", min: 10, max: 100, step: 1, default: 55, int: true, format: "int", param: "textSize", after: "textBuild" },
-    { id: "ctrlTextTrack", type: "range", label: "Spacing", min: -20, max: 80, step: 1, default: 6, int: true, format: "int", param: "textTrack", after: "textBuild" },
-    { id: "ctrlTextDepth", type: "range", label: "Depth", min: 5, max: 100, step: 1, default: 40, int: true, format: "int", param: "textDepth", after: "textBuild" },
-    { id: "ctrlTextBevel", type: "range", label: "Roundness", min: 0, max: 100, step: 1, default: 45, int: true, format: "int", param: "textBevel", after: "textBuild" },
-    { id: "ctrlTextVariety", type: "range", label: "Variety", min: 0, max: 100, step: 1, default: 25, int: true, format: "int", param: "textVariety" },
-    { id: "ctrlTextTwist", type: "range", label: "Twist", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "textTwist" },
-    { id: "ctrlTextBend", type: "range", label: "Bend", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "textBend" },
-    { id: "ctrlTextWave", type: "range", label: "Wave", min: 0, max: 100, step: 1, default: 0, int: true, format: "int", param: "textWave" },
-    { id: "ctrlTextLayout", type: "select", label: "Letters", default: "word", param: "textLayout",
-      options: [["word", "Word moves as one"], ["letters", "Letters move apart"]] },
-    { id: "ctrlTextSpin", type: "range", label: "Spin", min: 0, max: 100, step: 1, default: 20, int: true, format: "int", param: "textSpin" },
-    { id: "ctrlTextTravel", type: "range", label: "Travel", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "textTravel" },
-    { id: "ctrlTextSurface", type: "select", label: "Surface", default: "picture", param: "textSurface",
-      options: [["picture", "Picture on it"], ["glass", "Glass"], ["ink", "Ink"]] },
-    { id: "ctrlTextTest", type: "select", label: "Test words", default: "off", param: "textTest", after: "textBuild",
-      help: "Shows a fixed test string instead of your words, without changing them",
-      options: [["off", "Off — use my words"], ["counters", "Counters — oepadgbq8B&@%R"], ["alphabet", "Alphabet — lower case"], ["caps", "Alphabet — capitals"]] },
-    { id: "ctrlTextDebug", type: "select", label: "Debug view", default: "off", param: "textDebug",
-      help: "Shows how the letters are built. Wireframe: the triangles. Normals: surface direction. Faces: green = front/back, red/yellow = side walls. Flat: one colour per letter, no picture",
-      options: [["off", "Off"], ["wire", "Wireframe"], ["normals", "Normals"], ["parts", "Faces and walls"], ["flat", "Flat colour per letter"]] },
-    { id: "ctrlTextInfo", type: "switch", label: "Show details on screen", default: false, param: "textInfo", after: "textInfo",
-      help: "Frame rate, triangle counts and, per letter, how many outlines and holes were found" },
-    { id: "ctrlTextMagnify", type: "range", label: "Magnify", min: 0, max: 100, step: 1, default: 45, int: true, format: "int", param: "textMagnify" },
-
     // Effects in rotation (Untouched is the all-off switch — see app.js)
     { id: "ctrlEffectNone", type: "hidden", label: "Untouched", default: false, param: "enabledEffects.none", after: "effectRotation" },
     { id: "ctrlEffectDuotone", type: "switch", label: "Duotone", default: true, param: "enabledEffects.duotone", after: "effectRotation" },
@@ -391,30 +350,6 @@
         { note: "With Roam on, these modes also blend the roaming images where they overlap." },
       ] },
     ] },
-    { tab: "type", label: "Type", icon: "title", blocks: [
-      { card: "Text", summary: "off", summarize: "text", switch: "ctrlTextOn", items: [
-        { when: { id: "ctrlTextOn", is: ["off"] }, items: [
-          { note: "Switch on: your words as 3D letters over the picture. Then choose a look and shape them in the cards below." },
-        ] },
-        { when: { id: "ctrlTextOn", is: ["on"] }, items: ["ctrlTextValue", "ctrlTextFace", "ctrlTextLook"] },
-      ] },
-      { card: "Form", summary: "shape of the letters", when: { id: "ctrlTextOn", is: ["on"] }, items: [
-        "ctrlTextForm", "ctrlTextSize", "ctrlTextTrack", "ctrlTextDepth", "ctrlTextBevel", "ctrlTextVariety",
-      ] },
-      { card: "Deform", summary: "twist · bend · wave", when: { id: "ctrlTextOn", is: ["on"] }, items: [
-        "ctrlTextTwist", "ctrlTextBend", "ctrlTextWave",
-      ] },
-      { card: "Text motion", summary: "spin · travel", when: { id: "ctrlTextOn", is: ["on"] }, items: [
-        "ctrlTextLayout", "ctrlTextSpin", "ctrlTextTravel",
-      ] },
-      { card: "Debug", summary: "test words · views · details", when: { id: "ctrlTextOn", is: ["on"] }, items: [
-        "ctrlTextTest", "ctrlTextDebug", "ctrlTextInfo",
-      ] },
-      { card: "Surface", summary: "picture · glass · ink", when: { id: "ctrlTextOn", is: ["on"] }, items: [
-        "ctrlTextSurface",
-        { when: { id: "ctrlTextSurface", is: ["glass"] }, items: ["ctrlTextMagnify"] },
-      ] },
-    ] },
     { tab: "show", label: "Show", icon: "slideshow", blocks: [
       { section: "Scenes", displayOnly: true, items: [{ widget: "scenes" }] },
       { section: "Start-up", items: ["ctrlStartUnchanged"] },
@@ -694,10 +629,6 @@
       if (!parts.length) return "still";
       const end = byId.ctrlMoveEnd.options.find(([v]) => v === inputState("ctrlMoveEnd"));
       return `${parts.join(" · ")} · ${end ? end[0] : ""}`;
-    },
-    text() {
-      if (inputState("ctrlTextOn") !== "on") return "off";
-      return `“${inputState("ctrlTextValue")}” · ${inputState("ctrlTextFace")}`;
     },
     roam() {
       if (inputState("ctrlRoamOn") !== "on") return "off";
