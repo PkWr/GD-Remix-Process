@@ -5724,7 +5724,7 @@
   function applyOpeningLook() {
     // pageParams = the address as the page was opened (a scene link tidies
     // its ?scene away later, so location.search can't be trusted here).
-    if ([...pageParams.keys()].some((k) => k !== "bar")) return; // ?bar=off alone still gets it
+    if ([...pageParams.keys()].some((k) => k !== "bar" && k !== "stage")) return; // ?bar=off and ?stage=… alone still get it
     const values = sceneValuesFromDiff(OPENING_LOOK);
     delete values.ctrlLiveMode;
     delete values.ctrlCamera;
@@ -5855,6 +5855,10 @@
     openSharedSceneFromUrl();
     startReel();
     applyOpeningLook();
+    // The stage's own start-up settings go last, so neither the opening look
+    // nor settings carried over from another stage switch them off. A shared
+    // scene link (?scene=…) still wins.
+    if (!pageParams.has("scene") && !pageParams.has("reel")) applyProfileDefaults();
 
     try {
       state.sources = await loadImageSourcesForMode(params.sourceMode);
