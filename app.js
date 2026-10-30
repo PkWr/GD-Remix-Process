@@ -501,6 +501,7 @@
     roamAngle: 90,
     roamSpread: 30,
     roamBreath: 40,
+    backgroundColor: "#000000",
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
     // | "even" | "ragged"), with length and strength 0–100.
     echoOn: false,
@@ -3070,6 +3071,10 @@
   let effectsBeforeUntouched = null;
 
   const SETTING_ACTIONS = {
+    background(v) {
+      document.documentElement.style.background = v;
+      document.body.style.background = v;
+    },
     lookFilter() {
       applyLookFilter();
       updateLookDiagnostic();

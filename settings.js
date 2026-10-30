@@ -109,6 +109,8 @@
     { id: "ctrlAnimatePaletteDensityRandomize", type: "switch", label: "Random coverage", default: false, param: "randomizeAnimatePaletteDensity" },
 
     // Colour — whole screen
+    { id: "ctrlBackground", type: "color", label: "Background colour", default: "#000000", param: "backgroundColor", after: "background",
+      help: "Shows in the gaps between images (Strip, Roam, echo trail) and around the picture" },
     { id: "ctrlSaturation", type: "range", label: "Saturation", min: 0, max: 200, step: 1, default: 100, int: true, format: "percent", param: "saturation", after: "lookFilter" },
     { id: "ctrlContrast", type: "range", label: "Contrast", min: 0, max: 200, step: 1, default: 100, int: true, format: "percent", param: "contrast", after: "lookFilter" },
 
@@ -277,7 +279,7 @@
         { dual: ["ctrlAnimatePaletteDensityMin", "ctrlAnimatePaletteDensityMax"], label: "Coverage" },
         "ctrlAnimatePaletteDensityRandomize",
       ] },
-      { section: "Whole screen", items: ["ctrlSaturation", "ctrlContrast"] },
+      { section: "Whole screen", items: ["ctrlSaturation", "ctrlContrast", "ctrlBackground"] },
     ] },
     { tab: "motion", label: "Motion", icon: "animation", blocks: [
       { section: "Timing", items: [
@@ -448,6 +450,10 @@
           s.options.map(([v, l]) => `<option value="${esc(v)}"${v === s.default ? " selected" : ""}>${esc(l)}</option>`).join("") +
           `</select><span data-icon="keyboard_arrow_down"></span></div>`
         );
+      case "color":
+        // Palette colours are placed by the palette block; a loose one gets a row with a swatch.
+        if (/^ctrlPalette/.test(s.id)) return `<!-- ${esc(s.id)} is placed by its block -->`;
+        return `<div class="cp-row"${titleAttr(s)}><span>${esc(s.label)}</span><label class="cp-pal-swatch"><input type="color" id="${s.id}" value="${s.default}" aria-label="${esc(s.label)}"></label></div>`;
       case "hidden":
         return `<input type="checkbox" class="cp-hidden-input" id="${s.id}" tabindex="-1" aria-hidden="true"${checkedAttr(s)}>`;
       case "chip":
