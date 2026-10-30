@@ -205,7 +205,14 @@
         `</div>`;
     }
     h += `</div><p class="lv-h">Screen</p><div class="lv-pals"><div class="lv-pal-cell lv-screen">` + dot("ctrlBackground", "Screen background colour") + `<span class="lv-cap">Screen background</span></div></div>`;
-    return h + `<button type="button" class="lv-btn lv-wide" id="lvPalOn"></button><button type="button" class="lv-btn lv-wide" id="lvPalRand">Random palette each image</button>`;
+    h += `<button type="button" class="lv-btn lv-wide" id="lvPalOn"></button><button type="button" class="lv-btn lv-wide" id="lvPalRand">Random palette each image</button>`;
+    // Blend overlay: on/off, which modes may be picked, how strongly, how many layers.
+    const modes = [["Multiply", "Multiply"], ["Screen", "Screen"], ["Overlay", "Overlay"], ["Darken", "Darken"], ["Lighten", "Lighten"], ["Difference", "Difference"], ["Exclusion", "Exclusion"], ["HardLight", "Hard light"]];
+    h += `<p class="lv-h">Blend overlay</p><button type="button" class="lv-btn lv-wide" id="lvBlendOn" data-flip="ctrlBlendOverlay"></button><div class="lv-chips lv-modes">`;
+    h += modes.map(([k, n]) => `<button type="button" class="lv-chip" data-flip="ctrlBlendMode${k}">${n}</button>`).join("");
+    h += `</div><label class="lv-rng"><span>Opacity</span><input type="range" data-id="ctrlOpacity" aria-label="Blend opacity"></label>`;
+    h += `<label class="lv-rng"><span>Layers</span><input type="range" data-id="ctrlBlendLayers" aria-label="Blend layers"></label>`;
+    return h;
   }
 
   function renderPads() {
@@ -297,6 +304,12 @@
     });
     palEl.querySelectorAll("input[data-id]").forEach((inp) => {
       const src = $(inp.dataset.id);
+      if (src && inp.type === "range" && !inp.dataset.ready) {
+        inp.min = src.min;
+        inp.max = src.max;
+        inp.step = src.step;
+        inp.dataset.ready = "1";
+      }
       if (src && inp.value !== src.value && document.activeElement !== inp) inp.value = src.value;
     });
     palEl.querySelectorAll(".lv-pal-n").forEach((b) => {
@@ -314,6 +327,11 @@
       po.classList.toggle("is-on", !!(sw && sw.checked));
       po.textContent = `Palette ${selPal}: ${sw && sw.checked ? "in rotation" : "out of rotation"}`;
     }
+    palEl.querySelectorAll("[data-flip]").forEach((b) => {
+      const sw = $(b.dataset.flip);
+      b.classList.toggle("is-on", !!(sw && sw.checked));
+      if (b.id === "lvBlendOn") b.textContent = `Blend overlay: ${sw && sw.checked ? "on" : "off"}`;
+    });
     const pr = $("lvPalRand");
     if (pr) pr.classList.toggle("is-on", !!($("ctrlPaletteRandomize") || {}).checked);
     FUNCS.forEach((fn) => {
@@ -381,6 +399,11 @@
       sw.dispatchEvent(new Event("change", { bubbles: true }));
       refresh();
     };
+    const fl = e.target.closest("[data-flip]");
+    if (fl) {
+      flip(fl.dataset.flip);
+      return;
+    }
     const n = e.target.closest(".lv-pal-n");
     if (n) {
       selPal = +n.dataset.n;
