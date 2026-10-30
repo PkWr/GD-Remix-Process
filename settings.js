@@ -137,7 +137,7 @@
     { id: "ctrlStripGap", type: "range", label: "Gap between images", min: 0, max: 100, step: 1, default: 0, int: true, format: "percent", param: "stripGap",
       help: "Dark space between images in the strip, as a share of the screen — the echo trail shows in it" },
     { id: "ctrlRoamOn", type: "switch", label: "Roam on", default: false, param: "roamOn" },
-    { id: "ctrlRoamCount", type: "range", label: "Images at once", min: 1, max: 8, step: 1, default: 4, int: true, format: "int", param: "roamCount",
+    { id: "ctrlRoamCount", type: "range", label: "Images at once", min: 1, max: 24, step: 1, default: 4, int: true, format: "int", param: "roamCount",
       help: "How many images wander at the same time, overlapping" },
     { id: "ctrlRoamSize", type: "range", label: "Size", min: 0.1, max: 1, step: 0.05, default: 0.35, format: "fixed2", param: "roamSize",
       help: "How big each image is, as a share of the screen (each varies a little)" },
