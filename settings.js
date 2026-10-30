@@ -145,8 +145,8 @@
       help: "How fast each image crosses the screen (about the same scale as Pan / Tilt). 0 holds them still" },
     { id: "ctrlRoamSpin", type: "range", label: "Spin speed", min: -100, max: 100, step: 5, default: 0, int: true, format: "int", centre: true, param: "roamSpin",
       help: "How fast each image turns. Negative = anticlockwise, 0 keeps them from turning" },
-    { id: "ctrlRoamAngle", type: "range", label: "Heading", min: 0, max: 359, step: 1, default: 90, int: true, format: "int", param: "roamAngle",
-      help: "Degrees: 0 = up, 90 = right, 180 = down, 270 = left" },
+    { id: "ctrlRoamAngle", type: "range", label: "Heading", min: 0, max: 359, step: 1, default: 90, int: true, format: "compass", param: "roamAngle",
+      help: "Which way they travel: north is up, east is right, south is down, west is left" },
     { id: "ctrlRoamSpread", type: "range", label: "Together ↔ Wandering", min: 0, max: 180, step: 1, default: 180, int: true, format: "roamSpread", param: "roamSpread",
       help: "0: every image heads the same way. Higher: they stray further from the heading. Far end: each image goes its own way and slowly curves" },
     { id: "ctrlRoamBreath", type: "range", label: "Swell", min: 0, max: 100, step: 1, default: 40, int: true, format: "percent", param: "roamBreath",
@@ -384,7 +384,11 @@
     int: (v) => String(v),
     degrees: (v) => `${v}°`,
     textForm: (v) => (v < 12 ? "flat" : v < 40 ? "extruded" : "inflated"),
-    roamSpread: (v, angle) => (v >= 180 ? "wandering" : v === 0 ? (angle != null ? `together, ${angle}°` : "together") : v < 45 ? "loose flock" : "scattered"),
+    compass: (v) => {
+      const names = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"];
+      return `${v}° ${names[Math.round(((v % 360) + 360) % 360 / 45) % 8]}`;
+    },
+    roamSpread: (v, angle) => (v >= 180 ? "wandering" : v === 0 ? (angle != null ? `together, ${FORMATS.compass(+angle)}` : "together") : v < 45 ? "loose flock" : "scattered"),
     glassName: (v) => (v < 20 ? "lens" : v < 45 ? "glass lens" : v < 70 ? "glass" : v < 90 ? "soft liquid" : "liquid"),
     formName: (v) => (v < 12 ? "cube" : v < 40 ? "rounded box" : v < 60 ? "sphere" : v < 85 ? "soft blob" : "globular"),
     moveH: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "left" : "right"}`),
