@@ -46,6 +46,7 @@
     // Values were set directly (no events), so refresh the panel's chip
     // highlights and slider fills to match.
     if (window.PhotoRemixSettings) window.PhotoRemixSettings.syncPanel(panel);
+    if (window.SpotLive) window.SpotLive.refresh();
   }
 
   const link = window.SpotLink.open({
@@ -53,7 +54,11 @@
     code,
     local: !code, // a phone with a code talks only through the relay
     onMessage(msg) {
-      if (msg.type !== "state") return; // this page only ever consumes "state" messages
+      if (msg.type === "scenes") {
+        if (window.SpotLive) window.SpotLive.setScenes(msg);
+        return;
+      }
+      if (msg.type !== "state") return; // otherwise this page only consumes "state" messages
       markConnected();
       applyState(msg.values); // may be a partial update
     },
@@ -70,6 +75,8 @@
       link.post({ type: "requestState" });
     },
   });
+
+  window.SpotRemote = { post: (m) => link.post(m) };
 
   // Every input here just relays to the display page — it never applies
   // its own change locally first, since app.js's dispatched event (and the

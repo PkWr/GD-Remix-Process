@@ -54,10 +54,42 @@
     background: #17301c;
     color: #9fffa9;
   }
+  /* Live / Detailed switch and the Live view's pads */
+  #viewBar { display: flex; max-width: 520px; margin: 0 auto; background: #121315; border-bottom: 1px solid #2a2d31; }
+  #viewBar button { flex: 1; padding: 11px 0; font: 600 14px system-ui, -apple-system, sans-serif; color: #a3a3a3; background: none; border: 0; cursor: pointer; }
+  #viewBar button[aria-pressed="true"] { color: #ececec; box-shadow: inset 0 -2px 0 #7cff8a; }
+  #live { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; background: #121315; min-height: 100vh; font-family: system-ui, -apple-system, sans-serif; color: #ececec; }
+  .lv-funcs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .lv-func { flex: none; position: relative; padding: 10px 14px; font: 600 14px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
+  .lv-func[aria-pressed="true"] { border-color: #7cff8a; box-shadow: inset 0 0 0 1px #7cff8a; }
+  .lv-func i { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: transparent; }
+  .lv-func.is-on i { background: #7cff8a; }
+  .lv-on { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; padding: 14px 16px; font: 700 16px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 12px; cursor: pointer; }
+  .lv-on.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  .lv-pads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .lv-pads.one { grid-template-columns: 1fr; }
+  .lv-pad { position: relative; aspect-ratio: 1; max-height: 56vh; border: 1px solid #3a3d42; border-radius: 14px; background: #0e0f11; touch-action: none; cursor: crosshair; --px: 0%; --py: 50%; }
+  .lv-pad:focus-visible { outline: 2px solid #7cff8a; outline-offset: 2px; }
+  .lv-dot { position: absolute; left: var(--px); top: var(--py); width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: #7cff8a; box-shadow: 0 0 0 5px rgba(124, 255, 138, 0.2); pointer-events: none; }
+  .lv-zero { position: absolute; pointer-events: none; background: #3a3d42; }
+  .lv-zx { top: 0; bottom: 0; width: 1px; }
+  .lv-zy { left: 0; right: 0; height: 1px; }
+  .lv-tag { position: absolute; font-size: 11px; color: #a3a3a3; pointer-events: none; max-width: 70%; }
+  .lv-tx { right: 8px; bottom: 6px; }
+  .lv-ty { left: 8px; top: 6px; }
+  .lv-tv { left: 8px; bottom: 6px; font: 11px/1.2 "SF Mono", Menlo, monospace; color: #ececec; }
+  .lv-row { display: flex; gap: 10px; margin-top: 14px; }
+  .lv-btn { flex: 1; padding: 13px 0; font: 600 15px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 12px; cursor: pointer; }
+  .lv-scenes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 14px; }
+  .lv-scene { padding: 13px 0; font: 700 15px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
+  .lv-scene.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
 </style>
 </head>
 <body>
   <p id="remoteStatus">Looking for the display page…</p>
+
+  <div id="viewBar"><button type="button" data-view="live" aria-pressed="true">Live</button><button type="button" data-view="detail" aria-pressed="false">Detailed</button></div>
+  <div id="live"></div>
 
   <!-- Built from settings.js — the same list as the display page, so the
        two can never drift apart. Display-only extras (presets, profile,
@@ -68,5 +100,6 @@
   <script>window.PhotoRemixSettings.buildPanel(document.getElementById("controls"), { mode: "remote" });</script>
   <script>document.write('<script src="relay.js?t=' + Date.now() + '"><\/script>');</script>
   <script>document.write('<script src="controls.js?t=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="live.js?t=' + Date.now() + '"><\/script>');</script>
 </body>
 </html>

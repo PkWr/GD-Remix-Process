@@ -4147,9 +4147,25 @@
     }
   }
 
+  // The scene names and the active one, so a phone can show its scene buttons.
+  function sendRemoteScenes() {
+    if (!remoteLink) return;
+    remoteLink.post({ type: "scenes", names: allScenes().map((s) => s.name), active: activeSceneName || "" });
+  }
+
   function handleRemoteMessage(msg) {
     if (msg.type === "requestState") {
       broadcastState(true);
+      sendRemoteScenes();
+    } else if (msg.type === "scene") {
+      applySceneByIndex(Math.max(0, Math.min(99, parseInt(msg.index, 10) || 0)));
+    } else if (msg.type === "next") {
+      // Skip to the next image now (same as the hold timer running out).
+      if (cycleTimeoutId) {
+        clearTimeout(cycleTimeoutId);
+        cycleTimeoutId = null;
+      }
+      if (!state.paused) cycle();
     } else if (msg.type === "input") {
       const el = document.getElementById(msg.id);
       if (el) applyControlValue(el, msg);
@@ -5048,6 +5064,7 @@
     }
     activeSceneName = scene.name;
     broadcastState();
+    sendRemoteScenes();
     renderScenes();
     showToast(`Scene: ${scene.name}`, "ok", 2500);
   }
@@ -5361,7 +5378,10 @@
   function remoteLinkPresence(p) {
     remotePresence = p;
     renderRemotePanel();
-    if (p.remote) broadcastState(true); // a phone just joined: give it everything
+    if (p.remote) {
+      broadcastState(true); // a phone just joined: give it everything
+      sendRemoteScenes();
+    }
   }
   async function renderRemotePanel() {
     const box = document.getElementById("remoteQr");
