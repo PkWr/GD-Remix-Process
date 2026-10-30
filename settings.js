@@ -297,7 +297,7 @@
         ] },
         { when: { id: "ctrlRoamOn", is: ["on"] }, items: [
           "ctrlRoamCount", "ctrlRoamSize",
-          { pad: ["ctrlRoamSpeed", "ctrlRoamSpin"], label: "Travel & spin", xLabel: "travel speed", yTop: "↻ clockwise", yBottom: "↺ anticlockwise" },
+          { pair: ["ctrlRoamSpeed", "ctrlRoamSpin"], label: "Travel & spin", xLabel: "travel speed", yKey: "spin (middle = none)", yTop: "↻ clockwise", yBottom: "↺ anticlockwise" },
           "ctrlRoamSpread",
           { when: { id: "ctrlRoamSpread", not: ["180"] }, items: ["ctrlRoamAngle"] },
           "ctrlRoamBreath",
@@ -465,10 +465,20 @@
         `<div class="cp-dual">${rangeInput(a)}${rangeInput(b)}</div>`
       );
     }
-    if (item.pad) {
-      const [a, b] = item.pad.map((id) => byId[id]);
+    if (item.pair) {
+      // Two independent settings in one control. On the panel: two handles on
+      // one track (cp-twin). On the remote (phone): a square pad, x and y.
+      const [a, b] = item.pair.map((id) => byId[id]);
+      const head = `<div class="cp-range-head"><span>${esc(item.label)}</span><span>${valSpan(a)} · ${valSpan(b)}</span></div>`;
+      if (!(opts && opts.mode === "remote")) {
+        return (
+          head +
+          `<div class="cp-twin">${rangeInput(a)}${rangeInput(b)}</div>` +
+          `<p class="cp-twin-key"><i class="k1"></i>${esc(item.xLabel || a.label)} <i class="k2"></i>${esc(item.yKey || b.label)}</p>`
+        );
+      }
       return (
-        `<div class="cp-range-head"><span>${esc(item.label)}</span><span>${valSpan(a)} · ${valSpan(b)}</span></div>` +
+        head +
         `<div class="cp-pad" tabindex="0" role="group" aria-label="${esc(a.label)} (left to right) and ${esc(b.label)} (down to up)" data-x="${a.id}" data-y="${b.id}">` +
         `<span class="cp-pad-dot"></span><span class="cp-pad-tag cp-pad-r">${esc(item.xLabel || a.label)} →</span>` +
         `<span class="cp-pad-tag cp-pad-t">${esc(item.yTop || "")}</span><span class="cp-pad-tag cp-pad-b">${esc(item.yBottom || "")}</span></div>` +

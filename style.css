@@ -1349,3 +1349,26 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 #controls .cp-pad-t { left: 8px; top: 6px; }
 #controls .cp-pad-b { left: 8px; bottom: 6px; }
 #controls .cp-pad-input { display: none; }
+
+/* --- twin: two independent handles on one track (Roam travel & spin) -- */
+#controls .cp-twin { position: relative; height: 32px; }
+#controls .cp-twin::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #33363b 0 49.6%, var(--cp-line-strong) 49.6% 50.4%, #33363b 50.4%);
+}
+#controls .cp-twin input[type="range"] { position: absolute; inset: 0; pointer-events: none; }
+#controls .cp-twin input[type="range"]::-webkit-slider-runnable-track { background: transparent; }
+#controls .cp-twin input[type="range"]::-moz-range-track { background: transparent; }
+#controls .cp-twin input[type="range"]::-webkit-slider-thumb { pointer-events: auto; cursor: grab; }
+#controls .cp-twin input[type="range"]::-moz-range-thumb { pointer-events: auto; cursor: grab; }
+#controls .cp-twin input[type="range"]:nth-of-type(2)::-webkit-slider-thumb { background: var(--cp-accent); }
+#controls .cp-twin input[type="range"]:nth-of-type(2)::-moz-range-thumb { background: var(--cp-accent); }
+#controls .cp-twin-key { margin: 0 0 8px; font-size: 11px; color: var(--cp-muted); }
+#controls .cp-twin-key i { display: inline-block; width: 9px; height: 9px; margin: 0 4px 0 0; border-radius: 50%; background: #f4f4f4; }
+#controls .cp-twin-key i.k2 { margin-left: 10px; background: var(--cp-accent); }
