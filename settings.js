@@ -194,10 +194,6 @@
       help: "Degrees: 0 = up, 90 = right, 180 = down, 270 = left" },
     { id: "ctrlRoamSpread", type: "range", label: "Spread", min: 0, max: 180, step: 1, default: 30, int: true, format: "int", param: "roamSpread",
       help: "How far each image may stray from the heading, in degrees" },
-    { id: "ctrlRoamBlend", type: "select", label: "Overlap blend", default: "normal", param: "roamBlend",
-      help: "How overlapping images mix. The oldest image sits on the background colour; later ones blend with what's under them",
-      options: [["normal", "Normal — on top"], ["screen", "Screen — lighten"], ["multiply", "Multiply — darken"], ["difference", "Difference"], ["overlay", "Overlay"], ["exclusion", "Exclusion"]] },
-    { id: "ctrlRoamOpacity", type: "range", label: "Overlap opacity", min: 0.1, max: 1, step: 0.05, default: 1, format: "fixed2", param: "roamOpacity" },
     { id: "ctrlRoamBreath", type: "range", label: "Swell", min: 0, max: 100, step: 1, default: 40, int: true, format: "percent", param: "roamBreath",
       help: "How much each image slowly grows and shrinks" },
     { id: "ctrlEchoOn", type: "switch", label: "Echo trail on", default: false, param: "echoOn" },
@@ -349,8 +345,7 @@
         { when: { id: "ctrlRoamOn", is: ["on"] }, items: [
           "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpeed", "ctrlRoamSpin", "ctrlRoamDirection",
           { when: { id: "ctrlRoamDirection", is: ["set"] }, items: ["ctrlRoamAngle", "ctrlRoamSpread"] },
-          "ctrlRoamBreath", "ctrlRoamBlend",
-          { when: { id: "ctrlRoamBlend", not: ["normal"] }, items: ["ctrlRoamOpacity"] },
+          "ctrlRoamBreath",
           { note: "Move's \"At the edge\": a repeat option wraps images round the screen; the others let them leave and be replaced." },
         ] },
       ] },
@@ -385,6 +380,7 @@
         { chips: ["ctrlBlendModeMultiply", "ctrlBlendModeScreen", "ctrlBlendModeOverlay", "ctrlBlendModeDarken",
           "ctrlBlendModeLighten", "ctrlBlendModeDifference", "ctrlBlendModeExclusion", "ctrlBlendModeHardLight"], label: "Modes" },
         "ctrlBlendLayers", "ctrlRandomBlendLayers",
+        { note: "With Roam on, these modes also blend the roaming images where they overlap." },
       ] },
     ] },
     { tab: "type", label: "Type", icon: "title", blocks: [

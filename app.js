@@ -519,8 +519,6 @@
     roamAngle: 90,
     roamSpread: 30,
     roamBreath: 40,
-    roamBlend: "normal",
-    roamOpacity: 1,
     backgroundColor: "#000000",
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
     // | "even" | "ragged"), with length and strength 0–100.
@@ -2451,9 +2449,11 @@
     ctx.clearRect(0, 0, STAGE.w, STAGE.h);
     ctx.imageSmoothingEnabled = true;
     const breath = (params.roamBreath || 0) / 100;
-    // Overlap blend: the oldest image is laid down normally on the
-    // background colour; every later one blends with what's under it.
-    const blend = params.roamBlend && params.roamBlend !== "normal" ? params.roamBlend : null;
+    // Overlap blend uses the Blend overlay panel (this cycle's mode and
+    // opacity): the oldest image is laid down normally on the background
+    // colour; every later one blends with what's under it.
+    const blend = state.lastBlendMode && state.lastBlendMode !== "source-over" ? state.lastBlendMode : null;
+    const blendOpacity = state.lastBlendOpacity;
     if (blend) {
       ctx.fillStyle = params.backgroundColor || "#000000";
       ctx.fillRect(0, 0, STAGE.w, STAGE.h);
@@ -2473,7 +2473,7 @@
           const y = it.y + oy * STAGE.h;
           if (wrap && (x < -rad || x > STAGE.w + rad || y < -rad || y > STAGE.h + rad)) continue;
           ctx.save();
-          ctx.globalAlpha = blended ? alpha * params.roamOpacity : alpha;
+          ctx.globalAlpha = blended ? alpha * blendOpacity : alpha;
           ctx.globalCompositeOperation = blended ? blend : "source-over";
           ctx.translate(x, y);
           ctx.rotate(it.rot);
