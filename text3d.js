@@ -100,7 +100,7 @@
       // flat -> extruded
       p.z *= mix(0.03, 1.0, uFlat);
       // inflate (balloon) and melt (lumpy, drooping) along shared normals
-      p += sn * uInflate * uSize * 0.16;
+      p += sn * uInflate * uSize * 0.1; // gentle enough to keep the counters (o, p, e…) open
       float nz = snoise(p / uSize * 1.6 + vec3(uSeed, 0.0, uTime * 0.25));
       p += sn * nz * uMelt * uSize * 0.22;
       p.y -= uMelt * uSize * 0.12 * (0.6 + 0.4 * nz);
@@ -247,6 +247,16 @@
 
   function init() {
     T = window.THREE;
+    // The converted typefaces list their outlines the other way round to
+    // what three.js expects, which filled in the counters (o, p, e, a…).
+    // Read them the other way.
+    if (!T.ShapePath.prototype.spotFlip) {
+      const orig = T.ShapePath.prototype.toShapes;
+      T.ShapePath.prototype.toShapes = function (isCCW, noHoles) {
+        return orig.call(this, !isCCW, noHoles);
+      };
+      T.ShapePath.prototype.spotFlip = true;
+    }
     const canvas = document.createElement("canvas");
     canvas.id = "text3d";
     canvas.setAttribute("aria-hidden", "true");
@@ -336,7 +346,7 @@
     L.letters.forEach((l) => {
       const u = l.mesh.material.uniforms;
       const vary = (s) => (rand(l.k, s) - 0.5) * 2 * variety;
-      const lf = Math.min(1, Math.max(0, f + vary(1) * 0.25));
+      const lf = Math.min(0.5, Math.max(0, f + vary(1) * 0.25)); // capped: past this the counters close up
       const ls = formStages(lf);
       u.uSize.value = L.letterSize;
       u.uFlat.value = ls.flat; u.uInflate.value = ls.inflate; u.uMelt.value = ls.melt;

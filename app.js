@@ -2370,10 +2370,21 @@
       y = side === 2 ? -rad : side === 3 ? H + rad : Math.random() * H;
       ang = Math.atan2(H * (0.2 + 0.6 * Math.random()) - y, W * (0.2 + 0.6 * Math.random()) - x);
     }
+    // A smaller copy of the picture, sized for how big it will be shown
+    // (with room for Swell): drawing it every frame costs far less than
+    // sampling a full-size canvas down each time.
+    const sw = Math.max(64, Math.min(W, Math.round(W * size * 1.4)));
+    const sh = Math.max(64, Math.min(H, Math.round(H * size * 1.4)));
+    const sprite = document.createElement("canvas");
+    sprite.width = sw;
+    sprite.height = sh;
+    const sctx = sprite.getContext("2d");
+    sctx.imageSmoothingQuality = "high";
+    sctx.drawImage(canvas, 0, 0, sw, sh);
     const sp = CONFIG.MOVE_TILE_RATE * H * (params.roamSpeed / 100) * (0.6 + Math.random() * 0.8);
     const spin = (params.roamSpin || 0) / 100; // signed: negative turns anticlockwise
     r.items.push({
-      canvas, x, y, rad, size,
+      canvas: sprite, x, y, rad, size,
       vx: Math.cos(ang) * sp,
       vy: Math.sin(ang) * sp,
       turn: set ? 0 : (Math.random() * 2 - 1) * 0.15,
@@ -3117,10 +3128,9 @@
   const TEXT_LOOKS = {
     flat: { ctrlTextForm: 0, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 0, ctrlTextSpin: 0, ctrlTextSurface: "picture" },
     extruded: { ctrlTextForm: 33, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 0, ctrlTextSpin: 15, ctrlTextSurface: "picture" },
-    balloon: { ctrlTextForm: 62, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 10, ctrlTextSpin: 20, ctrlTextSurface: "picture" },
-    melt: { ctrlTextForm: 92, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 0, ctrlTextSpin: 10, ctrlTextSurface: "picture" },
+    balloon: { ctrlTextForm: 48, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 10, ctrlTextSpin: 20, ctrlTextSurface: "picture" },
     ribbon: { ctrlTextForm: 30, ctrlTextTwist: 70, ctrlTextBend: 40, ctrlTextWave: 30, ctrlTextSpin: 0, ctrlTextDepth: 15, ctrlTextSurface: "picture" },
-    glass: { ctrlTextForm: 60, ctrlTextTwist: 0, ctrlTextBend: 25, ctrlTextWave: 0, ctrlTextSpin: 25, ctrlTextSurface: "glass" },
+    glass: { ctrlTextForm: 45, ctrlTextTwist: 0, ctrlTextBend: 25, ctrlTextWave: 0, ctrlTextSpin: 25, ctrlTextSurface: "glass" },
   };
 
   const SETTING_ACTIONS = {
