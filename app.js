@@ -2330,10 +2330,12 @@
     r.spawned++;
     let x, y, ang;
     const set = params.roamSpread < 180;
+    const ro = Math.random() * 2 - 1; // this image's stray, -1..1 of Spread
+    const tr = (Math.random() * 2 - 1) * 0.15; // its curve rate when wandering
     if (set) {
       // Compass heading: 0 = up, 90 = right. Each image strays by up to
       // "spread" degrees; it enters from the side it's heading away from.
-      const th = ((params.roamAngle + (Math.random() * 2 - 1) * params.roamSpread) * Math.PI) / 180;
+      const th = ((params.roamAngle + ro * params.roamSpread) * Math.PI) / 180;
       const dx = Math.sin(th);
       const dy = -Math.cos(th);
       ang = Math.atan2(dy, dx);
@@ -2371,15 +2373,23 @@
     const sctx = sprite.getContext("2d");
     sctx.imageSmoothingQuality = "high";
     sctx.drawImage(canvas, 0, 0, sw, sh);
-    const sp = CONFIG.MOVE_TILE_RATE * H * (params.roamSpeed / 100) * (0.6 + Math.random() * 0.8);
+    // Each image keeps its own random speed / spin factor; the actual speed
+    // and spin follow the sliders live (see advanceRoam).
+    const sf = 0.6 + Math.random() * 0.8;
+    const sr = 0.5 + Math.random();
+    const sp = CONFIG.MOVE_TILE_RATE * H * (params.roamSpeed / 100) * sf;
     const spin = (params.roamSpin || 0) / 100; // signed: negative turns anticlockwise
     r.items.push({
       canvas: sprite, x, y, rad, size,
       vx: Math.cos(ang) * sp,
       vy: Math.sin(ang) * sp,
-      turn: set ? 0 : (Math.random() * 2 - 1) * 0.15,
+      turn: set ? 0 : tr,
+      ro,
+      tr,
       rot: spin === 0 ? 0 : (Math.random() * 2 - 1) * 0.5, // 0 spin = upright
-      vrot: spin * 0.6 * (0.5 + Math.random()),
+      vrot: spin * 0.6 * sr,
+      sf,
+      sr,
       phase: Math.random() * Math.PI * 2,
       prate: 0.2 + Math.random() * 0.4,
       age: 0,
@@ -2394,8 +2404,35 @@
     const W = STAGE.w;
     const H = STAGE.h;
     if (!state.paused) {
+      const speedNow = CONFIG.MOVE_TILE_RATE * H * (params.roamSpeed / 100);
+      const spinNow = ((params.roamSpin || 0) / 100) * 0.6;
+      const setNow = params.roamSpread < 180;
       for (const it of r.items) {
         it.age += dt;
+        // Travel and Spin act on images already on screen, not just new ones.
+        const mag = Math.hypot(it.vx, it.vy);
+        if (mag > 1e-6 && speedNow > 0) {
+          const k = (speedNow * (it.sf || 1)) / mag;
+          it.vx *= k;
+          it.vy *= k;
+        }
+        it.vrot = spinNow * (it.sr || 1);
+        // Together ↔ Wandering and Heading act live too: together = steer
+        // (eased) towards Heading + this image's stray; wandering = curve freely.
+        if (setNow) {
+          const th = ((params.roamAngle + (it.ro || 0) * params.roamSpread) * Math.PI) / 180;
+          const want = Math.atan2(-Math.cos(th), Math.sin(th));
+          const have = Math.atan2(it.vy, it.vx);
+          let d = want - have;
+          d = Math.atan2(Math.sin(d), Math.cos(d));
+          const a2 = have + d * (1 - Math.exp(-dt * 1.5));
+          const m2 = Math.hypot(it.vx, it.vy);
+          it.vx = Math.cos(a2) * m2;
+          it.vy = Math.sin(a2) * m2;
+          it.turn = 0;
+        } else {
+          it.turn = it.tr || 0;
+        }
         const c = Math.cos(it.turn * dt);
         const s = Math.sin(it.turn * dt);
         const vx = it.vx * c - it.vy * s;
