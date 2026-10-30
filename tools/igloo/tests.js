@@ -42,5 +42,5 @@ module.exports = [
   { name: "T12 Glass forms over the strip", checks: "Glass lens shapes",
     look: "Six see-through shapes, cubes to blobs, sliding round the room and magnifying and bending the moving strip behind them. Does the picture inside each shape bend smoothly as it moves? Do the shapes stand out from the background? Any stutter?",
     diff: { ...ONLY(["Halftone", "Duotone"]), MovePanSpeed: 50, MoveEnd: "strip", FormsOn: 1, FormsCount: 6, FormsSpacing: 50, FormsOrganic: 20, FormsOrganicMax: 100, FormsSize: 75, FormsTravel: 25,
-      FormsSurface: "glass", FormsMagnify: 45, FormsBend: 60, FormsRim: 70, FormsBehind: "picture", SpeedMin: 3, SpeedMax: 5 } },
+      FormsSurface: "glass", FormsLiquid: 60, FormsRim: 70, FormsBehind: "picture", SpeedMin: 3, SpeedMax: 5 } },
 ];

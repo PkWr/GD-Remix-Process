@@ -3743,8 +3743,10 @@
       t.needsUpdate = true; // the picture changes every frame
       sh.bg.value = t;
       sh.res.value.set(STAGE.w, STAGE.h);
-      sh.magnify.value = params.formsMagnify / 100;
-      sh.bend.value = params.formsBend / 100;
+      // Lens ↔ Liquid: one slider sets both (lens = big magnify, little bend).
+      const liquid = params.formsLiquid / 100;
+      sh.magnify.value = 0.8 - 0.65 * liquid;
+      sh.bend.value = 0.1 + 0.8 * liquid;
       sh.rimAmt.value = params.formsRim / 100;
       sh.fringe.value = params.formsFringe ? 1 : 0;
     }
@@ -3996,6 +3998,13 @@
   // is ignored; each control's own listener recomputes its .val text.
   function applyControlState(values) {
     // Older saved scenes/presets: Organic + Variety became an Organic range.
+    if (values.ctrlFormsBend && !values.ctrlFormsLiquid) {
+      const b = +values.ctrlFormsBend.value;
+      values = { ...values };
+      values.ctrlFormsLiquid = { value: String(Math.max(0, Math.min(100, Math.round(((b - 10) / 80) * 20) * 5))) };
+      delete values.ctrlFormsBend;
+      delete values.ctrlFormsMagnify;
+    }
     if (values.ctrlFormsVariety && !values.ctrlFormsOrganicMax) {
       const o = +(values.ctrlFormsOrganic ? values.ctrlFormsOrganic.value : 25);
       const v = +values.ctrlFormsVariety.value;
