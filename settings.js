@@ -78,6 +78,14 @@
     { id: "ctrlTextTravel", type: "range", label: "Travel", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "textTravel" },
     { id: "ctrlTextSurface", type: "select", label: "Surface", default: "picture", param: "textSurface",
       options: [["picture", "Picture on it"], ["glass", "Glass"], ["ink", "Ink"]] },
+    { id: "ctrlTextTest", type: "select", label: "Test words", default: "off", param: "textTest", after: "textBuild",
+      help: "Shows a fixed test string instead of your words, without changing them",
+      options: [["off", "Off — use my words"], ["counters", "Counters — oepadgbq8B&@%R"], ["alphabet", "Alphabet — lower case"], ["caps", "Alphabet — capitals"]] },
+    { id: "ctrlTextDebug", type: "select", label: "Debug view", default: "off", param: "textDebug",
+      help: "Shows how the letters are built. Wireframe: the triangles. Normals: surface direction. Faces: green = front/back, red/yellow = side walls. Flat: one colour per letter, no picture",
+      options: [["off", "Off"], ["wire", "Wireframe"], ["normals", "Normals"], ["parts", "Faces and walls"], ["flat", "Flat colour per letter"]] },
+    { id: "ctrlTextInfo", type: "switch", label: "Show details on screen", default: false, param: "textInfo", after: "textInfo",
+      help: "Frame rate, triangle counts and, per letter, how many outlines and holes were found" },
     { id: "ctrlTextMagnify", type: "range", label: "Magnify", min: 0, max: 100, step: 1, default: 45, int: true, format: "int", param: "textMagnify" },
 
     // Effects in rotation (Untouched is the all-off switch — see app.js)
@@ -399,6 +407,9 @@
       { card: "Text motion", summary: "spin · travel", when: { id: "ctrlTextOn", is: ["on"] }, items: [
         "ctrlTextLayout", "ctrlTextSpin", "ctrlTextTravel",
       ] },
+      { card: "Debug", summary: "test words · views · details", when: { id: "ctrlTextOn", is: ["on"] }, items: [
+        "ctrlTextTest", "ctrlTextDebug", "ctrlTextInfo",
+      ] },
       { card: "Surface", summary: "picture · glass · ink", when: { id: "ctrlTextOn", is: ["on"] }, items: [
         "ctrlTextSurface",
         { when: { id: "ctrlTextSurface", is: ["glass"] }, items: ["ctrlTextMagnify"] },
@@ -612,7 +623,8 @@
           `<a href="igloo-check.html" target="_blank">Igloo check ↗</a>` +
           `<a href="about.html" target="_blank">About & credits ↗</a>` +
           `<a href="changelog.html" target="_blank">Changelog ↗</a>` +
-          `</p><p class="cp-note" id="statusLine">loading…</p>`
+          `</p><div class="cp-btns"><button type="button" class="cp-btn" id="cpResetAll" title="Puts every control back to its starting value. Your saved settings and scenes are not touched">Reset all controls</button></div>` +
+          `<p class="cp-note" id="statusLine">loading…</p>`
         );
       case "scenes":
         return (

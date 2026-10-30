@@ -134,7 +134,7 @@
     }`;
 
   const FRAG = COVER + `
-    uniform float uSurface, uMagnify, uWordW, uSize; uniform sampler2D uSkin; uniform float uSkinAspect;
+    uniform float uSurface, uMagnify, uWordW, uSize, uDebug; uniform vec3 uTint; uniform sampler2D uSkin; uniform float uSkinAspect;
     varying vec3 vN; varying vec3 vWorld; varying vec3 vWord; varying float vSoft;
     void main(){
       vec3 fn = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
@@ -159,6 +159,14 @@
       } else {
         col = vec3(0.07) + vec3(0.9) * pow(diff, 1.5) * 0.25 + rim * vec3(1.0, 0.88, 0.0) * 0.9;
       }
+      if (uDebug > 0.5) {
+        if (uDebug < 1.5) col = vec3(0.95);                       // wireframe lines
+        else if (uDebug < 2.5) col = N * 0.5 + 0.5;               // normals
+        else if (uDebug < 3.5) {                                  // faces: green = front/back, red/yellow = walls
+          float wl = abs(fn.z);
+          col = wl > 0.7 ? vec3(0.2, 0.75, 0.35) : mix(vec3(0.85, 0.2, 0.2), vec3(0.9, 0.7, 0.1), wl);
+        } else col = uTint * (0.35 + 0.65 * diff);                // flat colour per letter
+      }
       gl_FragColor = vec4(col, 1.0);
     }`;
 
@@ -171,6 +179,7 @@
         uSpinA: { value: 0 }, uOffX: { value: 0 }, uOffY: { value: 0 }, uSeed: { value: 0 },
         uWordW: { value: 1 }, uTwist: { value: 0 }, uBend: { value: 0 }, uWave: { value: 0 }, uTravelX: { value: 0 },
         uSurface: { value: 0 }, uMagnify: { value: 0.45 },
+        uDebug: { value: 0 }, uTint: { value: new T.Color(1, 1, 1) },
       },
       vertexShader: VERT, fragmentShader: FRAG, side: T.DoubleSide, transparent: false,
     });
@@ -203,7 +212,11 @@
       return;
     }
     if (token !== L.buildToken) return;
-    const text = P.textValue || " ";
+    const TESTS = { counters: "oepadgbq8B&@%R", alphabet: "abcdefghijklmnopqrstuvwxyz", caps: "ABCDEFGHIJKLMNOPQRSTUVWXYZ" };
+    const text = TESTS[P.textTest] || P.textValue || " ";
+    L.builtText = text;
+    L.buildStats = [];
+    const t0 = performance.now();
     const size = (P.textSize / 100) * unit() * 0.38;
     const depth = size * (P.textDepth / 100) * 0.9;
     const bevel = P.textBevel / 100;
@@ -220,6 +233,7 @@
       const adv = (glyph ? glyph.ha : font.data.resolution * 0.5) * scale;
       if (ch.trim() && glyph) {
         const shapes = font.generateShapes(ch, size);
+        const holes = shapes.reduce((n, s) => n + (s.holes ? s.holes.length : 0), 0);
         let g = new T.ExtrudeGeometry(shapes, {
           depth, curveSegments: 10, bevelEnabled: bevel > 0.01,
           bevelThickness: depth * 0.5 * bevel + 0.0001, bevelSize: size * 0.045 * bevel, bevelSegments: 4,
@@ -232,12 +246,14 @@
         g = subdivide(g, size * 0.07, 60000);
         g.computeVertexNormals();
         addSmoothNormals(g);
+        L.buildStats.push({ ch, shapes: shapes.length, holes, tris: Math.round(g.attributes.position.count / 3) });
         placed.push({ mesh: new T.Mesh(g, makeMaterial()), k: i + 1, centre: x + cx });
       }
       x += adv + track;
     });
     L.wordW = Math.max(size, x - track);
     placed.forEach((l) => { l.offX = l.centre - L.wordW / 2; L.word.add(l.mesh); L.letters.push(l); });
+    L.buildMs = Math.round(performance.now() - t0);
   }
 
   const formStages = (f) => {
@@ -247,21 +263,26 @@
 
   function init() {
     T = window.THREE;
-    // The converted typefaces list their outlines the other way round to
-    // what three.js expects, which filled in the counters (o, p, e, a…).
-    // Read them the other way.
-    if (!T.ShapePath.prototype.spotFlip) {
+    // three.js reads outlines as clockwise-solid unless told otherwise; the
+    // converted typefaces have outer contours counter-clockwise (counters
+    // clockwise), so ask for that reading. Without it the outer outline was
+    // treated as the hole, which only looked right on letters with one counter.
+    if (!T.ShapePath.prototype.spotCCW) {
       const orig = T.ShapePath.prototype.toShapes;
       T.ShapePath.prototype.toShapes = function (isCCW, noHoles) {
-        return orig.call(this, !isCCW, noHoles);
+        return orig.call(this, true, noHoles);
       };
-      T.ShapePath.prototype.spotFlip = true;
+      T.ShapePath.prototype.spotCCW = true;
     }
     const canvas = document.createElement("canvas");
     canvas.id = "text3d";
     canvas.setAttribute("aria-hidden", "true");
     host.stage.appendChild(canvas);
     L.canvas = canvas;
+    L.info = document.createElement("pre");
+    L.info.id = "text3dInfo";
+    L.info.hidden = true;
+    host.stage.appendChild(L.info);
     L.renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
     L.renderer.setPixelRatio(1);
     L.renderer.autoClear = false;
@@ -298,6 +319,20 @@
   function rebuildSoon() {
     clearTimeout(L.rebuildTimer);
     L.rebuildTimer = setTimeout(build, 160);
+  }
+
+  function updateInfo() {
+    if (!L.info) return;
+    const on = P.textOn && P.textInfo;
+    L.info.hidden = !on;
+    if (!on) return;
+    const rows = L.buildStats.map((s) => `${s.ch}  shapes ${s.shapes}  holes ${s.holes}  tris ${s.tris}`);
+    const total = L.buildStats.reduce((n, s) => n + s.tris, 0);
+    L.info.textContent =
+      `text layer · ${P.textFace}${P.textTest !== "off" ? " · test: " + P.textTest : ""}${P.textDebug !== "off" ? " · view: " + P.textDebug : ""}\n` +
+      `${L.fps || 0} fps · ${total} tris built (${L.buildMs || 0} ms) · ${L.renderer.info.render.triangles} drawn · ${host.STAGE.w}×${host.STAGE.h}\n` +
+      `holes = counters found in the outline (o, p, e… should be 1; B, 8, & more)\n` +
+      rows.join("\n");
   }
 
   function active() {
@@ -339,6 +374,7 @@
     const f = P.textForm / 100;
     const variety = P.textVariety / 100;
     const spin = P.textSpin / 100;
+    const dbg = { wire: 1, normals: 2, parts: 3, flat: 4 }[P.textDebug] || 0;
     const letterMode = P.textLayout === "letters";
     L.travel += run * (P.textTravel / 100) * viewW() * 0.12;
     const span = viewW() + L.wordW;
@@ -361,12 +397,23 @@
       u.uTravelX.value = tx;
       u.uSurface.value = surface;
       u.uMagnify.value = P.textMagnify / 100;
+      u.uDebug.value = dbg;
+      l.mesh.material.wireframe = dbg === 1;
+      u.uTint.value.setHSL((l.k * 0.137) % 1, 0.65, 0.55);
     });
     L.word.rotation.y = letterMode ? 0 : Math.sin(t / 3200) * spin * 0.5;
     L.word.rotation.x = Math.sin(t / 4100) * 0.12 * spin;
 
     L.renderer.clear();
+    L.renderer.info.reset();
     L.renderer.render(L.scene, L.camera);
+    L.frames = (L.frames || 0) + 1;
+    if (now - (L.infoAt || 0) > 500) {
+      L.fps = Math.round((L.frames * 1000) / Math.max(1, now - (L.infoAt || now - 1000)));
+      L.frames = 0;
+      L.infoAt = now;
+      updateInfo();
+    }
     requestAnimationFrame(loop);
   }
 
@@ -392,6 +439,6 @@
     }
   }
 
-    return { update, rebuildSoon, resize };
+    return { update, rebuildSoon, resize, refreshInfo: updateInfo };
   };
 })();

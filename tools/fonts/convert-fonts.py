@@ -7,7 +7,7 @@ Usage, from the repo root:
   #   dmserifdisplay/DMSerifDisplay-Regular.ttf
   python3 tools/fonts/convert-fonts.py
 Writes vendor/fonts/typeface/*.typeface.json. Variable fonts are instanced with overlaps
-removed, and outlines are turned clockwise, so counters (p, o, B) stay open in three.js.
+removed, and outlines are turned counter-clockwise (outer) with counters the other way, so counters (p, o, B) stay open in three.js.
 """
 import os
 HERE=os.path.dirname(os.path.abspath(__file__)); ROOT=os.path.join(HERE,'..','..')
@@ -17,6 +17,7 @@ from fontTools.pens.basePen import BasePen
 from fontTools.varLib import instancer
 from fontTools.pens.reverseContourPen import ReverseContourPen
 from fontTools.pens.areaPen import AreaPen
+from pathops import Path as PPath
 class P(BasePen):
     def __init__(s,gs):
         super().__init__(gs); s.o=[]
@@ -34,13 +35,20 @@ def conv(path,out,family,weight=None,style='normal'):
         f=instancer.instantiateVariableFont(f,{'wght':weight},overlap=instancer.OverlapMode.REMOVE)
     gs=f.getGlyphSet(); cmap=f.getBestCmap(); hm=f['hmtx']
     chars=[chr(c) for c in range(32,127)]+list("£€éèêáàâíóôúüçñöäß’‘“”–—…·×")
-    ap=AreaPen(gs); gs[cmap[ord('o')]].draw(ap)
-    flip = ap.value > 0  # outer contours must run clockwise for three.js
+    # Every glyph is run through pathops first: overlapping contours are merged and the
+    # winding made consistent (outer one way, every counter the other), so letters with
+    # several counters (B, 8, g, &, %) are read correctly by three.js, not just o / p / e.
+    def clean(g):
+        pp=PPath(); gs[g].draw(pp.getPen(glyphSet=gs))
+        pp.simplify(fix_winding=True, keep_starting_points=False)
+        return pp
+    ap=AreaPen(None); clean(cmap[ord('o')]).draw(ap)
+    flip = ap.value < 0  # three.js wants outer contours counter-clockwise (y up) and every counter the other way
     glyphs={}
     for ch in chars:
         g=cmap.get(ord(ch))
         if not g: continue
-        pen=P(gs); gs[g].draw(ReverseContourPen(pen) if flip else pen)
+        pen=P(gs); clean(g).draw(ReverseContourPen(pen) if flip else pen)
         xs=[float(v) for i,v in enumerate(pen.o) if False]
         adv=hm[g][0]
         b=f['glyf'][g] if 'glyf' in f else None

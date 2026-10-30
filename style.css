@@ -1317,3 +1317,7 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 
 #controls input.cp-text { display: block; width: 100%; margin: 4px 0 8px; padding: 9px 12px; font: inherit; color: var(--cp-text); background: var(--cp-sunk); border: 1px solid var(--cp-line-strong); border-radius: 10px; }
 #controls input.cp-text:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 1px; }
+
+/* Type layer details (Type tab > Debug). */
+#stage #text3dInfo { position: absolute; left: 10px; bottom: 10px; z-index: 6; margin: 0; padding: 8px 10px; max-width: 92%; max-height: 60%; overflow: hidden; pointer-events: none; font: 11px/1.45 "IBM Plex Mono", ui-monospace, Menlo, monospace; color: #ffe100; background: rgba(0, 0, 0, 0.7); white-space: pre; }
+#stage #text3dInfo[hidden] { display: none; }

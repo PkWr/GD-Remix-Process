@@ -510,6 +510,9 @@
     textTravel: 0,
     textSurface: "picture",
     textMagnify: 45,
+    textTest: "off",
+    textDebug: "off",
+    textInfo: false,
     roamOn: false,
     roamCount: 4,
     roamSize: 0.5,
@@ -3187,6 +3190,9 @@
     text3d() {
       textLayer.update();
     },
+    textInfo() {
+      textLayer.refreshInfo();
+    },
     textBuild() {
       if (params.textOn) textLayer.rebuildSoon();
     },
@@ -3354,6 +3360,40 @@
     if (loadSettingsBtn) loadSettingsBtn.addEventListener("click", loadSettingsFromStorage);
     const clearSettingsBtn = document.getElementById("clearSettingsBtn");
     if (clearSettingsBtn) clearSettingsBtn.addEventListener("click", clearSavedSettings);
+    // Tools > Reset all controls: two clicks, so it can't happen by accident mid-show.
+    const resetBtn = document.getElementById("cpResetAll");
+    if (resetBtn) {
+      let armed = null;
+      resetBtn.addEventListener("click", () => {
+        if (!armed) {
+          resetBtn.textContent = "Sure? Click again to reset";
+          armed = setTimeout(() => {
+            armed = null;
+            resetBtn.textContent = "Reset all controls";
+          }, 4000);
+          return;
+        }
+        clearTimeout(armed);
+        armed = null;
+        resetBtn.textContent = "Reset all controls";
+        resetAllControls();
+      });
+    }
+  }
+
+  // Every control back to its starting value (saved settings and scenes are left alone).
+  function resetAllControls() {
+    for (const s of PRS.SETTINGS) {
+      const el = document.getElementById(s.id);
+      if (!el) continue;
+      if (s.type === "switch" || s.type === "chip" || s.type === "palette-on" || s.type === "hidden") el.checked = !!s.default;
+      else el.value = String(s.default);
+      applySetting(s, el);
+    }
+    resetStrip();
+    broadcastState();
+    showToast("All controls reset", "info", 2500);
+    if (state.hasCycled && !camera.live) refreshNow();
   }
 
   // Ticks continuously; each branch is a no-op unless its effect is both the
