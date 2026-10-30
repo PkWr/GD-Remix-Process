@@ -28,12 +28,13 @@
   // controls dim and a red banner stays at the top.
   let net = code ? "connecting" : "local";
   let hasDisplay = true;
+  let lastInfo = null;
   function render() {
     if (!code) return; // same-device mode keeps the simple messages below
     const bad = net !== "online" || !hasDisplay;
     document.body.classList.toggle("is-offline", bad);
     if (net === "connecting") setStatus("Connecting to the display…", "bad");
-    else if (net === "offline") setStatus("Connection lost — trying again…", "bad");
+    else if (net === "offline") setStatus("Connection lost — trying again…" + (lastInfo && lastInfo.code ? ` (code ${lastInfo.code}, try ${lastInfo.attempts})` : ""), "bad");
     else if (net === "busy") setStatus("Another phone is already controlling this display. Close it there, or press New code on the display and scan again.", "bad");
     else if (net === "local") setStatus("The phone remote isn't set up on this site yet (no relay address).", "bad");
     else if (!hasDisplay) setStatus("The display isn't connected — waiting for it…", "bad");
@@ -81,9 +82,10 @@
       markConnected();
       applyState(msg.values); // may be a partial update
     },
-    onStatus(st) {
+    onStatus(st, info) {
       const was = net;
       net = st;
+      if (info) lastInfo = info;
       if (st === "offline" || st === "connecting") {
         connected = false;
         hasDisplay = true; // unknown until the relay tells us

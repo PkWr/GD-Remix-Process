@@ -3999,6 +3999,7 @@
   // (BroadcastChannel) and, once the relay is set up, a phone via its QR code.
   let remotePresence = { remote: 0 };
   let remoteStatus = "";
+  let remoteInfo = null;
   const remoteLink = window.SpotLink
     ? window.SpotLink.open({
         role: "display",
@@ -5371,8 +5372,9 @@
 
   // Phone remote (Show tab): a QR for this running instance. The code is
   // random per tab, so each instance has its own; "New code" replaces it.
-  function remoteLinkStatus(st) {
+  function remoteLinkStatus(st, info) {
     remoteStatus = st;
+    if (info) remoteInfo = info;
     renderRemotePanel();
   }
   function remoteLinkPresence(p) {
@@ -5416,7 +5418,7 @@
     }
     note.textContent =
       remoteStatus === "offline" || remoteStatus === "connecting"
-        ? "Reaching the relay…"
+        ? "Reaching the relay…" + (remoteStatus === "offline" && remoteInfo && remoteInfo.code ? ` (code ${remoteInfo.code}, try ${remoteInfo.attempts})` : "")
         : remotePresence.remote
           ? "A phone is connected. New code disconnects it."
           : "Scan with a phone camera to control this display. One phone at a time.";

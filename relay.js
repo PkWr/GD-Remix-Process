@@ -69,10 +69,10 @@
     let queue = [];
     let status = "";
 
-    function setStatus(s) {
-      if (s === status) return;
+    function setStatus(s, info) {
+      if (s === status && !info) return;
       status = s;
-      if (o.onStatus) o.onStatus(s);
+      if (o.onStatus) o.onStatus(s, info);
     }
 
     function connect() {
@@ -117,11 +117,11 @@
           o.onMessage(m);
         }
       };
-      sock.onclose = () => {
+      sock.onclose = (ev) => {
         if (ws !== sock) return;
         clearInterval(pingTimer);
         if (closed) return;
-        setStatus("offline");
+        setStatus("offline", { code: ev && ev.code, attempts: tries + 1 }); // 1006 = never connected
         tries++;
         retryTimer = setTimeout(connect, Math.min(10000, 500 * 2 ** tries));
       };

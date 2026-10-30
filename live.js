@@ -36,8 +36,8 @@
   let selPal = 1; // which palette the colour pads edit
   const padsOf = (f) =>
     f.palettes
-      ? [...padsOf(f), { color: "Fg", x: "Hue", y: "Brightness", title: "Foreground" }, { color: "Bg", x: "Hue", y: "Brightness", title: "Background" }]
-      : padsOf(f);
+      ? [...f.pads, { color: "Fg", x: "Hue", y: "Brightness", title: "Foreground" }, { color: "Bg", x: "Hue", y: "Brightness", title: "Background" }]
+      : f.pads;
   const colId = (p) => `ctrlPalette${selPal}${p.color}`;
   const idsOf = (p) => (p.color ? [colId(p)] : p.xy || p.cs);
 
