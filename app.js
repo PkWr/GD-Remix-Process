@@ -498,9 +498,8 @@
     roamSize: 0.5,
     roamSpeed: 40,
     roamSpin: 0,
-    roamDirection: "any",
     roamAngle: 90,
-    roamSpread: 30,
+    roamSpread: 180,
     roamBreath: 40,
     backgroundColor: "#000000",
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
@@ -2335,7 +2334,7 @@
     const initial = roamWraps() || r.spawned < Math.round(params.roamCount);
     r.spawned++;
     let x, y, ang;
-    const set = params.roamDirection === "set";
+    const set = params.roamSpread < 180;
     if (set) {
       // Compass heading: 0 = up, 90 = right. Each image strays by up to
       // "spread" degrees; it enters from the side it's heading away from.

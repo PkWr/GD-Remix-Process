@@ -154,13 +154,10 @@
       help: "How fast each image crosses the screen (about the same scale as Pan / Tilt). 0 holds them still" },
     { id: "ctrlRoamSpin", type: "range", label: "Spin speed", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "roamSpin",
       help: "How fast each image turns. Negative = anticlockwise, 0 keeps them from turning" },
-    { id: "ctrlRoamDirection", type: "select", label: "Direction", default: "any", param: "roamDirection",
-      help: "Any way: each image heads off on its own and slowly curves. Set: they all travel roughly the same way",
-      options: [["any", "Any way — wandering"], ["set", "Set heading"]] },
     { id: "ctrlRoamAngle", type: "range", label: "Heading", min: 0, max: 359, step: 1, default: 90, int: true, format: "int", param: "roamAngle",
       help: "Degrees: 0 = up, 90 = right, 180 = down, 270 = left" },
-    { id: "ctrlRoamSpread", type: "range", label: "Spread", min: 0, max: 180, step: 1, default: 30, int: true, format: "int", param: "roamSpread",
-      help: "How far each image may stray from the heading, in degrees" },
+    { id: "ctrlRoamSpread", type: "range", label: "Together ↔ Wandering", min: 0, max: 180, step: 1, default: 180, int: true, format: "roamSpread", param: "roamSpread",
+      help: "0: every image heads the same way. Higher: they stray further from the heading. Far end: each image goes its own way and slowly curves" },
     { id: "ctrlRoamBreath", type: "range", label: "Swell", min: 0, max: 100, step: 1, default: 40, int: true, format: "percent", param: "roamBreath",
       help: "How much each image slowly grows and shrinks" },
     { id: "ctrlEchoOn", type: "switch", label: "Echo trail on", default: false, param: "echoOn" },
@@ -310,22 +307,14 @@
           { note: "Switch on: images wander freely and overlap, ignoring Pan / Tilt / Zoom. Set Move's \"At the edge\" to a repeat to make them wrap round the screen." },
         ] },
         { when: { id: "ctrlRoamOn", is: ["on"] }, items: [
-          "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpeed", "ctrlRoamSpin", "ctrlRoamDirection",
-          { when: { id: "ctrlRoamDirection", is: ["set"] }, items: ["ctrlRoamAngle", "ctrlRoamSpread"] },
+          "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpeed", "ctrlRoamSpin",
+          "ctrlRoamSpread",
+          { when: { id: "ctrlRoamSpread", not: ["180"] }, items: ["ctrlRoamAngle"] },
           "ctrlRoamBreath",
           { note: "Move's \"At the edge\": a repeat option wraps images round the screen; the others let them leave and be replaced." },
         ] },
       ] },
-      { card: "Echo trail", summary: "off", summarize: "echo", switch: "ctrlEchoOn", items: [
-        { when: { id: "ctrlEchoOn", is: ["off"] }, items: [
-          { note: "Switch on: moving pictures leave fading echoes of themselves. Works with any Move setting." },
-        ] },
-        { when: { id: "ctrlEchoOn", is: ["on"] }, items: [
-          "ctrlEchoMode", "ctrlEchoLength", "ctrlEchoStrength",
-          { when: { id: "ctrlEchoMode", not: ["smear"] }, items: ["ctrlEchoSpacing"] },
-          "ctrlEchoBlend",
-        ] },
-      ] },
+      // Echo trail card hidden 30 Oct 2026 — open for review (see OPEN.md). Settings and engine kept.
       { card: "3D forms", summary: "off", summarize: "forms", switch: "ctrlFormsOn", items: [
         { when: { id: "ctrlFormsOn", is: ["off"] }, items: [
           { note: "Switch on: each new image is wrapped round a 3D shape. On the Igloo they sit round all six walls." },
@@ -405,6 +394,7 @@
     int: (v) => String(v),
     degrees: (v) => `${v}°`,
     textForm: (v) => (v < 12 ? "flat" : v < 40 ? "extruded" : "inflated"),
+    roamSpread: (v, angle) => (v >= 180 ? "wandering" : v === 0 ? (angle != null ? `together, ${angle}°` : "together") : v < 45 ? "loose flock" : "scattered"),
     formName: (v) => (v < 12 ? "cube" : v < 40 ? "rounded box" : v < 60 ? "sphere" : v < 85 ? "soft blob" : "globular"),
     moveH: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "left" : "right"}`),
     moveV: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "down" : "up"}`),
@@ -632,7 +622,7 @@
     },
     roam() {
       if (inputState("ctrlRoamOn") !== "on") return "off";
-      const dir = inputState("ctrlRoamDirection") === "set" ? `${inputState("ctrlRoamAngle")}°` : "any way";
+      const dir = FORMATS.roamSpread(+inputState("ctrlRoamSpread"), inputState("ctrlRoamAngle"));
       return `${inputState("ctrlRoamCount")} images · speed ${inputState("ctrlRoamSpeed")} · ${dir}`;
     },
     strip() {
