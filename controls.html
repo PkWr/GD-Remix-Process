@@ -122,6 +122,7 @@
   .lv-rng { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 13px; color: #a3a3a3; }
   .lv-rng span { flex: none; width: 64px; }
   .lv-rng input { flex: 1; min-width: 0; height: 32px; accent-color: #ffe100; }
+  #buildStamp { max-width: 520px; margin: 0 auto; padding: 8px 16px 20px; font: 11px system-ui, sans-serif; color: #6f7378; background: #121315; }
 </style>
 </head>
 <body>
@@ -137,8 +138,12 @@
 
   <script>document.write('<script src="settings.js?t=' + Date.now() + '"><\/script>');</script>
   <script>window.PhotoRemixSettings.buildPanel(document.getElementById("controls"), { mode: "remote" });</script>
+  <script>document.write('<script src="version.js?t=' + Date.now() + '"><\/script>');</script>
   <script>document.write('<script src="relay.js?t=' + Date.now() + '"><\/script>');</script>
   <script>document.write('<script src="controls.js?t=' + Date.now() + '"><\/script>');</script>
+  <script>
+    (function () { var p = document.createElement("p"); p.id = "buildStamp"; p.textContent = "build " + (window.SPOT_BUILD || "unknown"); document.body.appendChild(p); })();
+  </script>
   <script>document.write('<script src="live.js?t=' + Date.now() + '"><\/script>');</script>
 </body>
 </html>
