@@ -493,6 +493,23 @@
     // Strip gap: dark space between strip images (% of the screen).
     stripGap: 0,
     // Roam: images wander freely, each on its own path, spin and size.
+    textOn: false,
+    textValue: "Spot",
+    textFace: "jost-black",
+    textForm: 45,
+    textSize: 55,
+    textTrack: 6,
+    textDepth: 40,
+    textBevel: 45,
+    textVariety: 25,
+    textTwist: 0,
+    textBend: 0,
+    textWave: 0,
+    textLayout: "word",
+    textSpin: 20,
+    textTravel: 0,
+    textSurface: "picture",
+    textMagnify: 45,
     roamOn: false,
     roamCount: 4,
     roamSize: 0.5,
@@ -3096,6 +3113,16 @@
   // Remembered effect set while Untouched is on, restored when it's off.
   let effectsBeforeUntouched = null;
 
+  // Type tab "Quick looks": each sets a handful of the text sliders.
+  const TEXT_LOOKS = {
+    flat: { ctrlTextForm: 0, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 0, ctrlTextSpin: 0, ctrlTextSurface: "picture" },
+    extruded: { ctrlTextForm: 33, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 0, ctrlTextSpin: 15, ctrlTextSurface: "picture" },
+    balloon: { ctrlTextForm: 62, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 10, ctrlTextSpin: 20, ctrlTextSurface: "picture" },
+    melt: { ctrlTextForm: 92, ctrlTextTwist: 0, ctrlTextBend: 0, ctrlTextWave: 0, ctrlTextSpin: 10, ctrlTextSurface: "picture" },
+    ribbon: { ctrlTextForm: 30, ctrlTextTwist: 70, ctrlTextBend: 40, ctrlTextWave: 30, ctrlTextSpin: 0, ctrlTextDepth: 15, ctrlTextSurface: "picture" },
+    glass: { ctrlTextForm: 60, ctrlTextTwist: 0, ctrlTextBend: 25, ctrlTextWave: 0, ctrlTextSpin: 25, ctrlTextSurface: "glass" },
+  };
+
   const SETTING_ACTIONS = {
     background(v) {
       document.documentElement.style.background = v;
@@ -3119,6 +3146,23 @@
     },
     forms3d() {
       forms3dUpdate();
+    },
+    text3d() {
+      textLayer.update();
+    },
+    textBuild() {
+      if (params.textOn) textLayer.rebuildSoon();
+    },
+    textLook(v) {
+      const look = TEXT_LOOKS[v];
+      if (!look) return;
+      for (const [id, val] of Object.entries(look)) {
+        const el = document.getElementById(id);
+        const s = PRS.SETTINGS.find((x) => x.id === id);
+        if (!el || !s) continue;
+        el.value = val;
+        applySetting(s, el);
+      }
     },
     // Untouched is exclusive: on = every effect off (remembering which
     // were on); off = those come back (or all, if none were). Turning any
@@ -3193,7 +3237,7 @@
         continue;
       }
       // Sliders and colour pickers update live while dragging; the rest on change.
-      const evt = s.type === "range" || s.type === "color" ? "input" : "change";
+      const evt = s.type === "range" || s.type === "color" || s.type === "text" ? "input" : "change";
       el.addEventListener(evt, () => applySetting(s, el));
     }
   }
@@ -3336,6 +3380,19 @@
     cams: [], meshes: [], geos: {}, shared: null, next: 0, travel: 0, last: 0,
     running: false, visibleH: 6, camTick: 0,
   };
+
+  // 3D text layer (text3d.js): its own canvas over the picture.
+  const textLayer = window.createTextLayer({
+    params,
+    STAGE,
+    stage: document.getElementById("stage"),
+    canvases: [canvasA, canvasB],
+    front: () => state.frontCanvas,
+    paused: () => state.paused,
+    skinFrame: () => state.recentFrames[1] || state.recentFrames[0] || state.lastEffectFrame,
+    loadThree: () => loadThree(),
+    toast: (msg) => showToast(msg, "error", 8000),
+  });
 
   function loadThree() {
     if (window.THREE) return Promise.resolve(window.THREE);
@@ -4062,6 +4119,7 @@
 
     sizeCanvases();
     forms3dResize();
+    textLayer.resize();
     normalizedCache.clear();
     state.recentFrames = [];
     state.lastEffectFrame = null;

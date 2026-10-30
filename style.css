@@ -29,6 +29,8 @@ html, body {
    picture underneath is hidden (it keeps running, just not shown). */
 #stage #forms3d { z-index: 3; }
 #stage #forms3d[hidden] { display: none; }
+#stage #text3d { z-index: 4; }
+#stage #text3d[hidden] { display: none; }
 #stage.forms-only #canvasA,
 #stage.forms-only #canvasB { visibility: hidden; }
 
@@ -1312,3 +1314,6 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 #controls .cp-colour-swatch input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 #controls .cp-colour-swatch input[type="color"]::-webkit-color-swatch { border: 0; }
 #controls .cp-colour-swatch input[type="color"]::-moz-color-swatch { border: 0; }
+
+#controls input.cp-text { display: block; width: 100%; margin: 4px 0 8px; padding: 9px 12px; font: inherit; color: var(--cp-text); background: var(--cp-sunk); border: 1px solid var(--cp-line-strong); border-radius: 10px; }
+#controls input.cp-text:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 1px; }

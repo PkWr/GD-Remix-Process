@@ -47,6 +47,32 @@
     { id: "ctrlCamera", type: "switch", label: "Live camera", default: false, after: "camera",
       help: "This computer's camera live through the effects. Nothing is recorded or uploaded. Same as V." },
 
+    // Type — 3D text layer (text3d.js)
+    { id: "ctrlTextOn", type: "switch", label: "Text on", default: false, param: "textOn", after: "text3d" },
+    { id: "ctrlTextValue", type: "text", label: "Words", default: "Spot", maxlength: 24, param: "textValue", after: "textBuild" },
+    { id: "ctrlTextFace", type: "select", label: "Typeface", default: "jost-black", param: "textFace", after: "textBuild",
+      options: [["jost-black", "Jost Black"], ["jost-bold", "Jost Bold"], ["dm-serif-display", "DM Serif Display"], ["ibm-plex-mono-italic", "IBM Plex Mono Italic"]] },
+    { id: "ctrlTextLook", type: "select", label: "Quick looks", default: "custom", after: "textLook",
+      help: "Sets the sliders below in one go",
+      options: [["custom", "Custom — as set below"], ["flat", "Flat"], ["extruded", "Extruded"], ["balloon", "Balloon"], ["melt", "Melt"], ["ribbon", "Ribbon"], ["glass", "Glass"]] },
+    { id: "ctrlTextForm", type: "range", label: "Form", min: 0, max: 100, step: 1, default: 45, int: true, format: "textForm", param: "textForm",
+      help: "Flat → extruded → inflated → melted" },
+    { id: "ctrlTextSize", type: "range", label: "Size", min: 10, max: 100, step: 1, default: 55, int: true, format: "int", param: "textSize", after: "textBuild" },
+    { id: "ctrlTextTrack", type: "range", label: "Spacing", min: -20, max: 80, step: 1, default: 6, int: true, format: "int", param: "textTrack", after: "textBuild" },
+    { id: "ctrlTextDepth", type: "range", label: "Depth", min: 5, max: 100, step: 1, default: 40, int: true, format: "int", param: "textDepth", after: "textBuild" },
+    { id: "ctrlTextBevel", type: "range", label: "Roundness", min: 0, max: 100, step: 1, default: 45, int: true, format: "int", param: "textBevel", after: "textBuild" },
+    { id: "ctrlTextVariety", type: "range", label: "Variety", min: 0, max: 100, step: 1, default: 25, int: true, format: "int", param: "textVariety" },
+    { id: "ctrlTextTwist", type: "range", label: "Twist", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "textTwist" },
+    { id: "ctrlTextBend", type: "range", label: "Bend", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "textBend" },
+    { id: "ctrlTextWave", type: "range", label: "Wave", min: 0, max: 100, step: 1, default: 0, int: true, format: "int", param: "textWave" },
+    { id: "ctrlTextLayout", type: "select", label: "Letters", default: "word", param: "textLayout",
+      options: [["word", "Word moves as one"], ["letters", "Letters move apart"]] },
+    { id: "ctrlTextSpin", type: "range", label: "Spin", min: 0, max: 100, step: 1, default: 20, int: true, format: "int", param: "textSpin" },
+    { id: "ctrlTextTravel", type: "range", label: "Travel", min: -100, max: 100, step: 1, default: 0, int: true, format: "int", centre: true, param: "textTravel" },
+    { id: "ctrlTextSurface", type: "select", label: "Surface", default: "picture", param: "textSurface",
+      options: [["picture", "Picture on it"], ["glass", "Glass"], ["ink", "Ink"]] },
+    { id: "ctrlTextMagnify", type: "range", label: "Magnify", min: 0, max: 100, step: 1, default: 45, int: true, format: "int", param: "textMagnify" },
+
     // Effects in rotation (Untouched is the all-off switch — see app.js)
     { id: "ctrlEffectNone", type: "hidden", label: "Untouched", default: false, param: "enabledEffects.none", after: "effectRotation" },
     { id: "ctrlEffectDuotone", type: "switch", label: "Duotone", default: true, param: "enabledEffects.duotone", after: "effectRotation" },
@@ -349,6 +375,27 @@
         "ctrlBlendLayers", "ctrlRandomBlendLayers",
       ] },
     ] },
+    { tab: "type", label: "Type", icon: "title", blocks: [
+      { card: "Text", summary: "off", summarize: "text", switch: "ctrlTextOn", items: [
+        { when: { id: "ctrlTextOn", is: ["off"] }, items: [
+          { note: "Switch on: your words as 3D letters over the picture. Then choose a look and shape them in the cards below." },
+        ] },
+        { when: { id: "ctrlTextOn", is: ["on"] }, items: ["ctrlTextValue", "ctrlTextFace", "ctrlTextLook"] },
+      ] },
+      { card: "Form", summary: "shape of the letters", when: { id: "ctrlTextOn", is: ["on"] }, items: [
+        "ctrlTextForm", "ctrlTextSize", "ctrlTextTrack", "ctrlTextDepth", "ctrlTextBevel", "ctrlTextVariety",
+      ] },
+      { card: "Deform", summary: "twist · bend · wave", when: { id: "ctrlTextOn", is: ["on"] }, items: [
+        "ctrlTextTwist", "ctrlTextBend", "ctrlTextWave",
+      ] },
+      { card: "Text motion", summary: "spin · travel", when: { id: "ctrlTextOn", is: ["on"] }, items: [
+        "ctrlTextLayout", "ctrlTextSpin", "ctrlTextTravel",
+      ] },
+      { card: "Surface", summary: "picture · glass · ink", when: { id: "ctrlTextOn", is: ["on"] }, items: [
+        "ctrlTextSurface",
+        { when: { id: "ctrlTextSurface", is: ["glass"] }, items: ["ctrlTextMagnify"] },
+      ] },
+    ] },
     { tab: "show", label: "Show", icon: "slideshow", blocks: [
       { section: "Scenes", displayOnly: true, items: [{ widget: "scenes" }] },
       { section: "Start-up", items: ["ctrlStartUnchanged"] },
@@ -381,6 +428,7 @@
     info: "M459.54-290h45.38v-230h-45.38v230Zm20.44-294q11.52 0 19.39-7.56 7.86-7.57 7.86-19.05 0-11.95-7.85-19.9-7.85-7.95-19.36-7.95-11.9 0-19.58 7.95-7.67 7.95-7.67 19.9 0 11.48 7.85 19.05 7.85 7.56 19.36 7.56Zm.35 484q-78.95 0-147.89-29.92-68.95-29.92-120.76-81.71-51.81-51.79-81.75-120.78Q100-401.39 100-480.43q0-78.66 29.92-147.87 29.92-69.21 81.71-120.52 51.79-51.31 120.78-81.25Q401.39-860 480.43-860q78.66 0 147.87 29.92 69.21 29.92 120.52 81.21 51.31 51.29 81.25 120.63Q860-558.9 860-480.33q0 78.95-29.92 147.89-29.92 68.95-81.21 120.57-51.29 51.63-120.63 81.75Q558.9-100 480.33-100Zm.17-45.39q139.19 0 236.65-97.76 97.46-97.77 97.46-237.35 0-139.19-97.27-236.65-97.27-97.46-237.34-97.46-139.08 0-236.85 97.27-97.76 97.27-97.76 237.34 0 139.08 97.76 236.85 97.77 97.76 237.35 97.76ZM480-480Z",
     skip_previous: "M220-240v-480h60v480h-60Zm520 0L360-480l380-240v480Zm-60-109v-262L474-480l206 131Z",
     skip_next: "M680-240v-480h60v480h-60Zm-460 0v-480l380 240-380 240Zm60-109 206-131-206-131v262Z",
+    title: "M240-760h480v45H502.3V-200h-44.6v-515H240v-45Z",
     remove: "M200-450v-60h560v60H200Z",
     add: "M450-200v-250H200v-60h250v-250h60v250h250v60H510v250h-60Z",
     close: "m250.92-218.92-32-32L448-480 218.92-709.08l32-32L480-512l229.08-229.08 32 32L512-480l229.08 229.08-32 32L480-448 250.92-218.92Z",
@@ -402,6 +450,7 @@
     fixed2: (v) => Number(v).toFixed(2),
     int: (v) => String(v),
     degrees: (v) => `${v}°`,
+    textForm: (v) => (v < 12 ? "flat" : v < 40 ? "extruded" : v < 72 ? "inflated" : "melted"),
     formName: (v) => (v < 12 ? "cube" : v < 40 ? "rounded box" : v < 60 ? "sphere" : v < 85 ? "soft blob" : "globular"),
     moveH: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "left" : "right"}`),
     moveV: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "down" : "up"}`),
@@ -460,6 +509,8 @@
         // Palette colours are placed by the palette block; a loose one gets a row with a swatch.
         if (/^ctrlPalette/.test(s.id)) return `<!-- ${esc(s.id)} is placed by its block -->`;
         return `<div class="cp-row"${titleAttr(s)}><span>${esc(s.label)}</span><label class="cp-colour-swatch"><input type="color" id="${s.id}" value="${s.default}" aria-label="${esc(s.label)}"></label></div>`;
+      case "text":
+        return `<label class="cp-field" for="${s.id}">${esc(s.label)}</label><input type="text" class="cp-text" id="${s.id}" value="${esc(s.default)}" maxlength="${s.maxlength || 40}" autocomplete="off" spellcheck="false">`;
       case "hidden":
         return `<input type="checkbox" class="cp-hidden-input" id="${s.id}" tabindex="-1" aria-hidden="true"${checkedAttr(s)}>`;
       case "chip":
@@ -623,6 +674,10 @@
       if (!parts.length) return "still";
       const end = byId.ctrlMoveEnd.options.find(([v]) => v === inputState("ctrlMoveEnd"));
       return `${parts.join(" · ")} · ${end ? end[0] : ""}`;
+    },
+    text() {
+      if (inputState("ctrlTextOn") !== "on") return "off";
+      return `“${inputState("ctrlTextValue")}” · ${inputState("ctrlTextFace")}`;
     },
     roam() {
       if (inputState("ctrlRoamOn") !== "on") return "off";
