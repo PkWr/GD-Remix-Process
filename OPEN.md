@@ -4,3 +4,8 @@
 - **Strip layers** — should they use the Blend overlay card too?
 - **Single-slider merges** (like Geometric ↔ Organic): Roam done (Together ↔ Wandering replaces Direction + Spread). Min/max pairs done for Pixelate, Halftone, ASCII, hold time and shimmer coverage (Random switch removed: handles apart = random, together = fixed). Random move strength left as is (its switch gates the whole move, not just the range). 3D forms Geometric ↔ Organic is now a range (replaces Organic + Mix of forms). Looked at and left as selects: ASCII Characters (Blocks are different glyphs, not just fewer tone levels), Strip "Layers move" (recipes mixing axis, direction and speed, not one scale), 3D forms Photo/Glass (two render paths). Move card also left as is (Random move rolls either direction at a strength between the two handles, a gap around zero that one signed range cannot express).
 - **Igloo test** of the Type layer — now belongs to Spot Type.
+
+## To do
+- **Port to Spot Type** (not started): the slider merges (Roam, ranges replacing the Random switches, 3D forms range, Lens ↔ Liquid), Roam live updates, and the phone remote (relay.js, Live view, QR). Use `tools/sync-from-spot.sh --diff` in `spot-type`; set the same `RELAY_URL` in its `relay.js`.
+- **Test the phone Live view** on a real phone (pad size, Next image timing, scene highlight).
+- **Test the relay on the Igloo machine's network.**

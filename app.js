@@ -72,8 +72,8 @@
     // Drive API key restricted by HTTP referrer to the GitHub Pages domain.
     // Safe to leave in client-side code as long as the referrer restriction
     // is set in Google Cloud Console — do NOT remove that restriction.
-    DRIVE_API_KEY: "YOUR_DRIVE_API_KEY_HERE",
-    DRIVE_FOLDER_ID: "YOUR_DRIVE_FOLDER_ID_HERE",
+    DRIVE_API_KEY: "AIzaSyAVBwrtnEtWBiXQW4knTcv71lu6R9XdpUA",
+    DRIVE_FOLDER_ID: "1E3MFazL_JouQlEt-jZ2x3tdEXcPFIPGX",
 
     // Stage size is no longer hard-coded here — it comes from the active
     // stage profile (see 1b. STAGE PROFILES below). REF_HEIGHT is the stage
