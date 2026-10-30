@@ -5376,7 +5376,10 @@
     renderRemotePanel();
   }
   function remoteLinkPresence(p) {
+    const was = remotePresence.remote || 0;
     remotePresence = p;
+    if (p.remote > was) showToast("Phone connected", "ok", 2500);
+    else if (p.remote < was) showToast("Phone disconnected", "info", 3500);
     renderRemotePanel();
     if (p.remote) {
       broadcastState(true); // a phone just joined: give it everything

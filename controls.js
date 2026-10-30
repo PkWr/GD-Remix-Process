@@ -23,10 +23,29 @@
     statusEl.className = cls || "";
   }
 
+  // What the phone shows about the connection. With a relay code, the page is
+  // only usable when the relay is up AND the display is there; otherwise the
+  // controls dim and a red banner stays at the top.
+  let net = code ? "connecting" : "local";
+  let hasDisplay = true;
+  function render() {
+    if (!code) return; // same-device mode keeps the simple messages below
+    const bad = net !== "online" || !hasDisplay;
+    document.body.classList.toggle("is-offline", bad);
+    if (net === "connecting") setStatus("Connecting to the display…", "bad");
+    else if (net === "offline") setStatus("Connection lost — trying again…", "bad");
+    else if (net === "busy") setStatus("Another phone is already controlling this display. Close it there, or press New code on the display and scan again.", "bad");
+    else if (net === "local") setStatus("The phone remote isn't set up on this site yet (no relay address).", "bad");
+    else if (!hasDisplay) setStatus("The display isn't connected — waiting for it…", "bad");
+    else if (connected) setStatus("Connected — mirroring the display live.", "connected");
+    else setStatus("Connected — waiting for the display…");
+  }
+
   function markConnected() {
     if (connected) return;
     connected = true;
-    setStatus("Connected — mirroring the display live.", "connected");
+    if (code) render();
+    else setStatus("Connected — mirroring the display live.", "connected");
   }
 
   function applyState(values) {
@@ -63,13 +82,21 @@
       applyState(msg.values); // may be a partial update
     },
     onStatus(st) {
-      if (st === "connecting") setStatus("Connecting to the display…");
-      else if (st === "online") setStatus(connected ? "Connected — mirroring the display live." : "Connected — waiting for the display…", connected ? "connected" : "");
-      else if (st === "offline") {
+      const was = net;
+      net = st;
+      if (st === "offline" || st === "connecting") {
         connected = false;
-        setStatus("Connection lost — trying again…");
-      } else if (st === "busy") setStatus("Another phone is already controlling this display. Close it there, or press New code on the display and scan again.");
-      else if (st === "local" && code) setStatus("The phone remote isn't set up on this site yet (no relay address).");
+        hasDisplay = true; // unknown until the relay tells us
+      }
+      if (was === "online" && st !== "online" && navigator.vibrate) navigator.vibrate([120, 60, 120]);
+      render();
+    },
+    onPresence(p) {
+      const had = hasDisplay;
+      hasDisplay = p.display > 0;
+      if (!hasDisplay) connected = false;
+      if (had && !hasDisplay && navigator.vibrate) navigator.vibrate([120, 60, 120]);
+      render();
     },
     onOpen() {
       link.post({ type: "requestState" });

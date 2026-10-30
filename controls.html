@@ -83,6 +83,17 @@
   .lv-scenes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 14px; }
   .lv-scene { padding: 13px 0; font: 700 15px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
   .lv-scene.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  #remoteStatus { position: sticky; top: 0; z-index: 10; }
+  #remoteStatus.bad { background: #4a1717; color: #ffb4b4; font-weight: 600; }
+  body.is-offline #live, body.is-offline #controls, body.is-offline #viewBar { opacity: 0.35; pointer-events: none; }
+  .lv-h { margin: 16px 0 6px; font-size: 12px; color: #a3a3a3; text-transform: uppercase; letter-spacing: 0.06em; }
+  .lv-pal-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .lv-pal-n { flex: none; width: 44px; height: 44px; font: 700 16px system-ui, sans-serif; color: #a3a3a3; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
+  .lv-pal-n.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  .lv-sw { flex: 1; display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px 4px; font-size: 12px; color: #a3a3a3; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; }
+  .lv-sw input { width: 44px; height: 36px; padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; }
+  .lv-wide { width: 100%; margin-top: 4px; }
+  .lv-btn.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
 </style>
 </head>
 <body>

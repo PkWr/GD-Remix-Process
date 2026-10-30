@@ -18,7 +18,7 @@
     { id: "pixelate", label: "Pixelate", on: "ctrlEffectPixelate", pads: [{ cs: ["ctrlPixelateMin", "ctrlPixelateMax"], x: "Cell size", y: "Variation" }] },
     { id: "halftone", label: "Halftone", on: "ctrlEffectHalftone", pads: [{ cs: ["ctrlHalftoneMin", "ctrlHalftoneMax"], x: "Dot grid", y: "Variation" }] },
     { id: "ascii", label: "ASCII", on: "ctrlEffectAscii", pads: [{ cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" }] },
-    { id: "colour", label: "Colour", on: "ctrlEffectDuotone", onLabel: "Duotone", pads: [{ xy: ["ctrlSaturation", "ctrlContrast"], x: "Saturation", y: "Contrast" }] },
+    { id: "colour", label: "Colour", on: "ctrlEffectDuotone", onLabel: "Duotone", palettes: true, pads: [{ xy: ["ctrlSaturation", "ctrlContrast"], x: "Saturation", y: "Contrast" }] },
     { id: "move", label: "Move", pads: [
       { xy: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed"], x: "Pan", y: "Tilt" },
       { xy: ["ctrlMoveZoomSpeed", "ctrlStripGap"], x: "Zoom", y: "Strip gap" } ] },
@@ -113,6 +113,7 @@
     `<div class="lv-funcs" id="lvFuncs"></div>` +
     `<div id="lvOn"></div>` +
     `<div class="lv-pads" id="lvPads"></div>` +
+    `<div id="lvPal"></div>` +
     `<div class="lv-row"><button type="button" class="lv-btn" id="lvPause">Pause</button>` +
     `<button type="button" class="lv-btn" id="lvNext">Next image</button></div>` +
     `<div class="lv-scenes" id="lvScenes"></div>`;
@@ -120,11 +121,25 @@
   const funcsEl = $("lvFuncs");
   const onEl = $("lvOn");
   const padsEl = $("lvPads");
+  const palEl = $("lvPal");
 
   function renderFuncs() {
     funcsEl.innerHTML = FUNCS.map(
       (f) => `<button type="button" class="lv-func" data-f="${f.id}" aria-pressed="${f.id === current}">${f.label}<i></i></button>`
     ).join("");
+  }
+
+  // The four palettes: tap the number to take one in or out of rotation;
+  // tap a swatch to pick its highlight / shadow colour (the phone's own picker).
+  function paletteHtml() {
+    let h = `<p class="lv-h">Duotone palettes</p>`;
+    for (let n = 1; n <= 4; n++) {
+      h +=
+        `<div class="lv-pal-row"><button type="button" class="lv-pal-n" data-n="${n}" aria-label="Palette ${n} in rotation">${n}</button>` +
+        `<label class="lv-sw"><input type="color" data-id="ctrlPalette${n}Fg" aria-label="Palette ${n} highlights"><span>Highlights</span></label>` +
+        `<label class="lv-sw"><input type="color" data-id="ctrlPalette${n}Bg" aria-label="Palette ${n} shadows"><span>Shadows</span></label></div>`;
+    }
+    return h + `<button type="button" class="lv-btn lv-wide" id="lvPalRand">Random palette each image</button>`;
   }
 
   function renderPads() {
@@ -133,6 +148,7 @@
       ? `<button type="button" class="lv-on" id="lvOnBtn" data-for="${f.on}">${f.onLabel || f.label}<span></span></button>`
       : "";
     padsEl.className = "lv-pads" + (f.pads.length === 1 ? " one" : "");
+    palEl.innerHTML = f.palettes ? paletteHtml() : "";
     padsEl.innerHTML = f.pads
       .map(
         (p, i) =>
@@ -169,6 +185,16 @@
       const ay = p.xy ? valText(p.xy[1]) : "";
       pad.querySelector(".lv-tv").textContent = ay ? `${ax} · ${ay}` : ax;
     });
+    palEl.querySelectorAll("input[data-id]").forEach((inp) => {
+      const src = $(inp.dataset.id);
+      if (src && inp.value !== src.value && document.activeElement !== inp) inp.value = src.value;
+    });
+    palEl.querySelectorAll(".lv-pal-n").forEach((b) => {
+      const sw = $(`ctrlPalette${b.dataset.n}Enabled`);
+      b.classList.toggle("is-on", !!(sw && sw.checked));
+    });
+    const pr = $("lvPalRand");
+    if (pr) pr.classList.toggle("is-on", !!($("ctrlPaletteRandomize") || {}).checked);
     FUNCS.forEach((fn) => {
       const b = funcsEl.querySelector(`[data-f="${fn.id}"]`);
       const sw = fn.on && $(fn.on);
@@ -212,6 +238,31 @@
     sw.checked = !sw.checked;
     sw.dispatchEvent(new Event("change", { bubbles: true }));
     refresh();
+  });
+
+  palEl.addEventListener("input", (e) => {
+    const inp = e.target.closest("input[data-id]");
+    const src = inp && $(inp.dataset.id);
+    if (!src) return;
+    src.value = inp.value;
+    src.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  palEl.addEventListener("change", (e) => {
+    const inp = e.target.closest("input[data-id]");
+    const src = inp && $(inp.dataset.id);
+    if (src) src.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  palEl.addEventListener("click", (e) => {
+    const flip = (id) => {
+      const sw = $(id);
+      if (!sw) return;
+      sw.checked = !sw.checked;
+      sw.dispatchEvent(new Event("change", { bubbles: true }));
+      refresh();
+    };
+    const n = e.target.closest(".lv-pal-n");
+    if (n) flip(`ctrlPalette${n.dataset.n}Enabled`);
+    else if (e.target.closest("#lvPalRand")) flip("ctrlPaletteRandomize");
   });
 
   let drag = null;
