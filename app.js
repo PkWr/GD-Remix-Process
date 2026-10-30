@@ -320,16 +320,15 @@
     sourceMode: "demo",
     pixelateMin: initialPixelateRange.min,
     pixelateMax: initialPixelateRange.max,
-    // Off = fixed cell size at pixelateMin's value (pixelateMax ignored).
-    // On = random value between pixelateMin/pixelateMax every cycle. Same
-    // on/off-toggle-over-a-range pattern as Speed's "Randomize speed".
-    randomizePixelateScale: true,
+    // Handles apart = a random cell size between them every cycle;
+    // together = fixed. One range carries both choice and amount (no
+    // separate Randomize switch).
     halftoneMin: initialHalftoneRange.min,
     halftoneMax: initialHalftoneRange.max,
-    randomizeHalftoneScale: true, // same pattern as randomizePixelateScale
+    randomizeHalftoneScale: true, // same range-carries-the-choice pattern as Pixelate
     asciiMin: initialAsciiRange.min,
     asciiMax: initialAsciiRange.max,
-    randomizeAsciiScale: true, // same pattern as randomizePixelateScale
+    randomizeAsciiScale: true, // same range-carries-the-choice pattern as Pixelate
     asciiRampStyle: "density",
     // Off = always use the dropdown's ramp style. On = pick a random ramp
     // style every cycle instead. Separate from randomize*Scale above — this
@@ -1490,10 +1489,10 @@
     pixelate: {
       label: "pixelate",
       // Explicit min/max sliders, not a derived narrow band — see
-      // randomizePixelateScale above. Off = fixed at pixelateMin; on = a
-      // fresh random roll between pixelateMin/pixelateMax every cycle.
+      // pixelateMin/Max above. Handles apart = a fresh random roll between
+      // them every cycle; together = fixed at that value.
       randomParams: () => ({
-        cellSize: params.randomizePixelateScale
+        cellSize: params.pixelateMax !== params.pixelateMin
           ? Math.round(
               Math.min(params.pixelateMin, params.pixelateMax) +
                 Math.random() * Math.abs(params.pixelateMax - params.pixelateMin)

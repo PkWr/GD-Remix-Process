@@ -57,8 +57,6 @@
     // Pixelate
     { id: "ctrlPixelateMin", type: "range", label: "Pixelate cell size minimum", min: 2, max: 128, step: 1, default: 7, int: true, format: "px", param: "pixelateMin" },
     { id: "ctrlPixelateMax", type: "range", label: "Pixelate cell size maximum", min: 2, max: 128, step: 1, default: 17, int: true, format: "px", param: "pixelateMax" },
-    { id: "ctrlPixelateRandomize", type: "switch", label: "Random size each image", default: true, param: "randomizePixelateScale",
-      help: "Off = fixed at the lower value. On = random between the two each image." },
     { id: "ctrlPixelateAnimate", type: "switch", label: "Animate size", default: false, param: "pixelateAnimate",
       help: "Bounces cell size up/down while the frame is on screen" },
     { id: "ctrlPixelateRandomCellSize", type: "switch", label: "Uneven cells", default: false, param: "pixelateRandomCellSize",
@@ -255,7 +253,8 @@
       ] },
       { card: "Pixelate", summary: "cell size · animation", switch: "ctrlEffectPixelate", items: [
         { dual: ["ctrlPixelateMin", "ctrlPixelateMax"], label: "Cell size" },
-        "ctrlPixelateRandomize", "ctrlPixelateAnimate", "ctrlPixelateRandomCellSize",
+        { note: "Handles apart: a random size each image. Handles together: one fixed size." },
+        "ctrlPixelateAnimate", "ctrlPixelateRandomCellSize",
       ] },
       { card: "Halftone", summary: "dot grid", switch: "ctrlEffectHalftone", items: [
         { dual: ["ctrlHalftoneMin", "ctrlHalftoneMax"], label: "Dot grid" },
