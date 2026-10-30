@@ -296,7 +296,8 @@
           { note: "Switch on: images wander freely and overlap, ignoring Pan / Tilt / Zoom. Set Move's \"At the edge\" to a repeat to make them wrap round the screen." },
         ] },
         { when: { id: "ctrlRoamOn", is: ["on"] }, items: [
-          "ctrlRoamCount", "ctrlRoamSize", "ctrlRoamSpeed", "ctrlRoamSpin",
+          "ctrlRoamCount", "ctrlRoamSize",
+          { pad: ["ctrlRoamSpeed", "ctrlRoamSpin"], label: "Travel & spin", xLabel: "travel speed", yTop: "↻ clockwise", yBottom: "↺ anticlockwise" },
           "ctrlRoamSpread",
           { when: { id: "ctrlRoamSpread", not: ["180"] }, items: ["ctrlRoamAngle"] },
           "ctrlRoamBreath",
@@ -462,6 +463,16 @@
       return (
         `<div class="cp-range-head"><span>${esc(item.label)}</span><span>${valSpan(a)}–${valSpan(b)}</span></div>` +
         `<div class="cp-dual">${rangeInput(a)}${rangeInput(b)}</div>`
+      );
+    }
+    if (item.pad) {
+      const [a, b] = item.pad.map((id) => byId[id]);
+      return (
+        `<div class="cp-range-head"><span>${esc(item.label)}</span><span>${valSpan(a)} · ${valSpan(b)}</span></div>` +
+        `<div class="cp-pad" tabindex="0" role="group" aria-label="${esc(a.label)} (left to right) and ${esc(b.label)} (down to up)" data-x="${a.id}" data-y="${b.id}">` +
+        `<span class="cp-pad-dot"></span><span class="cp-pad-tag cp-pad-r">${esc(item.xLabel || a.label)} →</span>` +
+        `<span class="cp-pad-tag cp-pad-t">${esc(item.yTop || "")}</span><span class="cp-pad-tag cp-pad-b">${esc(item.yBottom || "")}</span></div>` +
+        rangeInput(a, "cp-pad-input") + rangeInput(b, "cp-pad-input")
       );
     }
     if (item.chips) {
@@ -732,6 +743,13 @@
       box.style.setProperty("--to", `${Math.max(a, b)}%`);
       lo.style.zIndex = a > 90 ? "2" : ""; // both handles at the top end: keep the lower one draggable
     });
+    root.querySelectorAll(".cp-pad").forEach((pad) => {
+      const xi = document.getElementById(pad.dataset.x);
+      const yi = document.getElementById(pad.dataset.y);
+      if (!xi || !yi) return;
+      pad.style.setProperty("--px", `${rangePct(xi)}%`);
+      pad.style.setProperty("--py", `${100 - rangePct(yi)}%`);
+    });
   }
 
   function enhancePanel(root) {
@@ -785,6 +803,55 @@
           lo.value = hi.value;
           lo.dispatchEvent(new Event("input", { bubbles: true }));
         }
+      });
+    });
+
+    // Pads: one square, two drags (x and y each drive a hidden range input).
+    root.querySelectorAll(".cp-pad").forEach((pad) => {
+      const xi = document.getElementById(pad.dataset.x);
+      const yi = document.getElementById(pad.dataset.y);
+      if (!xi || !yi) return;
+      const snap = (el, f) => {
+        const st = +el.step || 1;
+        const v = Math.round((+el.min + f * (+el.max - +el.min)) / st) * st;
+        return String(Math.min(+el.max, Math.max(+el.min, v)));
+      };
+      const push = (el, v) => {
+        if (el.value === v) return;
+        el.value = v;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      const done = () => [xi, yi].forEach((el) => el.dispatchEvent(new Event("change", { bubbles: true })));
+      const fromPointer = (e) => {
+        const r = pad.getBoundingClientRect();
+        const fx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+        const fy = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+        push(xi, snap(xi, fx));
+        push(yi, snap(yi, 1 - fy));
+      };
+      pad.addEventListener("pointerdown", (e) => {
+        pad.setPointerCapture(e.pointerId);
+        fromPointer(e);
+        e.preventDefault();
+      });
+      pad.addEventListener("pointermove", (e) => {
+        if (pad.hasPointerCapture(e.pointerId)) fromPointer(e);
+      });
+      pad.addEventListener("pointerup", done);
+      pad.addEventListener("dblclick", () => {
+        push(xi, xi.defaultValue);
+        push(yi, yi.defaultValue);
+        done();
+      });
+      pad.addEventListener("keydown", (e) => {
+        const k = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
+        if (!k) return;
+        e.preventDefault();
+        const n = e.shiftKey ? 10 : 1;
+        const clamp = (el, v) => String(Math.min(+el.max, Math.max(+el.min, v)));
+        push(xi, clamp(xi, +xi.value + k[0] * n));
+        push(yi, clamp(yi, +yi.value + k[1] * n));
+        done();
       });
     });
 

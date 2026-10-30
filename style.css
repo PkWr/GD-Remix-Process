@@ -1316,3 +1316,36 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 #controls input.cp-text { display: block; width: 100%; margin: 4px 0 8px; padding: 9px 12px; font: inherit; color: var(--cp-text); background: var(--cp-sunk); border: 1px solid var(--cp-line-strong); border-radius: 10px; }
 #controls input.cp-text:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 1px; }
 
+
+/* --- pad: one square, two drags (Roam travel & spin) --------------- */
+#controls .cp-pad {
+  position: relative;
+  height: 132px;
+  margin: 4px 0 8px;
+  border: 1px solid var(--cp-line-strong);
+  border-radius: 10px;
+  background: var(--cp-sunk);
+  touch-action: none;
+  cursor: crosshair;
+  --px: 0%;
+  --py: 50%;
+}
+#controls .cp-pad::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed var(--cp-line-strong); }
+#controls .cp-pad:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
+#controls .cp-pad-dot {
+  position: absolute;
+  left: var(--px);
+  top: var(--py);
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  background: var(--cp-accent);
+  box-shadow: 0 0 0 4px rgba(255, 225, 0, 0.18);
+  pointer-events: none;
+}
+#controls .cp-pad-tag { position: absolute; font-size: 11px; color: var(--cp-muted); pointer-events: none; }
+#controls .cp-pad-r { right: 8px; bottom: 6px; }
+#controls .cp-pad-t { left: 8px; top: 6px; }
+#controls .cp-pad-b { left: 8px; bottom: 6px; }
+#controls .cp-pad-input { display: none; }
