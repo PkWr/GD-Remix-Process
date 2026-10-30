@@ -40,7 +40,7 @@
     border-bottom: 1px solid #2a2d31 !important;
     padding-bottom: 0 !important;
   }
-  #controls .cp-tabs button[aria-current="page"] { box-shadow: inset 0 -2px 0 #7cff8a !important; }
+  #controls .cp-tabs button[aria-current="page"] { box-shadow: inset 0 -2px 0 #ffe100 !important; }
   #controls .cp-body { overflow: visible; }
   #remoteStatus {
     max-width: 520px;
@@ -57,20 +57,20 @@
   /* Live / Detailed switch and the Live view's pads */
   #viewBar { display: flex; max-width: 520px; margin: 0 auto; background: #121315; border-bottom: 1px solid #2a2d31; }
   #viewBar button { flex: 1; padding: 11px 0; font: 600 14px system-ui, -apple-system, sans-serif; color: #a3a3a3; background: none; border: 0; cursor: pointer; }
-  #viewBar button[aria-pressed="true"] { color: #ececec; box-shadow: inset 0 -2px 0 #7cff8a; }
+  #viewBar button[aria-pressed="true"] { color: #ececec; box-shadow: inset 0 -2px 0 #ffe100; }
   #live { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; background: #121315; min-height: 100vh; font-family: system-ui, -apple-system, sans-serif; color: #ececec; }
   .lv-funcs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
   .lv-func { flex: none; position: relative; padding: 10px 14px; font: 600 14px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
-  .lv-func[aria-pressed="true"] { border-color: #7cff8a; box-shadow: inset 0 0 0 1px #7cff8a; }
+  .lv-func[aria-pressed="true"] { border-color: #ffe100; box-shadow: inset 0 0 0 1px #ffe100; }
   .lv-func i { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: transparent; }
-  .lv-func.is-on i { background: #7cff8a; }
+  .lv-func.is-on i { background: #ffe100; }
   .lv-on { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; padding: 14px 16px; font: 700 16px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 12px; cursor: pointer; }
-  .lv-on.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  .lv-on.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   .lv-pads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
   .lv-pads.one { grid-template-columns: 1fr; }
   .lv-pad { position: relative; aspect-ratio: 1; max-height: 56vh; border: 1px solid #3a3d42; border-radius: 14px; background: #0e0f11; touch-action: none; cursor: crosshair; --px: 0%; --py: 50%; }
-  .lv-pad:focus-visible { outline: 2px solid #7cff8a; outline-offset: 2px; }
-  .lv-dot { position: absolute; left: var(--px); top: var(--py); width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: #7cff8a; box-shadow: 0 0 0 5px rgba(124, 255, 138, 0.2); pointer-events: none; }
+  .lv-pad:focus-visible { outline: 2px solid #ffe100; outline-offset: 2px; }
+  .lv-dot { position: absolute; left: var(--px); top: var(--py); width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: #ffe100; box-shadow: 0 0 0 5px rgba(255, 225, 0, 0.2); pointer-events: none; }
   .lv-zero { position: absolute; pointer-events: none; background: #3a3d42; }
   .lv-zx { top: 0; bottom: 0; width: 1px; }
   .lv-zy { left: 0; right: 0; height: 1px; }
@@ -82,18 +82,18 @@
   .lv-btn { flex: 1; padding: 13px 0; font: 600 15px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 12px; cursor: pointer; }
   .lv-scenes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 14px; }
   .lv-scene { padding: 13px 0; font: 700 15px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
-  .lv-scene.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  .lv-scene.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   #remoteStatus { position: sticky; top: 0; z-index: 10; }
   #remoteStatus.bad { background: #4a1717; color: #ffb4b4; font-weight: 600; }
   body.is-offline #live, body.is-offline #controls, body.is-offline #viewBar { opacity: 0.35; pointer-events: none; }
   .lv-h { margin: 16px 0 6px; font-size: 12px; color: #a3a3a3; text-transform: uppercase; letter-spacing: 0.06em; }
   .lv-pal-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .lv-pal-n { flex: none; width: 44px; height: 44px; font: 700 16px system-ui, sans-serif; color: #a3a3a3; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
-  .lv-pal-n.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  .lv-pal-n.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   .lv-sw { flex: 1; display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px 4px; font-size: 12px; color: #a3a3a3; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; }
   .lv-sw input { width: 44px; height: 36px; padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; }
   .lv-wide { width: 100%; margin-top: 4px; }
-  .lv-btn.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  .lv-btn.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   .lv-key { margin-left: 6px; text-transform: none; letter-spacing: 0; color: #6f7378; }
   .lv-pals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
   .lv-pal-cell { display: flex; align-items: center; gap: 10px; padding: 6px 8px; background: #17191c; border: 1px solid #2a2d31; border-radius: 12px; }
@@ -113,15 +113,15 @@
   .lv-md { position: absolute; width: 38px; height: 38px; margin: -19px 0 0 -19px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 3px solid #fff; background: var(--c, #fff); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55); font: 700 14px system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px #000, 0 0 3px #000; pointer-events: none; }
   .lv-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
   .lv-chip { padding: 8px 12px; font: 600 13px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 999px; cursor: pointer; }
-  .lv-chip.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  .lv-chip.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   .lv-md.is-active { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 0 5px rgba(255, 255, 255, 0.45); }
-  .lv-mdsc { background: #17191c; border-color: #7cff8a; font-size: 18px; }
+  .lv-mdsc { background: #17191c; border-color: #ffe100; font-size: 18px; }
   .lv-md[hidden] { display: none; }
   .lv-map.lv-sc { background-image: linear-gradient(to top, rgba(128, 128, 128, 0.9), rgba(128, 128, 128, 0) 65%), linear-gradient(to right, #8a8a8a, #b48aa8, #ee6a9c, #ff9a4a, #ffe14a); background-color: #555; }
   .lv-modes { margin-top: 8px; }
   .lv-rng { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 13px; color: #a3a3a3; }
   .lv-rng span { flex: none; width: 64px; }
-  .lv-rng input { flex: 1; min-width: 0; height: 32px; accent-color: #7cff8a; }
+  .lv-rng input { flex: 1; min-width: 0; height: 32px; accent-color: #ffe100; }
 </style>
 </head>
 <body>
