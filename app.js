@@ -495,7 +495,7 @@
     // Roam: images wander freely, each on its own path, spin and size.
     textOn: false,
     textValue: "Spot",
-    textFace: "jost-black",
+    textFace: "archivo-black",
     textForm: 45,
     textSize: 55,
     textTrack: 6,

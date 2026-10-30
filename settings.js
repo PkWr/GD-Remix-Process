@@ -50,8 +50,15 @@
     // Type — 3D text layer (text3d.js)
     { id: "ctrlTextOn", type: "switch", label: "Text on", default: false, param: "textOn", after: "text3d" },
     { id: "ctrlTextValue", type: "text", label: "Words", default: "Spot", maxlength: 24, param: "textValue", after: "textBuild" },
-    { id: "ctrlTextFace", type: "select", label: "Typeface", default: "jost-black", param: "textFace", after: "textBuild",
-      options: [["jost-black", "Jost Black"], ["jost-bold", "Jost Bold"], ["dm-serif-display", "DM Serif Display"], ["ibm-plex-mono-italic", "IBM Plex Mono Italic"]] },
+    { id: "ctrlTextFace", type: "select", label: "Typeface", default: "archivo-black", param: "textFace", after: "textBuild",
+      options: [
+        ["archivo-black", "Archivo Black — grotesque"], ["space-grotesk-bold", "Space Grotesk Bold — grotesque"], ["anton", "Anton — condensed grotesque"],
+        ["tomorrow-bold", "Tomorrow Bold — angular"],
+        ["dm-serif-display", "DM Serif Display — serif"],
+        ["unifraktur-maguntia", "UnifrakturMaguntia — fraktur"], ["pirata-one", "Pirata One — fraktur"],
+        ["kaushan-script", "Kaushan Script — brush"], ["caveat-brush", "Caveat Brush — brush"],
+        ["ibm-plex-mono-italic", "IBM Plex Mono Italic — mono"], ["space-mono-bold", "Space Mono Bold — mono"], ["dm-mono-medium", "DM Mono Medium — mono"], ["major-mono-display", "Major Mono Display — mono"],
+      ] },
     { id: "ctrlTextLook", type: "select", label: "Quick looks", default: "custom", after: "textLook",
       help: "Sets the sliders below in one go",
       options: [["custom", "Custom — as set below"], ["flat", "Flat"], ["extruded", "Extruded"], ["balloon", "Balloon"], ["ribbon", "Ribbon"], ["glass", "Glass"]] },

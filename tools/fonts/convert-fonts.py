@@ -3,7 +3,7 @@
 Usage, from the repo root:
   pip install fonttools skia-pathops
   # put the TTFs in tools/fonts/ttf/ (from github.com/google/fonts, ofl/<family>/):
-  #   ibmplexmono/IBMPlexMono-Italic.ttf, jost/Jost[wght].ttf (save as jost_Jost-VF.ttf),
+  #   ibmplexmono/IBMPlexMono-Italic.ttf,
   #   dmserifdisplay/DMSerifDisplay-Regular.ttf
   python3 tools/fonts/convert-fonts.py
 Writes vendor/fonts/typeface/*.typeface.json. Variable fonts are instanced with overlaps
@@ -27,6 +27,8 @@ class P(BasePen):
     def _curveToOne(s,c1,c2,p): s.o+=['b',s.r(p[0]),s.r(p[1]),s.r(c1[0]),s.r(c1[1]),s.r(c2[0]),s.r(c2[1])]
     def _closePath(s): pass
 def conv(path,out,family,weight=None,style='normal'):
+    if not os.path.exists(path):
+        print('skip (no TTF):',path); return
     f=TTFont(path)
     if weight is not None and 'fvar' in f:
         f=instancer.instantiateVariableFont(f,{'wght':weight},overlap=instancer.OverlapMode.REMOVE)
@@ -55,6 +57,19 @@ def conv(path,out,family,weight=None,style='normal'):
     print(out,len(glyphs))
 OUT=os.path.join(ROOT,'vendor','fonts','typeface'); TTF=os.path.join(HERE,'ttf'); os.makedirs(OUT,exist_ok=True)
 conv(os.path.join(TTF,'ibmplexmono_IBMPlexMono-Italic.ttf'),os.path.join(OUT,'ibm-plex-mono-italic.typeface.json'),'IBM Plex Mono',None,'italic')
-conv(os.path.join(TTF,'jost_Jost-VF.ttf'),os.path.join(OUT,'jost-bold.typeface.json'),'Jost',700)
-conv(os.path.join(TTF,'jost_Jost-VF.ttf'),os.path.join(OUT,'jost-black.typeface.json'),'Jost',900)
 conv(os.path.join(TTF,'dmserifdisplay_DMSerifDisplay-Regular.ttf'),os.path.join(OUT,'dm-serif-display.typeface.json'),'DM Serif Display')
+# Second set (29 Oct 2026): grotesque, blackletter, brush script, mono. All SIL OFL, from github.com/google/fonts ofl/<family>/.
+for slug,fam,fn,wt in [
+  ('archivo-black','Archivo Black','archivoblack_ArchivoBlack-Regular.ttf',None),
+  ('anton','Anton','anton_Anton-Regular.ttf',None),
+  ('space-grotesk-bold','Space Grotesk','spacegrotesk_SpaceGrotesk-VF.ttf',700),   # SpaceGrotesk[wght].ttf
+  ('unifraktur-maguntia','UnifrakturMaguntia','unifrakturmaguntia_UnifrakturMaguntia-Book.ttf',None),
+  ('pirata-one','Pirata One','pirataone_PirataOne-Regular.ttf',None),
+  ('kaushan-script','Kaushan Script','kaushanscript_KaushanScript-Regular.ttf',None),
+  ('caveat-brush','Caveat Brush','caveatbrush_CaveatBrush-Regular.ttf',None),
+  ('space-mono-bold','Space Mono','spacemono_SpaceMono-Bold.ttf',None),
+  ('dm-mono-medium','DM Mono','dmmono_DMMono-Medium.ttf',None),
+  ('tomorrow-bold','Tomorrow','tomorrow_Tomorrow-Bold.ttf',None),
+  ('major-mono-display','Major Mono Display','majormonodisplay_MajorMonoDisplay-Regular.ttf',None),
+]:
+    conv(os.path.join(TTF,fn),os.path.join(OUT,slug+'.typeface.json'),fam,wt)
