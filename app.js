@@ -2742,7 +2742,10 @@
     } else {
       applyMoveTransform(destCtx, state.lastEffectFrame, moveState.pan, moveState.tilt, moveState.zoom);
     }
-    if (state.lastBlendMode) {
+    // With Roam on, the blend mode is used between the roaming images where they
+    // overlap (see applyRoam); laying earlier whole frames over the top as well
+    // would double up and wash the picture out.
+    if (state.lastBlendMode && !(roamActive() && state.roam.items.length)) {
       applyBlendOverlay(destCtx, state.lastBlendMode, state.lastBlendOpacity, state.lastBlendLayers);
     }
   }
