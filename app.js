@@ -2525,20 +2525,9 @@
     return state.roamBlend;
   }
 
-  function applyRoam(ctx) {
-    ctx.clearRect(0, 0, STAGE.w, STAGE.h);
-    ctx.imageSmoothingEnabled = true;
-    const breath = (params.roamBreath || 0) / 100;
-    // Overlap blend uses the Blend overlay panel (this cycle's mode and
-    // opacity): the oldest image is laid down normally on the background
-    // colour; every later one blends with what's under it.
-    const blend = roamBlendMode();
-    const blendOpacity = params.opacity;
-    // The Background colour is painted in the canvas itself (not left to show
-    // through from the page behind), so it applies in the gaps whatever is
-    // underneath, with or without a blend.
-    ctx.fillStyle = params.backgroundColor || "#000000";
-    ctx.fillRect(0, 0, STAGE.w, STAGE.h);
+  // Draws every roaming image. With a blend mode (not for the mask pass) each
+  // image after the first blends with what is already under it.
+  function drawRoamItems(ctx, blend, blendOpacity, breath) {
     let first = true;
     for (const it of state.roam.items) {
       const blended = blend && !first;
@@ -2566,6 +2555,42 @@
         }
       }
     }
+  }
+
+  function applyRoam(ctx) {
+    ctx.clearRect(0, 0, STAGE.w, STAGE.h);
+    ctx.imageSmoothingEnabled = true;
+    const breath = (params.roamBreath || 0) / 100;
+    // Overlap blend uses the Blend overlay panel (live mode and opacity): the
+    // oldest image is laid down normally; every later one blends with what is
+    // under it. With a blend on, the Background colour is painted underneath so
+    // the blend has something to work against (it tints the images)...
+    const blend = roamBlendMode();
+    const blendOpacity = params.opacity;
+    if (!blend) {
+      drawRoamItems(ctx, null, 1, breath);
+      return;
+    }
+    ctx.fillStyle = params.backgroundColor || "#000000";
+    ctx.fillRect(0, 0, STAGE.w, STAGE.h);
+    drawRoamItems(ctx, blend, blendOpacity, breath);
+    // ...but the colour itself must not go through the saturation / contrast
+    // filter that covers the stage, so the gaps are cut back out to see-through
+    // and the page's own (unfiltered) Background colour shows there instead.
+    let m = state.roamMask;
+    if (!m || m.width !== STAGE.w || m.height !== STAGE.h) {
+      m = state.roamMask = document.createElement("canvas");
+      m.width = STAGE.w;
+      m.height = STAGE.h;
+    }
+    const mctx = m.getContext("2d");
+    mctx.clearRect(0, 0, STAGE.w, STAGE.h);
+    mctx.imageSmoothingEnabled = true;
+    drawRoamItems(mctx, null, 1, breath);
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.globalAlpha = 1;
+    ctx.drawImage(m, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
   }
 
   // Strip layers ("lanes"): 1–3 strips at once, each its own line of
