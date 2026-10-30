@@ -33,6 +33,32 @@
   ];
 
   const $ = (id) => document.getElementById(id);
+  let selPal = 1; // which palette the colour pads edit
+  const padsOf = (f) =>
+    f.palettes
+      ? [...padsOf(f), { color: "Fg", x: "Hue", y: "Brightness", title: "Foreground" }, { color: "Bg", x: "Hue", y: "Brightness", title: "Background" }]
+      : padsOf(f);
+  const colId = (p) => `ctrlPalette${selPal}${p.color}`;
+  const idsOf = (p) => (p.color ? [colId(p)] : p.xy || p.cs);
+
+  function hexToHsl(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, l = (mx + mn) / 2;
+    let h = 0;
+    if (d) {
+      if (mx === r) h = ((g - b) / d + 6) % 6;
+      else if (mx === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+    }
+    return [h * 60, d ? d / (1 - Math.abs(2 * l - 1)) : 0, l];
+  }
+  function hslToHex(h, s, l) {
+    const k = (n) => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = (n) => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))));
+    return "#" + [f(0), f(8), f(4)].map((v) => v.toString(16).padStart(2, "0")).join("");
+  }
   const VIEW_KEY = "spotRemoteView";
   const FUNC_KEY = "spotRemoteFunc";
   const store = {
@@ -69,6 +95,12 @@
 
   // Where a pad's dot sits (0..1 across, 0..1 up) for its current settings.
   function padPos(p) {
+    if (p.color) {
+      const el = $(colId(p));
+      if (!el) return null;
+      const [h, , lum] = hexToHsl(el.value);
+      return [h / 360, lum];
+    }
     if (p.xy) {
       const [x, y] = p.xy.map($);
       return x && y ? [frac(x), frac(y)] : null;
@@ -83,6 +115,14 @@
   }
 
   function padSet(p, fx, fy) {
+    if (p.color) {
+      const el = $(colId(p));
+      if (!el) return;
+      const [, s] = hexToHsl(el.value);
+      el.value = hslToHex(Math.min(359.9, fx * 360), 1, fy); // full colour; top is white, bottom black
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
+    }
     if (p.xy) {
       const [x, y] = p.xy.map($);
       if (!x || !y) return;
@@ -132,14 +172,18 @@
   // The four palettes: tap the number to take one in or out of rotation;
   // tap a swatch to pick its highlight / shadow colour (the phone's own picker).
   function paletteHtml() {
-    let h = `<p class="lv-h">Duotone palettes</p>`;
+    const dot = (id, label) =>
+      `<label class="lv-dotc" title="${label}"><input type="color" data-id="${id}" aria-label="${label}"></label>`;
+    let h = `<p class="lv-h">Duotone palettes <span class="lv-key">tap a number to edit that palette · dots: foreground, background</span></p><div class="lv-pals">`;
     for (let n = 1; n <= 4; n++) {
       h +=
-        `<div class="lv-pal-row"><button type="button" class="lv-pal-n" data-n="${n}" aria-label="Palette ${n} in rotation">${n}</button>` +
-        `<label class="lv-sw"><input type="color" data-id="ctrlPalette${n}Fg" aria-label="Palette ${n} highlights"><span>Highlights</span></label>` +
-        `<label class="lv-sw"><input type="color" data-id="ctrlPalette${n}Bg" aria-label="Palette ${n} shadows"><span>Shadows</span></label></div>`;
+        `<div class="lv-pal-cell"><button type="button" class="lv-pal-n" data-n="${n}" aria-label="Edit palette ${n}">${n}</button>` +
+        dot(`ctrlPalette${n}Fg`, `Palette ${n} foreground (highlights)`) +
+        dot(`ctrlPalette${n}Bg`, `Palette ${n} background (shadows)`) +
+        `</div>`;
     }
-    return h + `<button type="button" class="lv-btn lv-wide" id="lvPalRand">Random palette each image</button>`;
+    h += `</div><p class="lv-h">Screen</p><div class="lv-pals"><div class="lv-pal-cell lv-screen">` + dot("ctrlBackground", "Screen background colour") + `<span class="lv-cap">Screen background</span></div></div>`;
+    return h + `<button type="button" class="lv-btn lv-wide" id="lvPalOn"></button><button type="button" class="lv-btn lv-wide" id="lvPalRand">Random palette each image</button>`;
   }
 
   function renderPads() {
@@ -147,15 +191,15 @@
     onEl.innerHTML = f.on
       ? `<button type="button" class="lv-on" id="lvOnBtn" data-for="${f.on}">${f.onLabel || f.label}<span></span></button>`
       : "";
-    padsEl.className = "lv-pads" + (f.pads.length === 1 ? " one" : "");
+    padsEl.className = "lv-pads" + (padsOf(f).length === 1 ? " one" : "");
     palEl.innerHTML = f.palettes ? paletteHtml() : "";
-    padsEl.innerHTML = f.pads
+    padsEl.innerHTML = padsOf(f)
       .map(
         (p, i) =>
-          `<div class="lv-pad" data-i="${i}" tabindex="0" role="group" aria-label="${p.x} and ${p.y}">` +
+          `<div class="lv-pad${p.color ? " lv-hue" : ""}" data-i="${i}" tabindex="0" role="group" aria-label="${p.title ? p.title + " " : ""}${p.x} and ${p.y}">` +
           `<span class="lv-zero lv-zx" hidden></span><span class="lv-zero lv-zy" hidden></span>` +
           `<span class="lv-dot"></span>` +
-          `<span class="lv-tag lv-tx">${p.x} →</span><span class="lv-tag lv-ty">↑ ${p.y}</span>` +
+          `<span class="lv-tag lv-tx">${p.x} →</span><span class="lv-tag lv-ty">${p.title ? p.title + " · " : ""}↑ ${p.y}</span>` +
           `<span class="lv-tag lv-tv"></span></div>`
       )
       .join("");
@@ -165,12 +209,18 @@
   function refresh() {
     const f = FUNCS.find((x) => x.id === current);
     padsEl.querySelectorAll(".lv-pad").forEach((pad) => {
-      const p = f.pads[+pad.dataset.i];
+      const p = padsOf(f)[+pad.dataset.i];
       const pos = padPos(p);
       if (!pos) return;
       pad.style.setProperty("--px", `${pos[0] * 100}%`);
       pad.style.setProperty("--py", `${(1 - pos[1]) * 100}%`);
       // Middle lines for signed settings (spin, pan, tilt…).
+      if (p.color) {
+        const el = $(colId(p));
+        pad.style.setProperty("--dc", el ? el.value : "#fff");
+        pad.querySelector(".lv-tv").textContent = el ? el.value : "";
+        return;
+      }
       const ids = p.xy || [];
       [["lv-zx", ids[0], true], ["lv-zy", ids[1], false]].forEach(([cls, id, horiz]) => {
         const el = id && $(id);
@@ -192,7 +242,14 @@
     palEl.querySelectorAll(".lv-pal-n").forEach((b) => {
       const sw = $(`ctrlPalette${b.dataset.n}Enabled`);
       b.classList.toggle("is-on", !!(sw && sw.checked));
+      b.classList.toggle("is-sel", +b.dataset.n === selPal);
     });
+    const po = $("lvPalOn");
+    if (po) {
+      const sw = $(`ctrlPalette${selPal}Enabled`);
+      po.classList.toggle("is-on", !!(sw && sw.checked));
+      po.textContent = `Palette ${selPal}: ${sw && sw.checked ? "in rotation" : "out of rotation"}`;
+    }
     const pr = $("lvPalRand");
     if (pr) pr.classList.toggle("is-on", !!($("ctrlPaletteRandomize") || {}).checked);
     FUNCS.forEach((fn) => {
@@ -261,14 +318,17 @@
       refresh();
     };
     const n = e.target.closest(".lv-pal-n");
-    if (n) flip(`ctrlPalette${n.dataset.n}Enabled`);
+    if (n) {
+      selPal = +n.dataset.n;
+      refresh();
+    } else if (e.target.closest("#lvPalOn")) flip(`ctrlPalette${selPal}Enabled`);
     else if (e.target.closest("#lvPalRand")) flip("ctrlPaletteRandomize");
   });
 
   let drag = null;
   function fromPointer(e, pad) {
     const f = FUNCS.find((x) => x.id === current);
-    const p = f.pads[+pad.dataset.i];
+    const p = padsOf(f)[+pad.dataset.i];
     const r = pad.getBoundingClientRect();
     const fx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
     const fy = Math.min(1, Math.max(0, 1 - (e.clientY - r.top) / r.height));
@@ -289,8 +349,8 @@
   const endDrag = () => {
     if (!drag) return;
     const f = FUNCS.find((x) => x.id === current);
-    const p = f.pads[+drag.dataset.i];
-    (p.xy || p.cs).forEach((id) => $(id) && $(id).dispatchEvent(new Event("change", { bubbles: true })));
+    const p = padsOf(f)[+drag.dataset.i];
+    idsOf(p).forEach((id) => $(id) && $(id).dispatchEvent(new Event("change", { bubbles: true })));
     drag = null;
   };
   padsEl.addEventListener("pointerup", endDrag);
@@ -299,9 +359,13 @@
     const pad = e.target.closest(".lv-pad");
     if (!pad) return;
     const f = FUNCS.find((x) => x.id === current);
-    (f.pads[+pad.dataset.i].xy || f.pads[+pad.dataset.i].cs).forEach((id) => {
+    idsOf(padsOf(f)[+pad.dataset.i]).forEach((id) => {
       const el = $(id);
-      if (el) put(el, +el.defaultValue);
+      if (!el) return;
+      if (el.type === "color") {
+        el.value = el.defaultValue;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      } else put(el, +el.defaultValue);
     });
     refresh();
   });

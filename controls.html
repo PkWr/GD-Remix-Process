@@ -94,6 +94,21 @@
   .lv-sw input { width: 44px; height: 36px; padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; }
   .lv-wide { width: 100%; margin-top: 4px; }
   .lv-btn.is-on { color: #0b0b0c; background: #7cff8a; border-color: #7cff8a; }
+  .lv-key { margin-left: 6px; text-transform: none; letter-spacing: 0; color: #6f7378; }
+  .lv-pals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .lv-pal-cell { display: flex; align-items: center; gap: 10px; padding: 6px 8px; background: #17191c; border: 1px solid #2a2d31; border-radius: 12px; }
+  .lv-dotc { flex: none; display: block; width: 44px; height: 44px; }
+  .lv-dotc input { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; padding: 0; margin: 0; border: 2px solid #3a3d42; border-radius: 50%; background: none; overflow: hidden; cursor: pointer; }
+  .lv-dotc input::-webkit-color-swatch-wrapper { padding: 0; }
+  .lv-dotc input::-webkit-color-swatch { border: 0; border-radius: 50%; }
+  .lv-dotc input::-moz-color-swatch { border: 0; border-radius: 50%; }
+  .lv-screen { grid-column: 1 / -1; }
+  .lv-cap { font-size: 13px; color: #a3a3a3; }
+  .lv-hue { background-image: linear-gradient(to bottom, #fff 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0) 50%, #000 100%), linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); background-color: #000; --dc: #fff; }
+  .lv-hue .lv-dot { background: var(--dc); box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(0, 0, 0, 0.5); }
+  .lv-hue .lv-tag { color: #fff; text-shadow: 0 1px 2px #000; }
+  .lv-hue .lv-tv { color: #fff; }
+  .lv-pal-n.is-sel { box-shadow: inset 0 0 0 2px #ececec; }
 </style>
 </head>
 <body>
