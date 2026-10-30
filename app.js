@@ -3250,6 +3250,21 @@
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(refreshNow, 220); // let a slider drag settle
   }
+  // Changes from the phone remote always apply live, as if N were on: the
+  // picture is redrawn while you drag (at most about four times a second — twice on
+  // very large stages — and always once more for the final value), not on the next image.
+  let remoteRefreshTimer = null;
+  function remoteRefresh(id) {
+    if (params.applyNow) return; // applySetting already does it
+    if (LIVE_ALREADY.has(id) || /^ctrlForms/.test(id) || !state.hasCycled) return;
+    if (remoteRefreshTimer) return;
+    // Big stages (the Igloo, about 12 million pixels) redraw at half the rate.
+    const delay = STAGE.w * STAGE.h > 4e6 ? 500 : 250;
+    remoteRefreshTimer = setTimeout(() => {
+      remoteRefreshTimer = null;
+      refreshNow();
+    }, delay);
+  }
   function refreshNow() {
     if (state.sources.length === 0 && !camera.live) return;
     if (cycleTimeoutId) {
@@ -4169,7 +4184,10 @@
       if (!state.paused) cycle();
     } else if (msg.type === "input") {
       const el = document.getElementById(msg.id);
-      if (el) applyControlValue(el, msg);
+      if (el) {
+        applyControlValue(el, msg);
+        remoteRefresh(el.id);
+      }
     }
   }
 
