@@ -1381,15 +1381,15 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 /* --- phone remote QR: bottom left of the screen, fades when the mouse is still --- */
 #remoteQrOverlay {
   position: fixed; left: 16px; bottom: 16px; z-index: 25;
-  padding: 10px; border-radius: 12px; text-align: center;
+  padding: 6px; border-radius: 10px; text-align: center;
   background: rgba(0, 0, 0, 0.72); color: #fff;
-  font: 600 13px system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 600 11px system-ui, -apple-system, "Segoe UI", sans-serif;
   opacity: 0; pointer-events: none; transition: opacity 0.6s ease;
 }
 #remoteQrOverlay.shown.active { opacity: 1; }
-#remoteQrOverlay .q { width: 168px; background: #fff; border-radius: 6px; }
+#remoteQrOverlay .q { width: 100px; background: #fff; border-radius: 4px; }
 #remoteQrOverlay .q:empty { display: none; }
 #remoteQrOverlay .q svg { display: block; width: 100%; height: auto; }
-#remoteQrOverlay p { margin: 8px 0 0; }
-#remoteQrOverlay.big { padding: 18px; border-radius: 20px; font-size: 24px; }
-#remoteQrOverlay.big .q { width: 340px; border-radius: 10px; }
+#remoteQrOverlay p { margin: 5px 0 0; }
+#remoteQrOverlay.big { padding: 10px; border-radius: 14px; font-size: 14px; }
+#remoteQrOverlay.big .q { width: 180px; border-radius: 6px; }
