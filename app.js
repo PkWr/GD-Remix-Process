@@ -306,7 +306,6 @@
     // On = current behaviour, a random value between holdMin/holdMax every
     // cycle. Same on/off-toggle-over-a-range pattern as Blend layers'
     // "Randomize layer count".
-    randomizeSpeed: true,
     opacity: 1,
     // Off = hard cut (both canvases jump straight to their end opacity, no
     // CSS transition). On = the CROSSFADE_MS ease that's always run so far.
@@ -325,10 +324,8 @@
     // separate Randomize switch).
     halftoneMin: initialHalftoneRange.min,
     halftoneMax: initialHalftoneRange.max,
-    randomizeHalftoneScale: true, // same range-carries-the-choice pattern as Pixelate
     asciiMin: initialAsciiRange.min,
     asciiMax: initialAsciiRange.max,
-    randomizeAsciiScale: true, // same range-carries-the-choice pattern as Pixelate
     asciiRampStyle: "density",
     // Off = always use the dropdown's ramp style. On = pick a random ramp
     // style every cycle instead. Separate from randomize*Scale above — this
@@ -396,7 +393,6 @@
     // on/off-over-a-range pattern as Speed/Pixelate/Halftone/ASCII scale.
     animatePaletteDensityMin: 0,
     animatePaletteDensityMax: 20,
-    randomizeAnimatePaletteDensity: false,
     // Which EFFECTS keys the random engine is allowed to pick — checking a
     // box in each effect's own "In rotation" toggle turns it on here. v2
     // default: every effect on, Untouched off (v1's workshop opened on
@@ -990,7 +986,7 @@
   // cell), so when randomized, coverage itself drifts tick to tick rather
   // than every cell picking its own independent coverage threshold.
   function resolveAnimatePaletteDensity() {
-    if (!params.randomizeAnimatePaletteDensity) {
+    if (params.animatePaletteDensityMin === params.animatePaletteDensityMax) {
       return params.animatePaletteDensityMin;
     }
     const min = Math.min(params.animatePaletteDensityMin, params.animatePaletteDensityMax);
@@ -1510,7 +1506,7 @@
       // defensive floor regardless of what the sliders allow — see
       // applyHalftone's own clamp and the perf note above it.
       randomParams: () => ({
-        cellSize: params.randomizeHalftoneScale
+        cellSize: params.halftoneMax !== params.halftoneMin
           ? Math.round(
               Math.max(
                 6,
@@ -1528,10 +1524,10 @@
       // Explicit min/max sliders, same pattern as Pixelate/Halftone. Ramp
       // style normally follows the dropdown, but gets randomized per cycle
       // when randomizeAsciiRamp is on — a separate toggle from
-      // randomizeAsciiScale, since one is about cell size and the other is
+      // the size range, since one is about cell size and the other is
       // about which character set is used.
       randomParams: () => ({
-        cellSize: params.randomizeAsciiScale
+        cellSize: params.asciiMax !== params.asciiMin
           ? Math.round(
               Math.min(params.asciiMin, params.asciiMax) +
                 Math.random() * Math.abs(params.asciiMax - params.asciiMin)
@@ -2068,7 +2064,7 @@
 
   function randomHold() {
     let holdMs;
-    if (!params.randomizeSpeed) {
+    if (params.holdMin === params.holdMax) {
       holdMs = params.holdMin * 1000;
     } else {
       const min = Math.min(params.holdMin, params.holdMax);
@@ -3204,7 +3200,7 @@
   // don't need a redraw.
   const LIVE_ALREADY = new Set([
     "ctrlApplyNow", "ctrlAutoCycle", "ctrlLiveMode", "ctrlCamera", "ctrlSaturation", "ctrlContrast",
-    "ctrlSpeedMin", "ctrlSpeedMax", "ctrlSpeedRandomize", "ctrlStartUnchanged",
+    "ctrlSpeedMin", "ctrlSpeedMax", "ctrlStartUnchanged",
   ]);
   let refreshTimer = null;
   function refreshSoon(id) {

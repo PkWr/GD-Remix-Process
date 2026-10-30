@@ -65,8 +65,6 @@
     // Halftone
     { id: "ctrlHalftoneMin", type: "range", label: "Halftone dot grid minimum", min: 6, max: 32, step: 1, default: 6, int: true, format: "px", param: "halftoneMin" },
     { id: "ctrlHalftoneMax", type: "range", label: "Halftone dot grid maximum", min: 6, max: 32, step: 1, default: 11, int: true, format: "px", param: "halftoneMax" },
-    { id: "ctrlHalftoneRandomize", type: "switch", label: "Random size each image", default: true, param: "randomizeHalftoneScale",
-      help: "Off = fixed at the lower value. On = random between the two each image." },
     { id: "ctrlHalftoneRandomCellSize", type: "switch", label: "Uneven dots", default: false, param: "halftoneRandomCellSize",
       help: "Dots at the same brightness vary in size" },
 
@@ -75,8 +73,6 @@
     { id: "ctrlAsciiMax", type: "range", label: "ASCII character size maximum", min: 8, max: 40, step: 1, default: 24, int: true, format: "px", param: "asciiMax" },
     { id: "ctrlAsciiRamp", type: "select", label: "Characters", default: "density", param: "asciiRampStyle",
       options: [["density", "Density  .:-=+*#%@"], ["blocks", "Blocks  ░▒▓█"], ["binary", "Binary  space / #"]] },
-    { id: "ctrlAsciiRandomize", type: "switch", label: "Random size each image", default: true, param: "randomizeAsciiScale",
-      help: "Off = fixed at the lower value. On = random between the two each image." },
     { id: "ctrlAsciiRampRandomize", type: "switch", label: "Random characters each image", default: false, param: "randomizeAsciiRamp" },
     { id: "ctrlAsciiAnimate", type: "switch", label: "Flicker characters", default: true, param: "asciiAnimate",
       help: "Swaps glyphs of the same weight in place" },
@@ -104,7 +100,6 @@
       help: "Cells in Pixelate, Halftone and ASCII roll their own random palette on every animation tick" },
     { id: "ctrlAnimatePaletteDensityMin", type: "range", label: "Shimmer coverage minimum", min: 0, max: 100, step: 1, default: 0, int: true, format: "percent", param: "animatePaletteDensityMin" },
     { id: "ctrlAnimatePaletteDensityMax", type: "range", label: "Shimmer coverage maximum", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "animatePaletteDensityMax" },
-    { id: "ctrlAnimatePaletteDensityRandomize", type: "switch", label: "Random coverage", default: false, param: "randomizeAnimatePaletteDensity" },
 
     // Colour — whole screen
     { id: "ctrlBackground", type: "color", label: "Background colour", default: "#000000", param: "backgroundColor", after: "background",
@@ -115,8 +110,6 @@
     // Motion — timing & transitions
     { id: "ctrlSpeedMin", type: "range", label: "Hold time minimum", min: 0.1, max: 20, step: 0.1, default: 2.5, format: "seconds", param: "holdMin" },
     { id: "ctrlSpeedMax", type: "range", label: "Hold time maximum", min: 0.1, max: 20, step: 0.1, default: 9, format: "seconds", param: "holdMax" },
-    { id: "ctrlSpeedRandomize", type: "switch", label: "Random hold", default: true, param: "randomizeSpeed",
-      help: "Off = always the lower value. On = random between the two each image." },
     { id: "ctrlAutoCycle", type: "switch", label: "Auto-advance", default: true, after: "autoCycle",
       help: "Same as P / the pause button" },
     { id: "ctrlApplyNow", type: "switch", label: "Apply changes straight away", default: false, param: "applyNow",
@@ -258,11 +251,11 @@
       ] },
       { card: "Halftone", summary: "dot grid", switch: "ctrlEffectHalftone", items: [
         { dual: ["ctrlHalftoneMin", "ctrlHalftoneMax"], label: "Dot grid" },
-        "ctrlHalftoneRandomize", "ctrlHalftoneRandomCellSize",
+        "ctrlHalftoneRandomCellSize",
       ] },
       { card: "ASCII", summary: "characters · flicker", switch: "ctrlEffectAscii", items: [
         { dual: ["ctrlAsciiMin", "ctrlAsciiMax"], label: "Character size" },
-        "ctrlAsciiRamp", "ctrlAsciiRandomize", "ctrlAsciiRampRandomize", "ctrlAsciiAnimate", "ctrlAsciiRandomCellSize",
+        "ctrlAsciiRamp", "ctrlAsciiRampRandomize", "ctrlAsciiAnimate", "ctrlAsciiRandomCellSize",
       ] },
     ] },
     { tab: "colour", label: "Colour", icon: "palette", blocks: [
@@ -274,14 +267,13 @@
       { section: "Shimmer", items: [
         "ctrlAnimatePaletteColor",
         { dual: ["ctrlAnimatePaletteDensityMin", "ctrlAnimatePaletteDensityMax"], label: "Coverage" },
-        "ctrlAnimatePaletteDensityRandomize",
       ] },
       { section: "Whole screen", items: ["ctrlSaturation", "ctrlContrast", "ctrlBackground"] },
     ] },
     { tab: "motion", label: "Motion", icon: "animation", blocks: [
       { section: "Timing", items: [
         { dual: ["ctrlSpeedMin", "ctrlSpeedMax"], label: "Hold each image" },
-        "ctrlSpeedRandomize", "ctrlAutoCycle", "ctrlApplyNow",
+        "ctrlAutoCycle", "ctrlApplyNow",
       ] },
       { section: "Transitions", items: ["ctrlCrossfadeEnabled", "ctrlOpacity", { note: "The camera always hard-cuts." }] },
       { card: "Move", summary: "pan · tilt · zoom", summarize: "move", items: [
