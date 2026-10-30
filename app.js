@@ -2495,6 +2495,8 @@
         it.phase += it.prate * dt;
       }
     }
+    // Count turned down: let the oldest go.
+    while (r.items.length > Math.round(params.roamCount)) r.items.shift();
     if (roamWraps()) {
       for (const it of r.items) {
         it.x = ((it.x % W) + W) % W;
@@ -2660,7 +2662,11 @@
 
   function pushStripFrame(canvas) {
     if (params.roamOn) {
-      pushRoamItem(canvas);
+      // Only add an image if there's room. A redraw of the current picture
+      // (Apply changes straight away, or any change from the phone) runs a
+      // cycle too, and without this cap each one added another image, up to
+      // hundreds, all held in memory until they aged out.
+      if (state.roam.items.length < Math.round(params.roamCount)) pushRoamItem(canvas);
       return;
     }
     if (!ensureStripLanes()) return;
