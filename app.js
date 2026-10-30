@@ -5512,12 +5512,35 @@
     el.innerHTML = '<div class="q" id="remoteQr"></div><p>Spot Remote</p>';
     if (STAGE.profile === "igloo") el.classList.add("big");
     document.body.appendChild(el);
+    positionRemoteQr();
+    window.addEventListener("resize", positionRemoteQr);
+    document.addEventListener("fullscreenchange", positionRemoteQr);
     ["mousemove", "pointerdown", "touchstart", "keydown"].forEach((ev) =>
       window.addEventListener(ev, () => pokeRemoteQr(), { passive: true })
     );
     pokeRemoteQr(STAGE.profile === "igloo" ? QR_START_GRACE_MS : QR_IDLE_MS);
     return el;
   }
+  // On the Igloo the code sits on the strip itself, bottom left, and scales
+  // with it: the stage is shown "contained" in the window (smaller than the
+  // window in a preview, 1:1 on the real walls), so the code is sized and
+  // placed from the stage's own position, not the window's corner.
+  function positionRemoteQr() {
+    const el = document.getElementById("remoteQrOverlay");
+    if (!el || STAGE.profile !== "igloo") return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const aspect = STAGE.w / STAGE.h;
+    const w = vw / vh > aspect ? vh * aspect : vw;
+    const h = w / aspect;
+    const scale = w / STAGE.w;
+    const margin = 16 * scale;
+    el.style.left = `${(vw - w) / 2 + margin}px`;
+    el.style.bottom = `${(vh - h) / 2 + margin}px`;
+    el.style.transformOrigin = "left bottom";
+    el.style.transform = `scale(${scale})`;
+  }
+
   function pokeRemoteQr(ms) {
     const el = document.getElementById("remoteQrOverlay");
     if (!el) return;
