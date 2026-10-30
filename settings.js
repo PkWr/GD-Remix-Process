@@ -194,7 +194,7 @@
     { id: "ctrlMoveSpeedMin", type: "range", label: "Random move strength minimum", min: 0, max: 100, step: 1, default: 20, int: true, format: "percent", param: "moveSpeedMin" },
     { id: "ctrlMoveSpeedMax", type: "range", label: "Random move strength maximum", min: 0, max: 100, step: 1, default: 80, int: true, format: "percent", param: "moveSpeedMax" },
 
-    // Motion — Blend overlay
+    // Colour — Blend overlay
     { id: "ctrlBlendOverlay", type: "switch", label: "Blend overlay on", default: false, param: "blendOverlayEnabled" },
     { id: "ctrlBlendModeMultiply", type: "chip", label: "Multiply", default: true, param: "enabledBlendModes.multiply" },
     { id: "ctrlBlendModeScreen", type: "chip", label: "Screen", default: true, param: "enabledBlendModes.screen" },
@@ -267,6 +267,12 @@
         { dual: ["ctrlAnimatePaletteDensityMin", "ctrlAnimatePaletteDensityMax"], label: "Coverage" },
       ] },
       { section: "Whole screen", items: ["ctrlSaturation", "ctrlContrast", "ctrlBackground"] },
+      { card: "Blend overlay", summary: "past frames on top", switch: "ctrlBlendOverlay", items: [
+        { chips: ["ctrlBlendModeMultiply", "ctrlBlendModeScreen", "ctrlBlendModeOverlay", "ctrlBlendModeDarken",
+          "ctrlBlendModeLighten", "ctrlBlendModeDifference", "ctrlBlendModeExclusion", "ctrlBlendModeHardLight"], label: "Modes" },
+        "ctrlBlendLayers", "ctrlRandomBlendLayers",
+        { note: "With Roam on, these modes also blend the roaming images where they overlap." },
+      ] },
     ] },
     { tab: "motion", label: "Motion", icon: "animation", blocks: [
       { section: "Timing", items: [
@@ -321,12 +327,6 @@
             { note: "With Behind: black, the glass becomes a window — the picture only shows through the shapes." }] },
           "ctrlFormsBehind",
         ] },
-      ] },
-      { card: "Blend overlay", summary: "past frames on top", switch: "ctrlBlendOverlay", items: [
-        { chips: ["ctrlBlendModeMultiply", "ctrlBlendModeScreen", "ctrlBlendModeOverlay", "ctrlBlendModeDarken",
-          "ctrlBlendModeLighten", "ctrlBlendModeDifference", "ctrlBlendModeExclusion", "ctrlBlendModeHardLight"], label: "Modes" },
-        "ctrlBlendLayers", "ctrlRandomBlendLayers",
-        { note: "With Roam on, these modes also blend the roaming images where they overlap." },
       ] },
     ] },
     { tab: "show", label: "Show", icon: "slideshow", blocks: [
