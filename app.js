@@ -519,6 +519,8 @@
     roamAngle: 90,
     roamSpread: 30,
     roamBreath: 40,
+    roamBlend: "normal",
+    roamOpacity: 1,
     backgroundColor: "#000000",
     // Echo trail: the moving picture leaves fading echoes ("off" | "smear"
     // | "even" | "ragged"), with length and strength 0–100.
@@ -1197,7 +1199,20 @@
   // both for the initial per-cycle render AND for every later redraw this
   // cycle (Move overlay's pan ticks) against a frozen, identical set of
   // frames — see state.lastBlendLayers in renderFrame/composeFrame below.
+  // Blend modes (multiply, screen…) only mix with what is already on the
+  // canvas, and see-through gaps count as nothing. So before blending, put
+  // the background colour behind whatever is there: the blend then works
+  // against it, like it does against the pictures.
+  function fillBackdrop(ctx) {
+    ctx.globalCompositeOperation = "destination-over";
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = params.backgroundColor || "#000000";
+    ctx.fillRect(0, 0, STAGE.w, STAGE.h);
+    ctx.globalCompositeOperation = "source-over";
+  }
+
   function applyBlendOverlay(ctx, mode, opacity, layers) {
+    if (layers.length && mode !== "source-over" && mode !== "normal") fillBackdrop(ctx);
     for (const frame of layers) {
       ctx.globalCompositeOperation = mode;
       ctx.globalAlpha = opacity;
@@ -2436,7 +2451,17 @@
     ctx.clearRect(0, 0, STAGE.w, STAGE.h);
     ctx.imageSmoothingEnabled = true;
     const breath = (params.roamBreath || 0) / 100;
+    // Overlap blend: the oldest image is laid down normally on the
+    // background colour; every later one blends with what's under it.
+    const blend = params.roamBlend && params.roamBlend !== "normal" ? params.roamBlend : null;
+    if (blend) {
+      ctx.fillStyle = params.backgroundColor || "#000000";
+      ctx.fillRect(0, 0, STAGE.w, STAGE.h);
+    }
+    let first = true;
     for (const it of state.roam.items) {
+      const blended = blend && !first;
+      first = false;
       const s = it.size * (1 + breath * 0.35 * Math.sin(it.phase));
       const alpha = Math.min(1, it.age / 1.2, (ROAM_LIFE - it.age) / 2);
       const wrap = roamWraps();
@@ -2448,7 +2473,8 @@
           const y = it.y + oy * STAGE.h;
           if (wrap && (x < -rad || x > STAGE.w + rad || y < -rad || y > STAGE.h + rad)) continue;
           ctx.save();
-          ctx.globalAlpha = alpha;
+          ctx.globalAlpha = blended ? alpha * params.roamOpacity : alpha;
+          ctx.globalCompositeOperation = blended ? blend : "source-over";
           ctx.translate(x, y);
           ctx.rotate(it.rot);
           ctx.scale(s, s);
@@ -2557,6 +2583,7 @@
     ctx.imageSmoothingEnabled = true; // needed for the sub-pixel glide below
     state.strip.lanes.forEach((lane, i) => {
       if (i > 0) {
+        if (params.stripBlend !== "normal") fillBackdrop(ctx);
         ctx.globalCompositeOperation = params.stripBlend === "normal" ? "source-over" : params.stripBlend;
         ctx.globalAlpha = params.stripOpacity;
       }
