@@ -4015,6 +4015,19 @@
   let remotePresence = { remote: 0 };
   let remoteStatus = "";
   let remoteInfo = null;
+  const QR_SHOWN_KEY = "spotRemoteQrShown";
+  const QR_IDLE_MS = 4000;
+  const QR_START_GRACE_MS = 90000; // on the Igloo, stay up while people scan
+  let remoteQrShown = (() => {
+    try {
+      const v = sessionStorage.getItem(QR_SHOWN_KEY);
+      if (v !== null) return v === "1";
+    } catch (e) {
+      /* default below */
+    }
+    return STAGE.profile === "igloo";
+  })();
+  let remoteQrTimer = 0;
   const remoteLink = window.SpotLink
     ? window.SpotLink.open({
         role: "display",
@@ -4972,6 +4985,7 @@
     on("cpMineAgain", () => useRememberedFolder(true));
     on("cpMineForget", forgetFolder);
     on("cpFullscreen", toggleFullscreen);
+    on("remoteShow", () => setRemoteQrShown(!remoteQrShown));
     on("remoteNewCode", () => {
       if (!remoteLink) return;
       remoteLink.setCode(window.SpotLink.code(true)); // a new code disconnects any phone
@@ -5406,12 +5420,51 @@
       sendRemoteScenes();
     }
   }
+  // The QR sits bottom left of the screen, shown with the Show tab's "Show
+  // code" button, faded when the mouse is still, and on at start on the Igloo.
+  function ensureRemoteOverlay() {
+    let el = document.getElementById("remoteQrOverlay");
+    if (el) return el;
+    el = document.createElement("div");
+    el.id = "remoteQrOverlay";
+    el.setAttribute("aria-hidden", "true");
+    el.innerHTML = '<div class="q" id="remoteQr"></div><p>Scan to control Spot</p>';
+    if (STAGE.profile === "igloo") el.classList.add("big");
+    document.body.appendChild(el);
+    ["mousemove", "pointerdown", "touchstart", "keydown"].forEach((ev) =>
+      window.addEventListener(ev, () => pokeRemoteQr(), { passive: true })
+    );
+    pokeRemoteQr(STAGE.profile === "igloo" ? QR_START_GRACE_MS : QR_IDLE_MS);
+    return el;
+  }
+  function pokeRemoteQr(ms) {
+    const el = document.getElementById("remoteQrOverlay");
+    if (!el) return;
+    el.classList.add("active");
+    clearTimeout(remoteQrTimer);
+    remoteQrTimer = setTimeout(() => el.classList.remove("active"), typeof ms === "number" ? ms : QR_IDLE_MS);
+  }
+  function setRemoteQrShown(on) {
+    remoteQrShown = on;
+    try {
+      sessionStorage.setItem(QR_SHOWN_KEY, on ? "1" : "0");
+    } catch (e) {
+      /* session only */
+    }
+    if (on) pokeRemoteQr();
+    renderRemotePanel();
+  }
+
   async function renderRemotePanel() {
-    const box = document.getElementById("remoteQr");
-    const note = document.getElementById("remoteNote");
-    if (!box || !note) return;
+    const overlay = ensureRemoteOverlay();
+    const box = overlay.querySelector("#remoteQr");
+    const note = document.getElementById("remoteNote") || {};
     const btns = document.getElementById("remoteBtns");
-    if (!window.SpotLink || !window.SpotLink.enabled) {
+    const showBtn = document.getElementById("remoteShow");
+    const enabled = !!(window.SpotLink && window.SpotLink.enabled) && !pageParams.has("reel");
+    overlay.classList.toggle("shown", enabled && remoteQrShown);
+    if (showBtn) showBtn.textContent = remoteQrShown ? "Hide code" : "Show code";
+    if (!enabled) {
       box.innerHTML = "";
       box.dataset.link = "";
       if (btns) btns.hidden = true;
@@ -5421,7 +5474,6 @@
     if (btns) btns.hidden = false;
     const link = new URL("controls.html?s=" + window.SpotLink.code(), location.href).href;
     if (box.dataset.link !== link) {
-      box.dataset.link = link;
       box.innerHTML = "";
       try {
         const qrcode = await loadQrLib();
@@ -5429,7 +5481,9 @@
         qr.addData(link);
         qr.make();
         box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+        box.dataset.link = link; // only once it is drawn, so a failed try is retried
       } catch (e) {
+        box.dataset.link = "";
         note.textContent = `Couldn't draw the QR code (${e.message}).`;
         return;
       }
@@ -5439,7 +5493,7 @@
         ? "Reaching the relay…" + (remoteStatus === "offline" && remoteInfo && remoteInfo.code ? ` (code ${remoteInfo.code}, try ${remoteInfo.attempts})` : "")
         : remotePresence.remote
           ? "A phone is connected. New code disconnects it."
-          : "Scan with a phone camera to control this display. One phone at a time.";
+          : "Press Show code, then scan the QR at the bottom left of the screen with a phone camera. One phone at a time.";
   }
 
   async function shareScene(scene) {

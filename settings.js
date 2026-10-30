@@ -594,9 +594,9 @@
         );
       case "remote":
         return (
-          `<div class="cp-remote"><div class="cp-qr" id="remoteQr"></div>` +
+          `<div class="cp-remote">` +
           `<p class="cp-note" id="remoteNote"></p>` +
-          `<div class="cp-btns" id="remoteBtns"><button type="button" class="cp-btn" id="remoteNewCode" title="Makes a new QR code and disconnects any phone">New code</button>` +
+          `<div class="cp-btns" id="remoteBtns"><button type="button" class="cp-btn" id="remoteShow" title="Shows the QR code at the bottom left of the screen. It fades when the mouse is still">Show code</button><button type="button" class="cp-btn" id="remoteNewCode" title="Makes a new QR code and disconnects any phone">New code</button>` +
           `<button type="button" class="cp-btn" id="remoteCopy">Copy link</button></div></div>`
         );
       case "keys":
