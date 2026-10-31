@@ -5102,6 +5102,13 @@
     const diag = document.getElementById("diagnostics");
     if (infoBtn && diag) infoBtn.setAttribute("aria-pressed", String(!diag.classList.contains("hidden")));
 
+    const camBtn = document.getElementById("cpCamera");
+    if (camBtn) {
+      camBtn.innerHTML = iconSvg(camera.live ? "videocam_off" : "videocam", 22);
+      camBtn.setAttribute("aria-label", camera.live ? "Camera off" : "Camera");
+      camBtn.title = camera.live ? "Turn the camera off" : "Live camera";
+      camBtn.setAttribute("aria-pressed", String(camera.live));
+    }
     const pause = document.getElementById("cpPause");
     if (pause) {
       const label = state.paused ? "Resume (P)" : "Pause (P)";
@@ -5147,7 +5154,8 @@
     on("cpMineAgain", () => useRememberedFolder(true));
     on("cpMineForget", forgetFolder);
     on("cpFullscreen", toggleFullscreen);
-    on("remoteShow", () => setRemoteQrShown(!remoteQrShown));
+    on("cpQr", () => setRemoteQrShown(!remoteQrShown));
+    on("cpCamera", () => setCamera(!camera.live));
     on("remoteNewCode", () => {
       if (!remoteLink) return;
       remoteLink.setCode(window.SpotLink.code(true)); // a new code disconnects any phone
@@ -5654,6 +5662,11 @@
     const enabled = !!(window.SpotLink && window.SpotLink.enabled) && !pageParams.has("reel");
     overlay.classList.toggle("shown", enabled && remoteQrShown);
     if (showBtn) showBtn.textContent = remoteQrShown ? "Hide code" : "Show code";
+    const qrBtn = document.getElementById("cpQr");
+    if (qrBtn) {
+      qrBtn.hidden = !enabled;
+      qrBtn.setAttribute("aria-pressed", String(enabled && remoteQrShown));
+    }
     if (!enabled) {
       box.innerHTML = "";
       box.dataset.link = "";

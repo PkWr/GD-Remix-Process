@@ -325,7 +325,7 @@
     { tab: "source", label: "Source", icon: "photo_library", group: "setup", blocks: [
       { section: "Image source", items: [
         { widget: "mine" },
-        "ctrlLiveMode", "ctrlCamera", { widget: "flip" },
+        "ctrlLiveMode", "ctrlCamera",
         { note: "Off = the curated demo set. The front camera is mirrored; effects hard-cut while the camera is on." },
       ] },
       { section: "Stage", displayOnly: true, items: [{ widget: "profile" }] },
@@ -609,7 +609,7 @@
         return (
           `<div class="cp-remote">` +
           `<p class="cp-note" id="remoteNote"></p>` +
-          `<div class="cp-btns" id="remoteBtns"><button type="button" class="cp-btn" id="remoteShow" title="Shows the QR code at the bottom left of the screen. It fades when the mouse is still">Show code</button><button type="button" class="cp-btn" id="remoteNewCode" title="Makes a new QR code and disconnects any phone">New code</button>` +
+          `<div class="cp-btns" id="remoteBtns"><button type="button" class="cp-btn" id="remoteNewCode" title="Makes a new QR code and disconnects any phone">New code</button>` +
           `<button type="button" class="cp-btn" id="remoteCopy">Copy link</button></div></div>`
         );
       case "keys":
@@ -715,7 +715,10 @@
       `<div class="cp-head"><div class="cp-title"><h2>${display ? "Controls" : "Remote controls"}</h2>` +
       `<div class="cp-now" id="cpNow">${display ? "starting…" : "mirrors the display page"}</div></div>` +
       (display
-        ? `<button type="button" class="cp-icon" id="cpInfoHead" aria-label="Info (D)" title="Info (D)" aria-pressed="false" data-icon="info"></button>` +
+        ? `<button type="button" class="cp-icon" id="cpCamera" aria-label="Camera" title="Live camera" aria-pressed="false" data-icon="videocam"></button>` +
+          `<button type="button" class="cp-icon" id="cpFlip" aria-label="Switch front / back camera" title="Switch front / back camera" data-icon="cameraswitch" hidden></button>` +
+          `<button type="button" class="cp-icon" id="cpQr" aria-label="Phone remote code" title="Phone remote: show / hide the QR code (Q)" aria-pressed="false" data-icon="qr_code_2"></button>` +
+          `<button type="button" class="cp-icon" id="cpInfoHead" aria-label="Info (D)" title="Info (D)" aria-pressed="false" data-icon="info"></button>` +
           `<button type="button" class="cp-icon" id="cpNext" aria-label="Next image" title="Next image" data-icon="skip_next"></button>` +
           `<button type="button" class="cp-icon" id="cpPause" aria-label="Pause (P)" title="Pause (P)" data-icon="pause"></button>` +
           `<button type="button" class="cp-icon cp-close" id="cpClose" aria-label="Close controls (C)" title="Close (C)" data-icon="close"></button>`

@@ -218,6 +218,9 @@ body.preview-pan #stage canvas {
 }
 
 #controls .cp-title { flex: 1; min-width: 0; }
+#controls .cp-head .cp-icon { width: 36px; height: 36px; border-radius: 18px; }
+/* On the display the camera lives in the header; its switch stays in the page (hidden) so everything still syncs. */
+#controls:has(#cpCamera) .cp-row:has(#ctrlCamera) { display: none; }
 
 #controls h2 { margin: 0; font-size: 15px; font-weight: 600; }
 
