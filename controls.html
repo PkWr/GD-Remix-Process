@@ -67,8 +67,9 @@
   .lv-on { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; padding: 14px 16px; font: 700 16px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 12px; cursor: pointer; }
   .lv-on.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   .lv-pads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-  .lv-pads.one { grid-template-columns: 1fr; }
-  .lv-pad { position: relative; aspect-ratio: 1; max-height: 56vh; border: 1px solid #3a3d42; border-radius: 14px; background: #0e0f11; touch-action: none; cursor: crosshair; --px: 0%; --py: 50%; }
+  .lv-pads.one { grid-template-columns: 1fr; justify-items: center; }
+  .lv-pads.one .lv-pad { width: min(82%, 48vh); }
+  .lv-pad { position: relative; aspect-ratio: 1; max-height: 44vh; border: 1px solid #3a3d42; border-radius: 14px; background: #0e0f11; touch-action: none; cursor: crosshair; --px: 0%; --py: 50%; }
   .lv-pad:focus-visible { outline: 2px solid #ffe100; outline-offset: 2px; }
   .lv-dot { position: absolute; left: var(--px); top: var(--py); width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: #ffe100; box-shadow: 0 0 0 5px rgba(255, 225, 0, 0.2); pointer-events: none; }
   .lv-zero { position: absolute; pointer-events: none; background: #3a3d42; }
@@ -115,7 +116,6 @@
   .lv-chip { padding: 8px 12px; font: 600 13px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 999px; cursor: pointer; }
   .lv-chip.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   .lv-cells { grid-column: 1 / -1; aspect-ratio: 1.1; }
-  .lv-cd.is-off { opacity: 0.45; }
   .lv-fxrow { display: flex; gap: 8px; margin-top: 10px; }
   .lv-fxrow .lv-on { flex: 1; width: auto; margin-top: 0; padding: 14px 10px; font-size: 15px; }
   .lv-fxrow .lv-on.is-sel { box-shadow: inset 0 0 0 2px #ececec; }
