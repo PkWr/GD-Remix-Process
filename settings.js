@@ -224,15 +224,6 @@
   // (chips that flip a checkbox elsewhere), { palettes: true }, { note },
   // { widget } (display-page-only extras built in widgetHtml below).
   const LAYOUT = [
-    { tab: "source", label: "Source", icon: "photo_library", blocks: [
-      { section: "Image source", items: [
-        { widget: "mine" },
-        "ctrlLiveMode", "ctrlCamera", { widget: "flip" },
-        { note: "Off = the curated demo set. The front camera is mirrored; effects hard-cut while the camera is on." },
-      ] },
-      { section: "Stage", displayOnly: true, items: [{ widget: "profile" }] },
-      { section: "Tools", displayOnly: true, items: [{ widget: "tools" }] },
-    ] },
     { tab: "effects", label: "Effects", icon: "blur_on", blocks: [
       { section: "In rotation", items: [
         { proxyChips: ["ctrlEffectNone", "ctrlEffectDuotone", "ctrlEffectPixelate", "ctrlEffectHalftone", "ctrlEffectAscii"] },
@@ -311,6 +302,8 @@
         ] },
       ] },
       // Echo trail card hidden 30 Oct 2026 — open for review (see OPEN.md). Settings and engine kept.
+    ] },
+    { tab: "forms", label: "3D forms", icon: "view_in_ar", blocks: [
       { card: "3D forms", summary: "off", summarize: "forms", switch: "ctrlFormsOn", items: [
         { when: { id: "ctrlFormsOn", is: ["off"] }, items: [
           { note: "Switch on: each new image is wrapped round a 3D shape. On the Igloo they sit round all six walls." },
@@ -328,6 +321,15 @@
           "ctrlFormsBehind",
         ] },
       ] },
+    ] },
+    { tab: "source", label: "Source", icon: "photo_library", group: "setup", blocks: [
+      { section: "Image source", items: [
+        { widget: "mine" },
+        "ctrlLiveMode", "ctrlCamera", { widget: "flip" },
+        { note: "Off = the curated demo set. The front camera is mirrored; effects hard-cut while the camera is on." },
+      ] },
+      { section: "Stage", displayOnly: true, items: [{ widget: "profile" }] },
+      { section: "Tools", displayOnly: true, items: [{ widget: "tools" }] },
     ] },
     { tab: "show", label: "Show", icon: "slideshow", blocks: [
       { section: "Scenes", displayOnly: true, items: [{ widget: "scenes" }] },
@@ -686,7 +688,7 @@
     ctrlEffectHalftone: "scatter_plot", ctrlEffectAscii: "abc",
   };
   // Cards on these tabs get a reset-to-defaults button.
-  const RESET_TABS = ["effects", "colour", "motion"];
+  const RESET_TABS = ["effects", "colour", "motion", "forms"];
 
   function blockHtml(block, opts) {
     if (block.displayOnly && opts.mode !== "display") return "";
@@ -720,7 +722,7 @@
         : "") +
       `</div>` +
       `<nav class="cp-tabs" aria-label="Control groups">` +
-      LAYOUT.map((t) => `<button type="button" data-tab="${t.tab}"><span data-icon="${t.icon}"></span>${esc(t.label)}</button>`).join("") +
+      LAYOUT.map((t) => `<button type="button" data-tab="${t.tab}"${t.group ? ` data-group="${t.group}"` : ""}><span data-icon="${t.icon}"></span>${esc(t.label)}</button>`).join("") +
       `</nav><div class="cp-body">` +
       LAYOUT.map((t) => `<div class="cp-tab" data-tab="${t.tab}">${t.blocks.map((b) => blockHtml(b, { mode, tab: t.tab })).join("")}</div>`).join("") +
       `</div>`;

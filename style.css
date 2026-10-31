@@ -273,6 +273,9 @@ body.preview-pan #stage canvas {
 
 #controls .cp-tabs button:hover { color: var(--cp-text); }
 
+/* The setup tabs (Source, Show) sit after a divider, apart from the look tabs. */
+#controls .cp-tabs button[data-group="setup"] { margin-left: 6px; border-left: 1px solid var(--cp-line); }
+
 #controls .cp-tabs button[aria-current="page"] {
   color: var(--cp-accent);
   box-shadow: inset 0 -2px 0 var(--cp-accent);
