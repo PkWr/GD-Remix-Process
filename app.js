@@ -3659,7 +3659,9 @@
       float t = clamp(form, 0.0, 1.0);
       float rough = smoothstep(0.3, 1.0, t);
       float n = sin(d.x * 3.6 + d.y * 2.2) * 0.5 + sin(d.y * 6.3 + d.z * 3.9) * 0.3 + sin(d.z * 8.7 + d.x * 7.1) * 0.2;
-      vec3 p = d * fit * (1.0 + 0.18 * rough * n);
+      // finer, sharper dents towards the top, so neighbouring facets point different ways
+      float m = sin(d.x * 13.0 + d.z * 11.0) * 0.5 + sin(d.y * 17.0 + d.x * 9.0) * 0.35 + sin(d.z * 19.0 + d.y * 12.0) * 0.3;
+      vec3 p = d * fit * (1.0 + 0.2 * rough * n + 0.085 * rough * rough * m);
       p.y *= mix(1.0, 0.85, rough);
       return p;
     }
