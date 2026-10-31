@@ -16,10 +16,10 @@
 
   const FUNCS = [
     { id: "cells", label: "Effects", icon: "blur_on", multi: [
-      { name: "Pixelate", c: "#ff7a45", on: "ctrlEffectPixelate", cs: ["ctrlPixelateMin", "ctrlPixelateMax"], x: "Cell size", y: "Variation" },
-      { name: "Halftone", c: "#3fb6ff", on: "ctrlEffectHalftone", cs: ["ctrlHalftoneMin", "ctrlHalftoneMax"], x: "Dot grid", y: "Variation" },
-      { name: "ASCII", c: "#7be06a", on: "ctrlEffectAscii", cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" } ],
-      extra: [{ name: "Untouched", on: "ctrlEffectNone" }] },
+      { name: "Pixelate", icon: "grid_view", c: "#ff7a45", on: "ctrlEffectPixelate", cs: ["ctrlPixelateMin", "ctrlPixelateMax"], x: "Cell size", y: "Variation" },
+      { name: "Halftone", icon: "scatter_plot", c: "#3fb6ff", on: "ctrlEffectHalftone", cs: ["ctrlHalftoneMin", "ctrlHalftoneMax"], x: "Dot grid", y: "Variation" },
+      { name: "ASCII", icon: "abc", c: "#7be06a", on: "ctrlEffectAscii", cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" } ],
+      extra: [{ name: "Untouched", icon: "image", on: "ctrlEffectNone" }] },
     { id: "colour", label: "Colour", icon: "palette", on: "ctrlEffectDuotone", onLabel: "Duotone", palettes: true, pads: [] },
     { id: "motion", label: "Motion", icon: "animation", on: "ctrlRoamOn", onLabel: "Roam", sets: [
       { chip: "Pan · Tilt", xy: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed"], title: "Move", x: "Pan", y: "Tilt" },
@@ -250,8 +250,8 @@
     onEl.innerHTML = f.palettes || (f.sets && f.on)
       ? ""
       : f.multi
-      ? `<div class="lv-fxrow">` + f.multi.map((e, k) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}" data-k="${k}">${e.name}<span></span></button>`).join("") +
-        (f.extra || []).map((e) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}">${e.name}<span></span></button>`).join("") + `</div>`
+      ? `<div class="lv-fxrow">` + f.multi.map((e, k) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}" data-k="${k}" aria-label="${e.name}" title="${e.name}">${ico(e.icon, 28)}<span class="lv-sr"></span></button>`).join("") +
+        (f.extra || []).map((e) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}" aria-label="${e.name}" title="${e.name}">${ico(e.icon, 28)}<span class="lv-sr"></span></button>`).join("") + `</div>`
       : fo.on
       ? `<button type="button" class="lv-on" id="lvOnBtn" data-for="${fo.on}">${fo.onLabel || fo.label || fo.name}<span></span></button>`
       : "";

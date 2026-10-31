@@ -131,8 +131,8 @@
   .lv-chip.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   .lv-cells { grid-column: 1 / -1; aspect-ratio: 1.1; }
   .lv-fxrow { display: flex; gap: 8px; margin-top: 10px; }
-  .lv-fxrow .lv-on { flex: 1; width: auto; min-width: 0; margin-top: 0; padding: 14px 8px; font-size: 14px; gap: 4px; }
-  .lv-fxrow .lv-on span { font-size: 12px; }
+  .lv-fxrow .lv-on { flex: 1 1 0; flex-direction: column; justify-content: center; align-items: center; width: auto; min-width: 0; margin-top: 0; padding: 12px 2px; position: relative; overflow: hidden; }
+  .lv-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .lv-fxrow .lv-on.is-sel { box-shadow: inset 0 0 0 2px #ececec; }
   .lv-fxrow .lv-on.is-on.is-sel { box-shadow: inset 0 0 0 2px #0b0b0c; }
   .lv-md.is-active { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 0 5px rgba(255, 255, 255, 0.45); }
