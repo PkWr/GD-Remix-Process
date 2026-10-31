@@ -510,7 +510,7 @@
     if (item.proxyChips) {
       return (
         `<div class="cp-chips">` +
-        item.proxyChips.map((id) => `<button type="button" class="cp-chip" data-for="${id}">${esc(byId[id].label)}</button>`).join("") +
+        item.proxyChips.map((id) => `<button type="button" class="cp-chip" data-for="${id}">${EFFECT_ICONS[id] ? `<span data-icon="${EFFECT_ICONS[id]}"></span>` : ""}${esc(byId[id].label)}</button>`).join("") +
         `</div>`
       );
     }
@@ -680,6 +680,14 @@
     },
   };
 
+  // Same icons as the phone remote's effect switches.
+  const EFFECT_ICONS = {
+    ctrlEffectNone: "image", ctrlEffectDuotone: "contrast", ctrlEffectPixelate: "grid_view",
+    ctrlEffectHalftone: "scatter_plot", ctrlEffectAscii: "abc",
+  };
+  // Cards on these tabs get a reset-to-defaults button.
+  const RESET_TABS = ["effects", "colour", "motion"];
+
   function blockHtml(block, opts) {
     if (block.displayOnly && opts.mode !== "display") return "";
     const items = block.items.map((it) => itemHtml(it, opts)).join("");
@@ -689,6 +697,7 @@
         `<section class="cp-card"${block.when ? whenAttrs(block.when) : ""}${block.summarize ? ` data-summary="${block.summarize}"` : ""}><div class="cp-card-head">` +
         `<button type="button" class="cp-card-toggle" aria-expanded="false"><span data-icon="keyboard_arrow_down"></span>` +
         `<b>${esc(block.card)}</b><small>${esc(block.summary || "")}</small></button>` +
+        (RESET_TABS.includes(opts.tab) ? `<button type="button" class="cp-icon cp-reset" aria-label="Reset ${esc(block.card)} to defaults" title="Reset to defaults" data-icon="restart_alt"></button>` : "") +
         (sw ? `<input type="checkbox" class="cp-switch" id="${sw.id}"${checkedAttr(sw)} aria-label="${esc(block.card)} on">` : "") +
         `</div><div class="cp-card-body">${items}</div></section>`
       );
@@ -705,6 +714,7 @@
       `<div class="cp-now" id="cpNow">${display ? "starting…" : "mirrors the display page"}</div></div>` +
       (display
         ? `<button type="button" class="cp-icon" id="cpInfoHead" aria-label="Info (D)" title="Info (D)" aria-pressed="false" data-icon="info"></button>` +
+          `<button type="button" class="cp-icon" id="cpNext" aria-label="Next image" title="Next image" data-icon="skip_next"></button>` +
           `<button type="button" class="cp-icon" id="cpPause" aria-label="Pause (P)" title="Pause (P)" data-icon="pause"></button>` +
           `<button type="button" class="cp-icon cp-close" id="cpClose" aria-label="Close controls (C)" title="Close (C)" data-icon="close"></button>`
         : "") +
@@ -712,7 +722,7 @@
       `<nav class="cp-tabs" aria-label="Control groups">` +
       LAYOUT.map((t) => `<button type="button" data-tab="${t.tab}"><span data-icon="${t.icon}"></span>${esc(t.label)}</button>`).join("") +
       `</nav><div class="cp-body">` +
-      LAYOUT.map((t) => `<div class="cp-tab" data-tab="${t.tab}">${t.blocks.map((b) => blockHtml(b, { mode })).join("")}</div>`).join("") +
+      LAYOUT.map((t) => `<div class="cp-tab" data-tab="${t.tab}">${t.blocks.map((b) => blockHtml(b, { mode, tab: t.tab })).join("")}</div>`).join("") +
       `</div>`;
     enhancePanel(root);
   }
@@ -807,6 +817,21 @@
         const open = !card.classList.contains("is-open");
         card.classList.toggle("is-open", open);
         toggle.setAttribute("aria-expanded", String(open));
+      });
+    });
+
+    // Reset button on a card: every control in the card (and its on/off switch) back to its default.
+    root.querySelectorAll(".cp-reset").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const card = btn.closest(".cp-card");
+        card.querySelectorAll("input, select").forEach((el) => {
+          if (el.type === "text" || el.type === "file" || el.type === "button") return;
+          if (el.type === "checkbox" || el.type === "radio") el.checked = el.defaultChecked;
+          else if (el.tagName === "SELECT") for (const o of el.options) o.selected = o.defaultSelected;
+          else el.value = el.defaultValue;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        });
       });
     });
 

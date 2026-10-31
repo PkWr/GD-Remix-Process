@@ -312,6 +312,7 @@ body.preview-pan #stage canvas {
 #controls .cp-card:has(.cp-card-head .cp-switch:checked) { border-color: #6b5f17; }
 
 #controls .cp-card-head { display: flex; align-items: center; gap: 4px; padding: 0 4px 0 6px; }
+#controls .cp-reset { width: 32px; height: 32px; border-color: transparent; color: var(--cp-muted); }
 
 #controls .cp-card-toggle {
   flex: 1;
@@ -410,6 +411,7 @@ body.preview-pan #stage canvas {
   padding: 0 12px;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   border: 1px solid #33363b;
   border-radius: 18px;
   background: var(--cp-sunk);

@@ -2974,6 +2974,18 @@
       effect = EFFECTS.none;
       effectParams = effect.randomParams();
     }
+    // Colour edits from the phone: redraw the SAME effect and settings with the
+    // new colours, rather than rolling a new effect / palette (which hid the edit).
+    if (opts.colour && keep && state.liveEffect && EFFECTS[state.lastEffectKey]) {
+      effectKey = state.lastEffectKey;
+      effect = EFFECTS[effectKey];
+      effectParams = { ...state.liveEffect.effectParams };
+      const pal = params.palettes[(effectParams.paletteIndex || 0) - 1];
+      if (pal) {
+        effectParams.fgColor = pal.fg;
+        effectParams.bgColor = pal.bg;
+      }
+    }
     state.hasCycled = true;
     const blendOverlay = pickBlendOverlay();
     // Snapshot count as it stood BEFORE this cycle's render adds its own
@@ -3377,24 +3389,30 @@
   // picture is redrawn while you drag (at most about four times a second — twice on
   // very large stages — and always once more for the final value), not on the next image.
   let remoteRefreshTimer = null;
+  let remoteColourOnly = false; // only a palette / background colour changed since the last redraw
   function remoteRefresh(id) {
     if (params.applyNow) return; // applySetting already does it
     if (LIVE_ALREADY.has(id) || /^ctrlForms/.test(id) || !state.hasCycled) return;
-    if (remoteRefreshTimer) return;
+    const isColour = /^ctrlPalette\d(Fg|Bg)$|^ctrlBackground$/.test(id);
+    if (remoteRefreshTimer) {
+      if (!isColour) remoteColourOnly = false;
+      return;
+    }
+    remoteColourOnly = isColour;
     // Big stages (the Igloo, about 12 million pixels) redraw at half the rate.
     const delay = STAGE.w * STAGE.h > 4e6 ? 500 : 250;
     remoteRefreshTimer = setTimeout(() => {
       remoteRefreshTimer = null;
-      refreshNow();
+      refreshNow({ colour: remoteColourOnly });
     }, delay);
   }
-  function refreshNow() {
+  function refreshNow(opts = {}) {
     if (state.sources.length === 0 && !camera.live) return;
     if (cycleTimeoutId) {
       clearTimeout(cycleTimeoutId);
       cycleTimeoutId = null;
     }
-    cycle({ keep: true });
+    cycle({ keep: true, colour: !!opts.colour });
   }
 
   function wireSettings() {
@@ -5112,6 +5130,14 @@
       if (el) el.addEventListener("click", fn);
     };
     on("cpPause", () => togglePause());
+    on("cpNext", () => {
+      // Skip to the next image now (same as the hold timer running out).
+      if (cycleTimeoutId) {
+        clearTimeout(cycleTimeoutId);
+        cycleTimeoutId = null;
+      }
+      if (!state.paused) cycle();
+    });
     on("cpClose", hide);
     on("cpGrab", hide);
     on("cpFlip", () => flipCamera());
