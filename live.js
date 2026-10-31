@@ -15,21 +15,21 @@
   if (!root || !panel) return;
 
   const FUNCS = [
-    { id: "cells", label: "Effects", multi: [
+    { id: "cells", label: "Effects", icon: "blur_on", multi: [
       { name: "Pixelate", c: "#ff7a45", on: "ctrlEffectPixelate", cs: ["ctrlPixelateMin", "ctrlPixelateMax"], x: "Cell size", y: "Variation" },
       { name: "Halftone", c: "#3fb6ff", on: "ctrlEffectHalftone", cs: ["ctrlHalftoneMin", "ctrlHalftoneMax"], x: "Dot grid", y: "Variation" },
       { name: "ASCII", c: "#7be06a", on: "ctrlEffectAscii", cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" } ] },
-    { id: "colour", label: "Colour", on: "ctrlEffectDuotone", onLabel: "Duotone", palettes: true, pads: [] },
-    { id: "motion", label: "Motion", on: "ctrlRoamOn", onLabel: "Roam", sets: [
+    { id: "colour", label: "Colour", icon: "palette", on: "ctrlEffectDuotone", onLabel: "Duotone", palettes: true, pads: [] },
+    { id: "motion", label: "Motion", icon: "animation", on: "ctrlRoamOn", onLabel: "Roam", sets: [
       { chip: "Pan · Tilt", xy: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed"], title: "Move", x: "Pan", y: "Tilt" },
       { chip: "Zoom · Gap", xy: ["ctrlMoveZoomSpeed", "ctrlStripGap"], title: "Move", x: "Zoom", y: "Strip gap" },
       { chip: "Travel · Spin", xy: ["ctrlRoamSpeed", "ctrlRoamSpin"], title: "Roam", x: "Travel", y: "Spin" },
       { chip: "Spread · Size", xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
-    { id: "forms", label: "3D forms", on: "ctrlFormsOn", sets: [
+    { id: "forms", label: "3D forms", icon: "view_in_ar", on: "ctrlFormsOn", sets: [
       { chip: "Organic · Mix", cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
       { chip: "Size · Spin", xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
       { chip: "Lens · Glow", xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
-    { id: "timing", label: "Timing", pads: [{ cs: ["ctrlSpeedMin", "ctrlSpeedMax"], x: "Hold time", y: "Variation" }] },
+    { id: "timing", label: "Timing", icon: "timer", pads: [{ cs: ["ctrlSpeedMin", "ctrlSpeedMax"], x: "Hold time", y: "Variation" }] },
   ];
 
   const $ = (id) => document.getElementById(id);
@@ -92,8 +92,12 @@
 
   // ---- value helpers -------------------------------------------------
   const lim = (el) => ({ lo: +el.min, hi: +el.max, st: +el.step || 1 });
-  function put(el, v) {
+  // Whole-number settings with room to move snap to multiples of 5 (the ends of the range stay reachable).
+  const SNAP = 5;
+  const snappy = (el) => { const { lo, hi, st } = lim(el); return st % 1 === 0 && hi - lo >= 4 * SNAP; };
+  function put(el, v, raw) {
     const { lo, hi, st } = lim(el);
+    if (!raw && snappy(el)) v = Math.round(v / SNAP) * SNAP;
     v = Math.round((v - lo) / st) * st + lo;
     const s = String(+Math.min(hi, Math.max(lo, v)).toFixed(4));
     if (el.value === s) return;
@@ -175,15 +179,16 @@
   if (!FUNCS.some((f) => f.id === current)) current = FUNCS[0].id;
   let scenes = { names: [], active: "" };
 
+  const ico = (n, size = 20) => (window.PhotoRemixSettings ? window.PhotoRemixSettings.iconSvg(n, size) : "");
   root.innerHTML =
+    `<div class="lv-top"><button type="button" class="lv-btn lv-tb" id="lvPause"></button>` +
+    `<button type="button" class="lv-btn lv-tb" id="lvNext">${ico("skip_next")}<span>Next image</span></button></div>` +
     `<div class="lv-funcs" id="lvFuncs"></div>` +
     `<div id="lvOn"></div>` +
     `<div class="lv-chips" id="lvChips"></div>` +
     `<div class="lv-pads" id="lvPads"></div>` +
     `<button type="button" class="lv-btn lv-wide" id="lvReset"></button>` +
     `<div id="lvPal"></div>` +
-    `<div class="lv-row"><button type="button" class="lv-btn" id="lvPause">Pause</button>` +
-    `<button type="button" class="lv-btn" id="lvNext">Next image</button></div>` +
     `<div class="lv-scenes" id="lvScenes"></div>`;
 
   const funcsEl = $("lvFuncs");
@@ -194,7 +199,7 @@
 
   function renderFuncs() {
     funcsEl.innerHTML = FUNCS.map(
-      (f) => `<button type="button" class="lv-func" data-f="${f.id}" aria-pressed="${f.id === current}">${f.label}<i></i></button>`
+      (f) => `<button type="button" class="lv-func" data-f="${f.id}" aria-pressed="${f.id === current}">${f.icon ? ico(f.icon, 18) : ""}<span>${f.label}</span><i></i></button>`
     ).join("");
   }
 
@@ -232,7 +237,7 @@
       : "";
     padsEl.className = "lv-pads" + (padsOf(f).length === 1 ? " one" : "");
     palEl.innerHTML = f.palettes ? paletteHtml() : "";
-    $("lvReset").textContent = `Reset ${f.label}`;
+    $("lvReset").innerHTML = `${ico("restart_alt")}<span>Reset ${f.label}</span>`;
     chipsEl.innerHTML = f.sets
       ? f.sets.map((t, i) => `<button type="button" class="lv-chip" data-s="${i}">${t.chip}</button>`).join("")
       : f.palettes
@@ -340,7 +345,7 @@
       if (src && inp.type === "range" && !inp.dataset.ready) {
         inp.min = src.min;
         inp.max = src.max;
-        inp.step = src.step;
+        inp.step = snappy(src) && +src.min % SNAP === 0 ? SNAP : src.step;
         inp.dataset.ready = "1";
       }
       if (src && inp.value !== src.value && document.activeElement !== inp) inp.value = src.value;
@@ -390,7 +395,7 @@
     }
     const pause = $("ctrlAutoCycle");
     const pb = $("lvPause");
-    if (pause && pb) pb.textContent = pause.checked ? "Pause" : "Resume";
+    if (pause && pb) pb.innerHTML = pause.checked ? `${ico("pause")}<span>Pause</span>` : `${ico("play_arrow")}<span>Resume</span>`;
     document.querySelectorAll("#lvScenes button").forEach((b) => b.classList.toggle("is-on", b.dataset.name === scenes.active));
   }
 
@@ -544,7 +549,7 @@
       if (el.type === "color") {
         el.value = el.defaultValue;
         el.dispatchEvent(new Event("input", { bubbles: true }));
-      } else put(el, +el.defaultValue);
+      } else put(el, +el.defaultValue, true);
     });
     refresh();
   });
