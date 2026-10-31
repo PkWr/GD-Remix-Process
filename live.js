@@ -246,7 +246,7 @@
     const sub = f.palettes ? colSub : "map";
     subEl.hidden = !f.palettes;
     subEl.innerHTML = f.palettes
-      ? [["map", "Colour map"], ["pal", "Palettes"], ["blend", "Blend"]].map(([k, n]) => `<button type="button" class="lv-chip${k === sub ? " is-on" : ""}" data-sub="${k}">${n}</button>`).join("")
+      ? [["map", "Colour map", "gradient"], ["pal", "Palettes", "colors"], ["blend", "Blend overlay", "layers"]].map(([k, n, ic]) => `<button type="button" class="lv-chip lv-subb${k === sub ? " is-on" : ""}" data-sub="${k}" aria-label="${n}" title="${n}">${ico(ic, 24)}</button>`).join("")
       : "";
     padsEl.hidden = !!f.scenes || sub !== "map";
     chipsEl.hidden = sub !== "map";
