@@ -29,9 +29,7 @@
     { id: "forms", label: "3D forms", icon: "view_in_ar", on: "ctrlFormsOn", sets: [
       { chip: "Organic · Mix", needs: true, cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix",
         alts: [
-          { shape: "rock", chip: "Rock · Mix", cs: ["ctrlFormsRock", "ctrlFormsRockMax"], x: "Triangles ↔ Rock" },
-          { shape: "crystal", chip: "Sides · Mix", cs: ["ctrlFormsSides", "ctrlFormsSidesMax"], x: "Pyramid ↔ Many sides" } ] },
-      { chip: "Irregular", needs: true, only: "crystal", cs: ["ctrlFormsIrregular", "ctrlFormsIrregularMax"], x: "Irregularity", y: "Mix" },
+          { shape: "rock", chip: "Rock · Mix", cs: ["ctrlFormsRock", "ctrlFormsRockMax"], x: "Triangles ↔ Rock" } ] },
       { chip: "Number · Spacing", needs: true, xy: ["ctrlFormsCount", "ctrlFormsSpacing"], x: "How many", y: "Spacing" },
       { chip: "Size · Spin", needs: true, xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
       { chip: "Lens · Glow", needs: true, xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
@@ -51,7 +49,7 @@
     const alt = (t.alts || []).find((x) => x.shape === shapeNow());
     return alt ? { ...t, ...alt } : t;
   };
-  const setOk = (f, t) => (!t.needs || ($(f.on) || {}).checked) && (!t.only || shapeNow() === t.only);
+  const setOk = (f, t) => (!t.needs || ($(f.on) || {}).checked);
   const setIndex = (f) => {
     const i = setIdx[f.id] || 0;
     return f.sets[i] && setOk(f, f.sets[i]) ? i : f.sets.findIndex((t) => setOk(f, t));

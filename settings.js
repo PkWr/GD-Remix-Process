@@ -165,15 +165,11 @@
     // Motion — 3D forms (photos wrapped round 3D shapes, drawn with WebGL)
     { id: "ctrlFormsOn", type: "switch", label: "3D forms on", default: false, param: "formsOn", after: "forms3d" },
     { id: "ctrlFormsShape", type: "select", label: "Shape", default: "form", param: "formsShape", after: "forms3d",
-      options: [["form", "Form — geometric to organic"], ["rock", "Rock — built from triangles"], ["crystal", "Crystal — flat faces, pyramid to many sides"]] },
+      options: [["form", "Form — geometric to organic"], ["rock", "Rock — built from triangles"]] },
     { id: "ctrlFormsOrganic", type: "range", label: "Geometric ↔ Organic, from", min: 0, max: 100, step: 5, default: 0, int: true, format: "formName", param: "formsOrganic" },
     { id: "ctrlFormsOrganicMax", type: "range", label: "Geometric ↔ Organic, to", min: 0, max: 100, step: 5, default: 55, int: true, format: "formName", param: "formsOrganicMax" },
     { id: "ctrlFormsRock", type: "range", label: "Triangles ↔ Rock, from", min: 0, max: 100, step: 5, default: 0, int: true, format: "rockName", param: "formsRock" },
     { id: "ctrlFormsRockMax", type: "range", label: "Triangles ↔ Rock, to", min: 0, max: 100, step: 5, default: 70, int: true, format: "rockName", param: "formsRockMax" },
-    { id: "ctrlFormsSides", type: "range", label: "Pyramid ↔ Many sides, from", min: 0, max: 100, step: 5, default: 0, int: true, format: "sidesName", param: "formsSides" },
-    { id: "ctrlFormsSidesMax", type: "range", label: "Pyramid ↔ Many sides, to", min: 0, max: 100, step: 5, default: 70, int: true, format: "sidesName", param: "formsSidesMax" },
-    { id: "ctrlFormsIrregular", type: "range", label: "Irregularity, from", min: 0, max: 100, step: 5, default: 0, int: true, format: "percent", param: "formsIrregular" },
-    { id: "ctrlFormsIrregularMax", type: "range", label: "Irregularity, to", min: 0, max: 100, step: 5, default: 40, int: true, format: "percent", param: "formsIrregularMax" },
     { id: "ctrlFormsDrift", type: "switch", label: "Drift slowly across the range", default: false, param: "formsDrift" },
     { id: "ctrlFormsCount", type: "range", label: "How many", min: 1, max: 24, step: 1, default: 6, int: true, format: "int", param: "formsCount", after: "forms3d" },
     { id: "ctrlFormsSpacing", type: "range", label: "Spacing", min: 4, max: 90, step: 1, default: 45, int: true, format: "degrees", param: "formsSpacing",
@@ -314,7 +310,6 @@
           "ctrlFormsShape",
           { when: { id: "ctrlFormsShape", is: ["form"] }, items: [{ dual: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], label: "Geometric ↔ Organic" }, { note: "Handles apart: each form lands somewhere between them. Together: all alike. 0 cube · 50 sphere · 100 blob." }] },
           { when: { id: "ctrlFormsShape", is: ["rock"] }, items: [{ dual: ["ctrlFormsRock", "ctrlFormsRockMax"], label: "Triangles ↔ Rock" }, { note: "Built from flat triangles. Handles apart: each rock lands somewhere between them. Together: all alike. 0 triangles · 100 rough rock." }] },
-          { when: { id: "ctrlFormsShape", is: ["crystal"] }, items: [{ dual: ["ctrlFormsSides", "ctrlFormsSidesMax"], label: "Pyramid ↔ Many sides" }, { dual: ["ctrlFormsIrregular", "ctrlFormsIrregularMax"], label: "Irregularity" }, { note: "Flat faces only. Handles apart: each one lands somewhere between them. Together: all alike. Sides: 0 three-sided pyramid, more sides as it rises. Irregularity: 0 even, 100 lopsided." }] },
           "ctrlFormsDrift",
           "ctrlFormsCount",
           { when: { id: "ctrlFormsCount", not: ["1"] }, items: ["ctrlFormsSpacing", "ctrlFormsDepth"] },
@@ -410,7 +405,6 @@
     roamSpread: (v, angle) => (v >= 180 ? "wandering" : v === 0 ? (angle != null ? `together, ${FORMATS.compass(+angle)}` : "together") : v < 45 ? "loose flock" : "scattered"),
     glassName: (v) => (v < 20 ? "lens" : v < 45 ? "glass lens" : v < 70 ? "glass" : v < 90 ? "soft liquid" : "liquid"),
     rockName: (v) => (v < 12 ? "triangles" : v < 40 ? "chiselled" : v < 70 ? "boulder" : "rock"),
-    sidesName: (v) => (v < 10 ? "pyramid" : v < 35 ? "few sides" : v < 70 ? "many sides" : "gem"),
     formName: (v) => (v < 12 ? "cube" : v < 40 ? "rounded box" : v < 60 ? "sphere" : v < 85 ? "soft blob" : "globular"),
     moveH: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "left" : "right"}`),
     moveV: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "down" : "up"}`),
@@ -679,7 +673,7 @@
       const n = +inputState("ctrlFormsCount");
       const shape = inputState("ctrlFormsShape");
       const rng = (lo, hi, name) => (inputState(lo) === inputState(hi) ? FORMATS[name](+inputState(lo)) : `${FORMATS[name](+inputState(lo))} to ${FORMATS[name](+inputState(hi))}`);
-      const what = shape === "form" ? rng("ctrlFormsOrganic", "ctrlFormsOrganicMax", "formName") : shape === "crystal" ? rng("ctrlFormsSides", "ctrlFormsSidesMax", "sidesName") : rng("ctrlFormsRock", "ctrlFormsRockMax", "rockName");
+      const what = shape === "form" ? rng("ctrlFormsOrganic", "ctrlFormsOrganicMax", "formName") : rng("ctrlFormsRock", "ctrlFormsRockMax", "rockName");
       const glass = inputState("ctrlFormsSurface") === "glass" ? " · glass" : "";
       return `${n} × ${what}${glass}${inputState("ctrlFormsBehind") === "picture" ? " · over picture" : ""}`;
     },

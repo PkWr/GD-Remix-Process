@@ -3636,7 +3636,7 @@
   }
 
   const FORMS_VERTEX = `
-    uniform int morph; uniform float form; uniform float time; uniform float irr;
+    uniform int morph; uniform float form; uniform float time;
     attribute vec3 corner1; attribute vec3 corner2; // Rock: the other two corners of this vertex's triangle
     varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN; varying vec2 vCentre;
     vec3 shapeAt(vec3 d) {
@@ -3652,34 +3652,11 @@
       r *= (1.0 + o * 0.42 * n) / (1.0 + o * 0.3);
       return d * r;
     }
-    // Crystal: flat faces only. At 0 a three-sided pyramid; more planes bite in as the
-    // slider rises, so it gains sides (4, 6, 8, 12 ... a many-sided gem). Separately,
-    // irr lets every plane wander to its own distance, so the shape turns irregular.
     float faceR(vec3 d, vec3 n, float h) {
       float dn = dot(d, normalize(n));
       return dn > 0.001 ? h / dn : 1000.0;
     }
-    float hash1(float k) { return fract(sin(k * 91.3458) * 47453.5453); }
-    vec3 crystalAt(vec3 d) {
-      float t = clamp(form, 0.0, 1.0);
-      float wander = irr * 0.5; // how far each plane may wander
-      float r = 1000.0;
-      r = min(r, faceR(d, vec3(-1.0, -1.0, -1.0), 1.0 + wander * (hash1(1.0) - 0.5)));
-      r = min(r, faceR(d, vec3(-1.0, 1.0, 1.0), 1.0 + wander * (hash1(2.0) - 0.5)));
-      r = min(r, faceR(d, vec3(1.0, -1.0, 1.0), 1.0 + wander * (hash1(3.0) - 0.5)));
-      r = min(r, faceR(d, vec3(1.0, 1.0, -1.0), 1.0 + wander * (hash1(4.0) - 0.5)));
-      for (int i = 0; i < 24; i++) {
-        float k = float(i) + 1.0;
-        float ny = 1.0 - (k - 0.5) / 12.0; // evenly spread directions (golden spiral)
-        vec3 n = vec3(sqrt(1.0 - ny * ny) * cos(k * 2.39996), ny, sqrt(1.0 - ny * ny) * sin(k * 2.39996));
-        float at = 0.03 + 0.8 * fract(k * 0.6180339); // where on the slider this face appears
-        float cut = smoothstep(at, at + 0.08, t);
-        float reach = 0.86 + 0.1 * fract(k * 0.754) + wander * (hash1(k + 10.0) - 0.5);
-        r = min(r, faceR(d, n, mix(4.0, reach, cut)));
-      }
-      return d * r * mix(0.36, 0.8, smoothstep(0.0, 0.9, t));
-    }
-    vec3 shape(vec3 d) { return morph == 2 ? crystalAt(d) : shapeAt(d); }
+    vec3 shape(vec3 d) { return shapeAt(d); }
     // Rock: built from flat triangles, like the ball it starts from. At 0 an
     // icosahedron (20 triangular faces); as the slider rises the surface roughens into
     // a craggy rock. Every small triangle stays flat, so each facet catches the light
@@ -3883,13 +3860,13 @@
   function forms3dSync() {
     const T = window.THREE;
     const n = params.formsCount;
-    forms3d.shared.morph.value = params.formsShape === "rock" ? 3 : params.formsShape === "crystal" ? 2 : 1; // all shapes are shaped in the vertex shader
+    forms3d.shared.morph.value = params.formsShape === "rock" ? 3 : 1; // both shapes are shaped in the vertex shader
     const geo = formsGeometry(params.formsShape);
     while (forms3d.meshes.length < n) {
       const k = forms3d.meshes.length;
       const material = new T.ShaderMaterial({
         uniforms: {
-          map: { value: null }, form: { value: 0.25 }, time: { value: 0 }, irr: { value: 0 },
+          map: { value: null }, form: { value: 0.25 }, time: { value: 0 },
           ...forms3d.shared,
         },
         vertexShader: FORMS_VERTEX,
@@ -4021,8 +3998,8 @@
     // handles. Drift slides that window across the whole scale (cube → blob
     // → cube in ~22 s).
     const shapeNow = params.formsShape;
-    const rLo = shapeNow === "rock" ? params.formsRock : shapeNow === "crystal" ? params.formsSides : params.formsOrganic;
-    const rHi = shapeNow === "rock" ? params.formsRockMax : shapeNow === "crystal" ? params.formsSidesMax : params.formsOrganicMax;
+    const rLo = shapeNow === "rock" ? params.formsRock : params.formsOrganic;
+    const rHi = shapeNow === "rock" ? params.formsRockMax : params.formsOrganicMax;
     const oLo = Math.min(rLo, rHi) / 100;
     const oW = Math.abs(rHi - rLo) / 100;
     const organicBase = params.formsDrift ? (0.5 - 0.5 * Math.cos(now / 3500)) * (1 - oW) : oLo;
@@ -4069,9 +4046,6 @@
       const u = m.material.uniforms;
       u.time.value = now / 1000 + k * 7.3;
       u.form.value = organicBase + oW * formsRand(k, 5);
-      const iLo = Math.min(params.formsIrregular, params.formsIrregularMax) / 100;
-      const iW = Math.abs(params.formsIrregularMax - params.formsIrregular) / 100;
-      u.irr.value = iLo + iW * formsRand(k, 6); // Rock: how irregular this one is
     });
 
     const R = forms3d.renderer;
