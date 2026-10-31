@@ -28,7 +28,8 @@
       { chip: "Spread · Size", needs: true, xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
     { id: "forms", label: "3D forms", icon: "view_in_ar", on: "ctrlFormsOn", sets: [
       { chip: "Organic · Mix", needs: true, cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix",
-        alt: { shape: "rock", chip: "Rock · Mix", cs: ["ctrlFormsRock", "ctrlFormsRockMax"], x: "Triangle ↔ Rock" } },
+        alt: { shape: "rock", chip: "Sides · Mix", cs: ["ctrlFormsRock", "ctrlFormsRockMax"], x: "Pyramid ↔ Many sides" } },
+      { chip: "Irregular", needs: true, only: "rock", cs: ["ctrlFormsIrregular", "ctrlFormsIrregularMax"], x: "Irregularity", y: "Mix" },
       { chip: "Number · Spacing", needs: true, xy: ["ctrlFormsCount", "ctrlFormsSpacing"], x: "How many", y: "Spacing" },
       { chip: "Size · Spin", needs: true, xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
       { chip: "Lens · Glow", needs: true, xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
@@ -45,7 +46,7 @@
   // A set marked `needs` is only offered while the function's own switch is on.
   const shapeNow = () => ($("ctrlFormsShape") || {}).value;
   const setOf = (t) => (t.alt && shapeNow() === t.alt.shape ? { ...t, ...t.alt } : t);
-  const setOk = (f, t) => !t.needs || ($(f.on) || {}).checked;
+  const setOk = (f, t) => (!t.needs || ($(f.on) || {}).checked) && (!t.only || shapeNow() === t.only);
   const setIndex = (f) => {
     const i = setIdx[f.id] || 0;
     return f.sets[i] && setOk(f, f.sets[i]) ? i : f.sets.findIndex((t) => setOk(f, t));
@@ -197,9 +198,6 @@
 
   const ico = (n, size = 20) => (window.PhotoRemixSettings ? window.PhotoRemixSettings.iconSvg(n, size) : "");
   root.innerHTML =
-    `<div class="lv-top"><button type="button" class="lv-btn lv-tb" id="lvPause"></button>` +
-    `<button type="button" class="lv-btn lv-tb" id="lvNext" aria-label="Next image" title="Next image">${ico("skip_next", 24)}</button>` +
-    `<button type="button" class="lv-btn lv-tb" id="lvReset"></button></div>` +
     `<div class="lv-funcs" id="lvFuncs"></div>` +
     `<div class="lv-chips lv-sub" id="lvSub" hidden></div>` +
     `<div id="lvOn"></div>` +
@@ -208,6 +206,7 @@
     `<div id="lvPal"></div>` +
     `<div class="lv-scenes" id="lvScenes" hidden></div>`;
 
+  $("lvNext").innerHTML = ico("skip_next", 24); // Pause / Next / Reset live in the bar above both views
   const funcsEl = $("lvFuncs");
   const onEl = $("lvOn");
   const padsEl = $("lvPads");
@@ -269,7 +268,7 @@
     padsEl.hidden = !!f.scenes || sub !== "map" || padsOf(f).length === 0;
     chipsEl.hidden = sub !== "map";
     onEl.hidden = sub !== "map" || !!f.palettes; // Colour: the Duotone switch sits in the chip row
-    $("lvReset").hidden = !!f.scenes;
+    $("lvReset").hidden = !!f.scenes || root.hidden;
     $("lvReset").innerHTML = ico("restart_alt", 24);
     $("lvReset").setAttribute("aria-label", `Reset ${f.label}`);
     $("lvReset").title = `Reset ${f.label}`;
@@ -657,6 +656,8 @@
   function setView(v) {
     store.set(VIEW_KEY, v);
     root.hidden = v !== "live";
+    const cf = FUNCS.find((x) => x.id === current);
+    $("lvReset").hidden = v !== "live" || !!(cf && cf.scenes); // Reset belongs to the Live view's pads
     panel.style.display = v === "live" ? "none" : "";
     document.querySelectorAll("#viewBar [data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === v)));
     if (v === "live") refresh();

@@ -3636,8 +3636,7 @@
   }
 
   const FORMS_VERTEX = `
-    uniform int morph; uniform float form; uniform float time;
-    attribute vec3 corner1; attribute vec3 corner2; // Rock: the other two corners of this vertex's triangle
+    uniform int morph; uniform float form; uniform float time; uniform float irr;
     varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN; varying vec2 vCentre;
     vec3 shapeAt(vec3 d) {
       float g = clamp(form * 2.0, 0.0, 1.0);
@@ -3652,45 +3651,37 @@
       r *= (1.0 + o * 0.42 * n) / (1.0 + o * 0.3);
       return d * r;
     }
-    // Rock: built from flat triangles, like the ball it starts from. At 0 it is an
-    // icosahedron (20 triangular faces); as the slider rises the surface roughens
-    // into a craggy rock. Every small triangle stays flat, so each facet catches
-    // the light (and bends the glass) on its own.
-    float faceR(vec3 d, vec3 n) {
+    // Rock: flat faces only. At 0 a three-sided pyramid; more planes bite in as the
+    // slider rises, so it gains sides (4, 6, 8, 12 ... a many-sided gem). Separately,
+    // irr lets every plane wander to its own distance, so the shape turns irregular.
+    float faceR(vec3 d, vec3 n, float h) {
       float dn = dot(d, normalize(n));
-      return dn > 0.001 ? 1.0 / dn : 1000.0;
+      return dn > 0.001 ? h / dn : 1000.0;
     }
+    float hash1(float k) { return fract(sin(k * 91.3458) * 47453.5453); }
     vec3 rockAt(vec3 d) {
       float t = clamp(form, 0.0, 1.0);
-      float ico = 1000.0;
-      for (int i = 0; i < 4; i++) {
-        float sa = i < 2 ? 1.0 : -1.0;
-        float sb = (i == 0 || i == 2) ? 1.0 : -1.0;
-        ico = min(ico, faceR(d, vec3(1.0, sa, sb)));
-        ico = min(ico, faceR(d, vec3(-1.0, sa, sb)));
-        ico = min(ico, faceR(d, vec3(0.0, sa * 1.618034, sb * 0.618034)));
-        ico = min(ico, faceR(d, vec3(sa * 1.618034, sb * 0.618034, 0.0)));
-        ico = min(ico, faceR(d, vec3(sb * 0.618034, 0.0, sa * 1.618034)));
+      float wander = irr * 0.5; // how far each plane may wander
+      float r = 1000.0;
+      r = min(r, faceR(d, vec3(-1.0, -1.0, -1.0), 1.0 + wander * (hash1(1.0) - 0.5)));
+      r = min(r, faceR(d, vec3(-1.0, 1.0, 1.0), 1.0 + wander * (hash1(2.0) - 0.5)));
+      r = min(r, faceR(d, vec3(1.0, -1.0, 1.0), 1.0 + wander * (hash1(3.0) - 0.5)));
+      r = min(r, faceR(d, vec3(1.0, 1.0, -1.0), 1.0 + wander * (hash1(4.0) - 0.5)));
+      for (int i = 0; i < 24; i++) {
+        float k = float(i) + 1.0;
+        float ny = 1.0 - (k - 0.5) / 12.0; // evenly spread directions (golden spiral)
+        vec3 n = vec3(sqrt(1.0 - ny * ny) * cos(k * 2.39996), ny, sqrt(1.0 - ny * ny) * sin(k * 2.39996));
+        float at = 0.03 + 0.8 * fract(k * 0.6180339); // where on the slider this face appears
+        float cut = smoothstep(at, at + 0.08, t);
+        float reach = 0.86 + 0.1 * fract(k * 0.754) + wander * (hash1(k + 10.0) - 0.5);
+        r = min(r, faceR(d, n, mix(4.0, reach, cut)));
       }
-      float n = sin(d.x * 3.6 + d.y * 2.2) * 0.5 + sin(d.y * 6.3 + d.z * 3.9) * 0.3 + sin(d.z * 8.7 + d.x * 7.1) * 0.2;
-      float rough = 0.74 * (1.0 + 0.18 * n);
-      float w = smoothstep(0.0, 1.0, t);
-      vec3 p = d * mix(ico * 0.72, rough, w);
-      p.y *= mix(1.0, 0.85, w);
-      return p;
+      return d * r * mix(0.36, 0.8, smoothstep(0.0, 0.9, t));
     }
-    vec3 shape(vec3 d) { return shapeAt(d); }
+    vec3 shape(vec3 d) { return morph == 2 ? rockAt(d) : shapeAt(d); }
     void main() {
       vec3 p = position; vec3 nrm = normalize(normal);
-      if (morph == 2) {
-        vec3 d0 = normalize(position);
-        vec3 p0 = rockAt(d0);
-        vec3 p1 = rockAt(normalize(corner1));
-        vec3 p2 = rockAt(normalize(corner2));
-        nrm = normalize(cross(p1 - p0, p2 - p0));
-        if (dot(nrm, d0) < 0.0) nrm = -nrm;
-        p = p0;
-      } else if (morph == 1) {
+      if (morph >= 1) {
         vec3 d = normalize(position);
         vec3 up = abs(d.y) > 0.99 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
         vec3 t1 = normalize(cross(d, up)); vec3 t2 = cross(d, t1);
@@ -3766,26 +3757,7 @@
   function formsGeometry(kind) {
     const T = window.THREE;
     if (forms3d.geos[kind]) return forms3d.geos[kind];
-    // Both shapes are reshaped in the vertex shader. Rock starts from a faceted
-    // ball (separate triangles), each vertex also carrying its triangle's other two corners.
-    let g;
-    if (kind === "rock") {
-      g = new T.IcosahedronGeometry(1, 5);
-      const pos = g.attributes.position;
-      const c1 = new Float32Array(pos.count * 3);
-      const c2 = new Float32Array(pos.count * 3);
-      for (let i = 0; i < pos.count; i++) {
-        const s = i - (i % 3);
-        const j1 = s + ((i + 1) % 3);
-        const j2 = s + ((i + 2) % 3);
-        c1.set([pos.getX(j1), pos.getY(j1), pos.getZ(j1)], i * 3);
-        c2.set([pos.getX(j2), pos.getY(j2), pos.getZ(j2)], i * 3);
-      }
-      g.setAttribute("corner1", new T.BufferAttribute(c1, 3));
-      g.setAttribute("corner2", new T.BufferAttribute(c2, 3));
-    } else {
-      g = new T.SphereGeometry(1, 128, 96);
-    }
+    const g = new T.SphereGeometry(1, 128, 96); // both shapes are reshaped in the vertex shader
     g.computeVertexNormals();
     g.computeBoundingBox();
     const c = new T.Vector3();
@@ -3867,7 +3839,7 @@
       const k = forms3d.meshes.length;
       const material = new T.ShaderMaterial({
         uniforms: {
-          map: { value: null }, form: { value: 0.25 }, time: { value: 0 },
+          map: { value: null }, form: { value: 0.25 }, time: { value: 0 }, irr: { value: 0 },
           ...forms3d.shared,
         },
         vertexShader: FORMS_VERTEX,
@@ -4047,6 +4019,9 @@
       const u = m.material.uniforms;
       u.time.value = now / 1000 + k * 7.3;
       u.form.value = organicBase + oW * formsRand(k, 5);
+      const iLo = Math.min(params.formsIrregular, params.formsIrregularMax) / 100;
+      const iW = Math.abs(params.formsIrregularMax - params.formsIrregular) / 100;
+      u.irr.value = iLo + iW * formsRand(k, 6); // Rock: how irregular this one is
     });
 
     const R = forms3d.renderer;
