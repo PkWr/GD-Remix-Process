@@ -4178,6 +4178,9 @@
   const QR_IDLE_MS = 4000;
   const QR_START_GRACE_MS = 90000; // on the Igloo, stay up while people scan
   let remoteQrShown = (() => {
+    // Desktop and phone always start with the code hidden (even if it was shown
+    // earlier in the session); only the Igloo starts with it up, so people can scan.
+    if (STAGE.profile !== "igloo") return false;
     try {
       const v = sessionStorage.getItem(QR_SHOWN_KEY);
       if (v !== null) return v === "1";
