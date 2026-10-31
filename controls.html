@@ -114,6 +114,11 @@
   .lv-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
   .lv-chip { padding: 8px 12px; font: 600 13px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 999px; cursor: pointer; }
   .lv-chip.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
+  .lv-cells { grid-column: 1 / -1; aspect-ratio: 1.1; }
+  .lv-cd.is-off { opacity: 0.45; }
+  .lv-fx { border-left: 6px solid var(--c); }
+  .lv-fx.has-fx::after { content: " ●"; color: var(--c); }
+  .lv-fx.is-on.has-fx::after { color: #0b0b0c; }
   .lv-md.is-active { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 0 5px rgba(255, 255, 255, 0.45); }
   .lv-mdsc { background: #17191c; border-color: #ffe100; font-size: 18px; }
   .lv-md[hidden] { display: none; }
