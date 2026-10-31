@@ -3636,7 +3636,7 @@
   }
 
   const FORMS_VERTEX = `
-    uniform int morph; uniform float form; uniform float time;
+    uniform int morph; uniform float form; uniform float time; uniform float fit;
     attribute vec3 corner1; attribute vec3 corner2; // Rock: the other two corners of this vertex's triangle
     varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN; varying vec2 vCentre;
     vec3 shapeAt(vec3 d) {
@@ -3652,33 +3652,18 @@
       r *= (1.0 + o * 0.42 * n) / (1.0 + o * 0.3);
       return d * r;
     }
-    float faceR(vec3 d, vec3 n, float h) {
-      float dn = dot(d, normalize(n));
-      return dn > 0.001 ? h / dn : 1000.0;
-    }
-    vec3 shape(vec3 d) { return shapeAt(d); }
-    // Rock: built from flat triangles, like the ball it starts from. At 0 an
-    // icosahedron (20 triangular faces); as the slider rises the surface roughens into
-    // a craggy rock. Every small triangle stays flat, so each facet catches the light
-    // (and bends the glass) on its own.
+    // Rock: built from flat triangles. The geometry itself changes with the slider
+    // (a three-sided pyramid, then more and more triangles, see formsGeometry), and
+    // from about a third of the way up the surface roughens into a rock.
     vec3 rockAt(vec3 d) {
       float t = clamp(form, 0.0, 1.0);
-      float ico = 1000.0;
-      for (int i = 0; i < 4; i++) {
-        float sa = i < 2 ? 1.0 : -1.0;
-        float sb = (i == 0 || i == 2) ? 1.0 : -1.0;
-        ico = min(ico, faceR(d, vec3(1.0, sa, sb), 1.0));
-        ico = min(ico, faceR(d, vec3(-1.0, sa, sb), 1.0));
-        ico = min(ico, faceR(d, vec3(0.0, sa * 1.618034, sb * 0.618034), 1.0));
-        ico = min(ico, faceR(d, vec3(sa * 1.618034, sb * 0.618034, 0.0), 1.0));
-        ico = min(ico, faceR(d, vec3(sb * 0.618034, 0.0, sa * 1.618034), 1.0));
-      }
+      float rough = smoothstep(0.3, 1.0, t);
       float n = sin(d.x * 3.6 + d.y * 2.2) * 0.5 + sin(d.y * 6.3 + d.z * 3.9) * 0.3 + sin(d.z * 8.7 + d.x * 7.1) * 0.2;
-      float rough = 0.74 * (1.0 + 0.18 * n);
-      vec3 p = d * mix(ico * 0.72, rough, smoothstep(0.0, 1.0, t));
-      p.y *= mix(1.0, 0.85, t);
+      vec3 p = d * fit * (1.0 + 0.18 * rough * n);
+      p.y *= mix(1.0, 0.85, rough);
       return p;
     }
+    vec3 shape(vec3 d) { return shapeAt(d); }
     void main() {
       vec3 p = position; vec3 nrm = normalize(normal);
       if (morph == 3) {
@@ -3762,14 +3747,21 @@
 
   // Built-in shapes, centred and scaled to fit a unit ball. Bounds are
   // padded so the Form's bulges are never culled at a wall's edge.
-  function formsGeometry(kind) {
+  // Rock's steps: 4, 8, 20, 80, 180, 320, 720 triangles. `fit` evens out their sizes.
+  const ROCK_LEVELS = [["tetra"], ["octa"], ["ico", 0], ["ico", 1], ["ico", 2], ["ico", 3], ["ico", 5]];
+  const ROCK_FIT = [1.25, 1.0, 0.86, 0.82, 0.8, 0.78, 0.77];
+  const rockLevel = (t) => Math.min(ROCK_LEVELS.length - 1, Math.max(0, Math.floor(t * ROCK_LEVELS.length)));
+  function formsGeometry(kind, level = 0) {
     const T = window.THREE;
-    if (forms3d.geos[kind]) return forms3d.geos[kind];
-    // All shapes are reshaped in the vertex shader. Rock starts from a faceted ball
-    // (separate triangles), each vertex also carrying its triangle's other two corners.
+    const key = kind === "rock" ? `rock${level}` : kind;
+    if (forms3d.geos[key]) return forms3d.geos[key];
+    // Form is a ball reshaped in the vertex shader. Rock is a flat-faced solid whose
+    // triangle count follows the slider (see ROCK_LEVELS); each vertex also carries its
+    // triangle's other two corners, so every face gets its own flat normal.
     let g;
     if (kind === "rock") {
-      g = new T.IcosahedronGeometry(1, 5);
+      const [type, detail] = ROCK_LEVELS[level];
+      g = type === "tetra" ? new T.TetrahedronGeometry(1, 0) : type === "octa" ? new T.OctahedronGeometry(1, 0) : new T.IcosahedronGeometry(1, detail);
       const pos = g.attributes.position;
       const c1 = new Float32Array(pos.count * 3);
       const c2 = new Float32Array(pos.count * 3);
@@ -3795,7 +3787,7 @@
     g.scale(s, s, s);
     g.computeBoundingSphere();
     g.boundingSphere.radius *= 1.6;
-    forms3d.geos[kind] = g;
+    forms3d.geos[key] = g;
     return g;
   }
 
@@ -3861,12 +3853,12 @@
     const T = window.THREE;
     const n = params.formsCount;
     forms3d.shared.morph.value = params.formsShape === "rock" ? 3 : 1; // both shapes are shaped in the vertex shader
-    const geo = formsGeometry(params.formsShape);
+    const geo = formsGeometry(params.formsShape, 0);
     while (forms3d.meshes.length < n) {
       const k = forms3d.meshes.length;
       const material = new T.ShaderMaterial({
         uniforms: {
-          map: { value: null }, form: { value: 0.25 }, time: { value: 0 },
+          map: { value: null }, form: { value: 0.25 }, time: { value: 0 }, fit: { value: 1 },
           ...forms3d.shared,
         },
         vertexShader: FORMS_VERTEX,
@@ -4046,6 +4038,16 @@
       const u = m.material.uniforms;
       u.time.value = now / 1000 + k * 7.3;
       u.form.value = organicBase + oW * formsRand(k, 5);
+      if (params.formsShape === "rock") {
+        // The slider sets how many triangles: swap in the matching solid.
+        const lv = rockLevel(u.form.value);
+        u.fit.value = ROCK_FIT[lv];
+        const rg = formsGeometry("rock", lv);
+        if (m.geometry !== rg) {
+          m.geometry = rg;
+          ghost.geometry = rg;
+        }
+      }
     });
 
     const R = forms3d.renderer;
