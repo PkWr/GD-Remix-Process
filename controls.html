@@ -116,9 +116,10 @@
   .lv-chip.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   .lv-cells { grid-column: 1 / -1; aspect-ratio: 1.1; }
   .lv-cd.is-off { opacity: 0.45; }
-  .lv-fx { border-left: 6px solid var(--c); }
-  .lv-fx.has-fx::after { content: " ●"; color: var(--c); }
-  .lv-fx.is-on.has-fx::after { color: #0b0b0c; }
+  .lv-fxrow { display: flex; gap: 8px; margin-top: 10px; }
+  .lv-fxrow .lv-on { flex: 1; width: auto; margin-top: 0; padding: 14px 10px; font-size: 15px; }
+  .lv-fxrow .lv-on.is-sel { box-shadow: inset 0 0 0 2px #ececec; }
+  .lv-fxrow .lv-on.is-on.is-sel { box-shadow: inset 0 0 0 2px #0b0b0c; }
   .lv-md.is-active { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 0 5px rgba(255, 255, 255, 0.45); }
   .lv-mdsc { background: #17191c; border-color: #ffe100; font-size: 18px; }
   .lv-md[hidden] { display: none; }

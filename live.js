@@ -15,7 +15,7 @@
   if (!root || !panel) return;
 
   const FUNCS = [
-    { id: "cells", label: "Cells", multi: [
+    { id: "cells", label: "Effects", multi: [
       { name: "Pixelate", c: "#ff7a45", on: "ctrlEffectPixelate", cs: ["ctrlPixelateMin", "ctrlPixelateMax"], x: "Cell size", y: "Variation" },
       { name: "Halftone", c: "#3fb6ff", on: "ctrlEffectHalftone", cs: ["ctrlHalftoneMin", "ctrlHalftoneMax"], x: "Dot grid", y: "Variation" },
       { name: "ASCII", c: "#7be06a", on: "ctrlEffectAscii", cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" } ] },
@@ -222,14 +222,14 @@
   function renderPads() {
     const f = FUNCS.find((x) => x.id === current);
     const fo = f.multi ? f.multi[cellIdx] : f;
-    onEl.innerHTML = fo.on
+    onEl.innerHTML = f.multi
+      ? `<div class="lv-fxrow">` + f.multi.map((e, k) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}" data-k="${k}">${e.name}<span></span></button>`).join("") + `</div>`
+      : fo.on
       ? `<button type="button" class="lv-on" id="lvOnBtn" data-for="${fo.on}">${fo.onLabel || fo.label || fo.name}<span></span></button>`
       : "";
     padsEl.className = "lv-pads" + (padsOf(f).length === 1 ? " one" : "");
     palEl.innerHTML = f.palettes ? paletteHtml() : "";
-    chipsEl.innerHTML = f.multi
-      ? f.multi.map((e, i) => `<button type="button" class="lv-chip lv-fx" data-c="${i}" style="--c:${e.c}">${e.name}</button>`).join("")
-      : f.palettes
+    chipsEl.innerHTML = f.palettes
       ? [["Fg", "Foreground"], ["Bg", "Background"], ["Sc", "Screen"], ["SC", "Saturation · Contrast"]]
           .map(([k, n]) => `<button type="button" class="lv-chip" data-m="${k}">${n}</button>`)
           .join("")
@@ -344,13 +344,6 @@
       b.classList.toggle("is-sel", +b.dataset.n === selPal);
     });
     chipsEl.querySelectorAll(".lv-chip").forEach((c) => {
-      if (c.dataset.c !== undefined) {
-        const e = f.multi[+c.dataset.c];
-        const sw = $(e.on);
-        c.classList.toggle("is-on", +c.dataset.c === cellIdx);
-        c.classList.toggle("has-fx", !!(sw && sw.checked));
-        return;
-      }
       const on = mapMode === "sc" ? c.dataset.m === "SC" : c.dataset.m === mapTarget;
       c.classList.toggle("is-on", on);
     });
@@ -372,12 +365,14 @@
       const on = fn.multi ? fn.multi.some((e) => ($(e.on) || {}).checked) : (fn.on && $(fn.on) || {}).checked;
       if (b) b.classList.toggle("is-on", !!on);
     });
+    onEl.querySelectorAll(".lv-fxsw").forEach((b) => {
+      const sw = $(b.dataset.for);
+      b.classList.toggle("is-on", !!(sw && sw.checked));
+      b.classList.toggle("is-sel", +b.dataset.k === cellIdx);
+      b.querySelector("span").textContent = sw && sw.checked ? "ON" : "off";
+    });
     const onBtn = $("lvOnBtn");
     if (onBtn) {
-      if (f.multi) {
-        onBtn.dataset.for = f.multi[cellIdx].on;
-        onBtn.firstChild.textContent = f.multi[cellIdx].name;
-      }
       const sw = $(onBtn.dataset.for);
       onBtn.classList.toggle("is-on", !!(sw && sw.checked));
       onBtn.querySelector("span").textContent = sw && sw.checked ? "ON" : "off";
@@ -408,9 +403,10 @@
   });
 
   onEl.addEventListener("click", (e) => {
-    const b = e.target.closest("#lvOnBtn");
+    const b = e.target.closest("#lvOnBtn, .lv-fxsw");
     const sw = b && $(b.dataset.for);
     if (!sw) return;
+    if (b.dataset.k !== undefined) cellIdx = +b.dataset.k;
     sw.checked = !sw.checked;
     sw.dispatchEvent(new Event("change", { bubbles: true }));
     refresh();
@@ -452,11 +448,6 @@
   chipsEl.addEventListener("click", (e) => {
     const c = e.target.closest(".lv-chip");
     if (!c) return;
-    if (c.dataset.c !== undefined) {
-      cellIdx = +c.dataset.c;
-      refresh();
-      return;
-    }
     if (c.dataset.m === "SC") mapMode = "sc";
     else {
       mapMode = "colour";
