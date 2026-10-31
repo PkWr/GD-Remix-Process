@@ -313,7 +313,7 @@
         { when: { id: "ctrlFormsOn", is: ["on"] }, items: [
           "ctrlFormsShape",
           { when: { id: "ctrlFormsShape", is: ["form"] }, items: [{ dual: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], label: "Geometric ↔ Organic" }, { note: "Handles apart: each form lands somewhere between them. Together: all alike. 0 cube · 50 sphere · 100 blob." }] },
-          { when: { id: "ctrlFormsShape", is: ["rock"] }, items: [{ dual: ["ctrlFormsRock", "ctrlFormsRockMax"], label: "Triangle ↔ Rock" }, { note: "Flat faces, no curves. Handles apart: each rock lands somewhere between them. Together: all alike. 0 triangle · 100 rock." }] },
+          { when: { id: "ctrlFormsShape", is: ["rock"] }, items: [{ dual: ["ctrlFormsRock", "ctrlFormsRockMax"], label: "Triangle ↔ Rock" }, { note: "Built from flat triangles. Handles apart: each rock lands somewhere between them. Together: all alike. 0 triangles · 100 rock." }] },
           "ctrlFormsDrift",
           "ctrlFormsCount",
           { when: { id: "ctrlFormsCount", not: ["1"] }, items: ["ctrlFormsSpacing", "ctrlFormsDepth"] },
@@ -408,7 +408,7 @@
     },
     roamSpread: (v, angle) => (v >= 180 ? "wandering" : v === 0 ? (angle != null ? `together, ${FORMATS.compass(+angle)}` : "together") : v < 45 ? "loose flock" : "scattered"),
     glassName: (v) => (v < 20 ? "lens" : v < 45 ? "glass lens" : v < 70 ? "glass" : v < 90 ? "soft liquid" : "liquid"),
-    rockName: (v) => (v < 12 ? "triangle" : v < 40 ? "chiselled" : v < 70 ? "boulder" : "rock"),
+    rockName: (v) => (v < 12 ? "triangles" : v < 40 ? "chiselled" : v < 70 ? "boulder" : "rock"),
     formName: (v) => (v < 12 ? "cube" : v < 40 ? "rounded box" : v < 60 ? "sphere" : v < 85 ? "soft blob" : "globular"),
     moveH: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "left" : "right"}`),
     moveV: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "down" : "up"}`),
