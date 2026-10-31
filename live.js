@@ -28,8 +28,10 @@
       { chip: "Spread · Size", needs: true, xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
     { id: "forms", label: "3D forms", icon: "view_in_ar", on: "ctrlFormsOn", sets: [
       { chip: "Organic · Mix", needs: true, cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix",
-        alt: { shape: "rock", chip: "Sides · Mix", cs: ["ctrlFormsRock", "ctrlFormsRockMax"], x: "Pyramid ↔ Many sides" } },
-      { chip: "Irregular", needs: true, only: "rock", cs: ["ctrlFormsIrregular", "ctrlFormsIrregularMax"], x: "Irregularity", y: "Mix" },
+        alts: [
+          { shape: "rock", chip: "Rock · Mix", cs: ["ctrlFormsRock", "ctrlFormsRockMax"], x: "Triangles ↔ Rock" },
+          { shape: "crystal", chip: "Sides · Mix", cs: ["ctrlFormsSides", "ctrlFormsSidesMax"], x: "Pyramid ↔ Many sides" } ] },
+      { chip: "Irregular", needs: true, only: "crystal", cs: ["ctrlFormsIrregular", "ctrlFormsIrregularMax"], x: "Irregularity", y: "Mix" },
       { chip: "Number · Spacing", needs: true, xy: ["ctrlFormsCount", "ctrlFormsSpacing"], x: "How many", y: "Spacing" },
       { chip: "Size · Spin", needs: true, xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
       { chip: "Lens · Glow", needs: true, xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
@@ -45,7 +47,10 @@
   let cellIdx = 0; // which of Pixelate / Halftone / ASCII the Cells pad edits
   // A set marked `needs` is only offered while the function's own switch is on.
   const shapeNow = () => ($("ctrlFormsShape") || {}).value;
-  const setOf = (t) => (t.alt && shapeNow() === t.alt.shape ? { ...t, ...t.alt } : t);
+  const setOf = (t) => {
+    const alt = (t.alts || []).find((x) => x.shape === shapeNow());
+    return alt ? { ...t, ...alt } : t;
+  };
   const setOk = (f, t) => (!t.needs || ($(f.on) || {}).checked) && (!t.only || shapeNow() === t.only);
   const setIndex = (f) => {
     const i = setIdx[f.id] || 0;
@@ -620,7 +625,7 @@
   $("lvReset").addEventListener("click", () => {
     const f = FUNCS.find((x) => x.id === current);
     const ids = new Set();
-    [...(f.pads || []), ...(f.sets || []), ...(f.multi || [])].forEach((p) => [...(p.xy || p.cs), ...((p.alt && p.alt.cs) || [])].forEach((id) => ids.add(id)));
+    [...(f.pads || []), ...(f.sets || []), ...(f.multi || [])].forEach((p) => [...(p.xy || p.cs), ...(p.alts || []).flatMap((x) => x.cs)].forEach((id) => ids.add(id)));
     if (f.on) ids.add(f.on);
     [...(f.multi || []), ...(f.extra || [])].forEach((e) => ids.add(e.on));
     if (f.palettes) {

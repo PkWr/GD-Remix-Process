@@ -3637,6 +3637,7 @@
 
   const FORMS_VERTEX = `
     uniform int morph; uniform float form; uniform float time; uniform float irr;
+    attribute vec3 corner1; attribute vec3 corner2; // Rock: the other two corners of this vertex's triangle
     varying vec3 vPos; varying vec3 vNormal; varying vec3 vViewN; varying vec2 vCentre;
     vec3 shapeAt(vec3 d) {
       float g = clamp(form * 2.0, 0.0, 1.0);
@@ -3651,7 +3652,7 @@
       r *= (1.0 + o * 0.42 * n) / (1.0 + o * 0.3);
       return d * r;
     }
-    // Rock: flat faces only. At 0 a three-sided pyramid; more planes bite in as the
+    // Crystal: flat faces only. At 0 a three-sided pyramid; more planes bite in as the
     // slider rises, so it gains sides (4, 6, 8, 12 ... a many-sided gem). Separately,
     // irr lets every plane wander to its own distance, so the shape turns irregular.
     float faceR(vec3 d, vec3 n, float h) {
@@ -3659,7 +3660,7 @@
       return dn > 0.001 ? h / dn : 1000.0;
     }
     float hash1(float k) { return fract(sin(k * 91.3458) * 47453.5453); }
-    vec3 rockAt(vec3 d) {
+    vec3 crystalAt(vec3 d) {
       float t = clamp(form, 0.0, 1.0);
       float wander = irr * 0.5; // how far each plane may wander
       float r = 1000.0;
@@ -3678,10 +3679,40 @@
       }
       return d * r * mix(0.36, 0.8, smoothstep(0.0, 0.9, t));
     }
-    vec3 shape(vec3 d) { return morph == 2 ? rockAt(d) : shapeAt(d); }
+    vec3 shape(vec3 d) { return morph == 2 ? crystalAt(d) : shapeAt(d); }
+    // Rock: built from flat triangles, like the ball it starts from. At 0 an
+    // icosahedron (20 triangular faces); as the slider rises the surface roughens into
+    // a craggy rock. Every small triangle stays flat, so each facet catches the light
+    // (and bends the glass) on its own.
+    vec3 rockAt(vec3 d) {
+      float t = clamp(form, 0.0, 1.0);
+      float ico = 1000.0;
+      for (int i = 0; i < 4; i++) {
+        float sa = i < 2 ? 1.0 : -1.0;
+        float sb = (i == 0 || i == 2) ? 1.0 : -1.0;
+        ico = min(ico, faceR(d, vec3(1.0, sa, sb), 1.0));
+        ico = min(ico, faceR(d, vec3(-1.0, sa, sb), 1.0));
+        ico = min(ico, faceR(d, vec3(0.0, sa * 1.618034, sb * 0.618034), 1.0));
+        ico = min(ico, faceR(d, vec3(sa * 1.618034, sb * 0.618034, 0.0), 1.0));
+        ico = min(ico, faceR(d, vec3(sb * 0.618034, 0.0, sa * 1.618034), 1.0));
+      }
+      float n = sin(d.x * 3.6 + d.y * 2.2) * 0.5 + sin(d.y * 6.3 + d.z * 3.9) * 0.3 + sin(d.z * 8.7 + d.x * 7.1) * 0.2;
+      float rough = 0.74 * (1.0 + 0.18 * n);
+      vec3 p = d * mix(ico * 0.72, rough, smoothstep(0.0, 1.0, t));
+      p.y *= mix(1.0, 0.85, t);
+      return p;
+    }
     void main() {
       vec3 p = position; vec3 nrm = normalize(normal);
-      if (morph >= 1) {
+      if (morph == 3) {
+        vec3 d0 = normalize(position);
+        vec3 p0 = rockAt(d0);
+        vec3 p1 = rockAt(normalize(corner1));
+        vec3 p2 = rockAt(normalize(corner2));
+        nrm = normalize(cross(p1 - p0, p2 - p0));
+        if (dot(nrm, d0) < 0.0) nrm = -nrm;
+        p = p0;
+      } else if (morph >= 1) {
         vec3 d = normalize(position);
         vec3 up = abs(d.y) > 0.99 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
         vec3 t1 = normalize(cross(d, up)); vec3 t2 = cross(d, t1);
@@ -3757,7 +3788,26 @@
   function formsGeometry(kind) {
     const T = window.THREE;
     if (forms3d.geos[kind]) return forms3d.geos[kind];
-    const g = new T.SphereGeometry(1, 128, 96); // both shapes are reshaped in the vertex shader
+    // All shapes are reshaped in the vertex shader. Rock starts from a faceted ball
+    // (separate triangles), each vertex also carrying its triangle's other two corners.
+    let g;
+    if (kind === "rock") {
+      g = new T.IcosahedronGeometry(1, 5);
+      const pos = g.attributes.position;
+      const c1 = new Float32Array(pos.count * 3);
+      const c2 = new Float32Array(pos.count * 3);
+      for (let i = 0; i < pos.count; i++) {
+        const s = i - (i % 3);
+        const j1 = s + ((i + 1) % 3);
+        const j2 = s + ((i + 2) % 3);
+        c1.set([pos.getX(j1), pos.getY(j1), pos.getZ(j1)], i * 3);
+        c2.set([pos.getX(j2), pos.getY(j2), pos.getZ(j2)], i * 3);
+      }
+      g.setAttribute("corner1", new T.BufferAttribute(c1, 3));
+      g.setAttribute("corner2", new T.BufferAttribute(c2, 3));
+    } else {
+      g = new T.SphereGeometry(1, 128, 96);
+    }
     g.computeVertexNormals();
     g.computeBoundingBox();
     const c = new T.Vector3();
@@ -3833,7 +3883,7 @@
   function forms3dSync() {
     const T = window.THREE;
     const n = params.formsCount;
-    forms3d.shared.morph.value = params.formsShape === "rock" ? 2 : 1; // both shapes are shaped in the vertex shader
+    forms3d.shared.morph.value = params.formsShape === "rock" ? 3 : params.formsShape === "crystal" ? 2 : 1; // all shapes are shaped in the vertex shader
     const geo = formsGeometry(params.formsShape);
     while (forms3d.meshes.length < n) {
       const k = forms3d.meshes.length;
@@ -3970,9 +4020,9 @@
     // Geometric ↔ Organic is a range: each form lands somewhere between the
     // handles. Drift slides that window across the whole scale (cube → blob
     // → cube in ~22 s).
-    const rockShape = params.formsShape === "rock";
-    const rLo = rockShape ? params.formsRock : params.formsOrganic;
-    const rHi = rockShape ? params.formsRockMax : params.formsOrganicMax;
+    const shapeNow = params.formsShape;
+    const rLo = shapeNow === "rock" ? params.formsRock : shapeNow === "crystal" ? params.formsSides : params.formsOrganic;
+    const rHi = shapeNow === "rock" ? params.formsRockMax : shapeNow === "crystal" ? params.formsSidesMax : params.formsOrganicMax;
     const oLo = Math.min(rLo, rHi) / 100;
     const oW = Math.abs(rHi - rLo) / 100;
     const organicBase = params.formsDrift ? (0.5 - 0.5 * Math.cos(now / 3500)) * (1 - oW) : oLo;
