@@ -186,6 +186,7 @@
     `<button type="button" class="lv-btn lv-tb" id="lvNext" aria-label="Next image" title="Next image">${ico("skip_next", 24)}</button>` +
     `<button type="button" class="lv-btn lv-tb" id="lvReset"></button></div>` +
     `<div class="lv-funcs" id="lvFuncs"></div>` +
+    `<div class="lv-chips lv-sub" id="lvSub" hidden></div>` +
     `<div id="lvOn"></div>` +
     `<div class="lv-chips" id="lvChips"></div>` +
     `<div class="lv-pads" id="lvPads"></div>` +
@@ -197,6 +198,8 @@
   const padsEl = $("lvPads");
   const chipsEl = $("lvChips");
   const palEl = $("lvPal");
+  const subEl = $("lvSub");
+  let colSub = "map"; // Colour page: "map" (colour pad) | "pal" (palettes) | "blend"
 
   function renderFuncs() {
     funcsEl.innerHTML = FUNCS.map(
@@ -209,7 +212,7 @@
   function paletteHtml() {
     const dot = (id, label) =>
       `<label class="lv-dotc" title="${label}"><input type="color" data-id="${id}" aria-label="${label}"></label>`;
-    let h = `<p class="lv-h">Duotone palettes <span class="lv-key">tap a number to edit that palette · dots: foreground, background</span></p><div class="lv-pals">`;
+    let h = `<div class="lv-sec" data-s="pal"><p class="lv-h">Duotone palettes <span class="lv-key">tap a number to edit that palette · dots: foreground, background</span></p><div class="lv-pals">`;
     for (let n = 1; n <= 4; n++) {
       h +=
         `<div class="lv-pal-cell"><button type="button" class="lv-pal-n" data-n="${n}" aria-label="Edit palette ${n}">${n}</button>` +
@@ -220,12 +223,13 @@
     h += `</div><p class="lv-h">Screen</p><div class="lv-pals"><div class="lv-pal-cell lv-screen">` + dot("ctrlBackground", "Screen background colour") + `<span class="lv-cap">Screen background</span></div></div>`;
     h += `<button type="button" class="lv-btn lv-wide" id="lvPalOn"></button><button type="button" class="lv-btn lv-wide" id="lvPalRand">Random palette each image</button>`;
     // Blend overlay: on/off, which modes may be picked, how strongly, how many layers.
+    h += `</div><div class="lv-sec" data-s="blend">`;
     const modes = [["Multiply", "Multiply"], ["Screen", "Screen"], ["Overlay", "Overlay"], ["Darken", "Darken"], ["Lighten", "Lighten"], ["Difference", "Difference"], ["Exclusion", "Exclusion"], ["HardLight", "Hard light"]];
     h += `<p class="lv-h">Blend overlay</p><button type="button" class="lv-btn lv-wide" id="lvBlendOn" data-flip="ctrlBlendOverlay"></button><div class="lv-chips lv-modes">`;
     h += modes.map(([k, n]) => `<button type="button" class="lv-chip" data-flip="ctrlBlendMode${k}">${n}</button>`).join("");
     h += `</div><label class="lv-rng"><span>Opacity</span><input type="range" data-id="ctrlOpacity" aria-label="Blend opacity"></label>`;
     h += `<label class="lv-rng"><span>Layers</span><input type="range" data-id="ctrlBlendLayers" aria-label="Blend layers"></label>`;
-    return h;
+    return h + `</div>`;
   }
 
   function renderPads() {
@@ -239,7 +243,14 @@
     padsEl.className = "lv-pads" + (padsOf(f).length === 1 ? " one" : "");
     palEl.innerHTML = f.palettes ? paletteHtml() : "";
     $("lvScenes").hidden = !f.scenes; // the Scenes page shows only the scene buttons
-    padsEl.hidden = !!f.scenes;
+    const sub = f.palettes ? colSub : "map";
+    subEl.hidden = !f.palettes;
+    subEl.innerHTML = f.palettes
+      ? [["map", "Colour map"], ["pal", "Palettes"], ["blend", "Blend"]].map(([k, n]) => `<button type="button" class="lv-chip${k === sub ? " is-on" : ""}" data-sub="${k}">${n}</button>`).join("")
+      : "";
+    padsEl.hidden = !!f.scenes || sub !== "map";
+    chipsEl.hidden = sub !== "map";
+    onEl.hidden = sub !== "map";
     $("lvReset").hidden = !!f.scenes;
     $("lvReset").innerHTML = ico("restart_alt", 24);
     $("lvReset").setAttribute("aria-label", `Reset ${f.label}`);
@@ -269,6 +280,7 @@
           `<span class="lv-tag lv-tv"></span></div>`
       )
       .join("");
+    palEl.querySelectorAll(".lv-sec").forEach((x) => (x.hidden = x.dataset.s !== sub));
     refresh();
   }
 
@@ -469,6 +481,13 @@
       refresh();
     } else if (e.target.closest("#lvPalOn")) flip(`ctrlPalette${selPal}Enabled`);
     else if (e.target.closest("#lvPalRand")) flip("ctrlPaletteRandomize");
+  });
+
+  subEl.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sub]");
+    if (!b) return;
+    colSub = b.dataset.sub;
+    renderPads();
   });
 
   chipsEl.addEventListener("click", (e) => {
