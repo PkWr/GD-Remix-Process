@@ -49,7 +49,7 @@
 
     // Effects in rotation (Untouched is the all-off switch — see app.js)
     { id: "ctrlEffectNone", type: "hidden", label: "Untouched", default: false, param: "enabledEffects.none", after: "effectRotation" },
-    { id: "ctrlEffectDuotone", type: "switch", label: "Duotone", default: true, param: "enabledEffects.duotone", after: "effectRotation" },
+    { id: "ctrlEffectDuotone", type: "hidden", label: "Duotone", default: true, param: "enabledEffects.duotone", after: "effectRotation" },
     { id: "ctrlEffectPixelate", type: "switch", label: "Pixelate", default: true, param: "enabledEffects.pixelate", after: "effectRotation" },
     { id: "ctrlEffectHalftone", type: "switch", label: "Halftone", default: true, param: "enabledEffects.halftone", after: "effectRotation" },
     { id: "ctrlEffectAscii", type: "switch", label: "ASCII", default: true, param: "enabledEffects.ascii", after: "effectRotation" },
@@ -229,11 +229,8 @@
     { tab: "effects", label: "Effects", icon: "blur_on", blocks: [
       { section: "In rotation", items: [
         { proxyChips: ["ctrlEffectNone", "ctrlEffectDuotone", "ctrlEffectPixelate", "ctrlEffectHalftone", "ctrlEffectAscii"] },
-        "ctrlEffectNone",
-        { note: "Untouched = plain photos only — switches every effect off." },
-      ] },
-      { card: "Duotone", summary: "palette only", switch: "ctrlEffectDuotone", items: [
-        { note: "Maps brightness onto the palette. No settings of its own — colours come from the Colour tab." },
+        "ctrlEffectNone", "ctrlEffectDuotone",
+        { note: "Untouched = plain photos only: switches every effect off. Duotone maps brightness onto the palette and has no settings of its own; its colours come from the Colour tab." },
       ] },
       { card: "Pixelate", summary: "cell size · animation", switch: "ctrlEffectPixelate", items: [
         { dual: ["ctrlPixelateMin", "ctrlPixelateMax"], label: "Cell size" },
@@ -270,7 +267,6 @@
     { tab: "motion", label: "Motion", icon: "animation", blocks: [
       { section: "Timing", items: [
         { dual: ["ctrlSpeedMin", "ctrlSpeedMax"], label: "Hold each image" },
-        "ctrlAutoCycle", "ctrlApplyNow",
       ] },
       { section: "Transitions", items: ["ctrlCrossfadeEnabled", "ctrlOpacity", { note: "The camera always hard-cuts." }] },
       { card: "Move", summary: "pan · tilt · zoom", summarize: "move", items: [
@@ -306,7 +302,7 @@
       // Echo trail card hidden 30 Oct 2026 — open for review (see OPEN.md). Settings and engine kept.
     ] },
     { tab: "forms", label: "3D forms", icon: "view_in_ar", blocks: [
-      { card: "3D forms", summary: "off", summarize: "forms", switch: "ctrlFormsOn", items: [
+      { card: "3D forms", open: true, summary: "off", summarize: "forms", switch: "ctrlFormsOn", items: [
         { when: { id: "ctrlFormsOn", is: ["off"] }, items: [
           { note: "Switch on: each new image is wrapped round a 3D shape. On the Igloo they sit round all six walls." },
         ] },
@@ -332,15 +328,15 @@
         "ctrlLiveMode", "ctrlCamera",
         { note: "Off = the curated demo set. The front camera is mirrored; effects hard-cut while the camera is on." },
       ] },
-      { section: "Stage", displayOnly: true, items: [{ widget: "profile" }] },
-      { section: "Tools", displayOnly: true, items: [{ widget: "tools" }] },
     ] },
     { tab: "show", label: "Show", icon: "slideshow", group: "setup", blocks: [
       { section: "Scenes", displayOnly: true, items: [{ widget: "scenes" }] },
-      { section: "Start-up", items: ["ctrlStartUnchanged"] },
+      { section: "Playback", items: ["ctrlAutoCycle", "ctrlApplyNow", "ctrlStartUnchanged"] },
+      { section: "Stage", displayOnly: true, items: [{ widget: "profile" }] },
       { section: "Output", displayOnly: true, items: [{ widget: "output" }] },
       { section: "Phone remote", displayOnly: true, items: [{ widget: "remote" }] },
       { section: "Keyboard", displayOnly: true, className: "cp-keys-sec", items: [{ widget: "keys" }] },
+      { card: "Tools & links", summary: "showreel · uploader · about", displayOnly: true, items: [{ widget: "tools" }] },
     ] },
   ];
 
@@ -702,8 +698,8 @@
     if (block.card) {
       const sw = block.switch ? byId[block.switch] : null;
       return (
-        `<section class="cp-card"${block.when ? whenAttrs(block.when) : ""}${block.summarize ? ` data-summary="${block.summarize}"` : ""}><div class="cp-card-head">` +
-        `<button type="button" class="cp-card-toggle" aria-expanded="false"><span data-icon="keyboard_arrow_down"></span>` +
+        `<section class="cp-card${block.open ? " is-open" : ""}"${block.when ? whenAttrs(block.when) : ""}${block.summarize ? ` data-summary="${block.summarize}"` : ""}><div class="cp-card-head">` +
+        `<button type="button" class="cp-card-toggle" aria-expanded="${block.open ? "true" : "false"}"><span data-icon="keyboard_arrow_down"></span>` +
         `<b>${esc(block.card)}</b><small>${esc(block.summary || "")}</small></button>` +
         (RESET_TABS.includes(opts.tab) ? `<button type="button" class="cp-icon cp-reset" aria-label="Reset ${esc(block.card)} to defaults" title="Reset to defaults" data-icon="restart_alt"></button>` : "") +
         (sw ? `<input type="checkbox" class="cp-switch" id="${sw.id}"${checkedAttr(sw)} aria-label="${esc(block.card)} on">` : "") +
