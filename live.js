@@ -18,7 +18,8 @@
     { id: "cells", label: "Effects", icon: "blur_on", multi: [
       { name: "Pixelate", c: "#ff7a45", on: "ctrlEffectPixelate", cs: ["ctrlPixelateMin", "ctrlPixelateMax"], x: "Cell size", y: "Variation" },
       { name: "Halftone", c: "#3fb6ff", on: "ctrlEffectHalftone", cs: ["ctrlHalftoneMin", "ctrlHalftoneMax"], x: "Dot grid", y: "Variation" },
-      { name: "ASCII", c: "#7be06a", on: "ctrlEffectAscii", cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" } ] },
+      { name: "ASCII", c: "#7be06a", on: "ctrlEffectAscii", cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" } ],
+      extra: [{ name: "Untouched", on: "ctrlEffectNone" }] },
     { id: "colour", label: "Colour", icon: "palette", on: "ctrlEffectDuotone", onLabel: "Duotone", palettes: true, pads: [] },
     { id: "motion", label: "Motion", icon: "animation", on: "ctrlRoamOn", onLabel: "Roam", sets: [
       { chip: "Pan · Tilt", xy: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed"], title: "Move", x: "Pan", y: "Tilt" },
@@ -27,6 +28,7 @@
       { chip: "Spread · Size", needs: true, xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
     { id: "forms", label: "3D forms", icon: "view_in_ar", on: "ctrlFormsOn", sets: [
       { chip: "Organic · Mix", needs: true, cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
+      { chip: "Number · Spacing", needs: true, xy: ["ctrlFormsCount", "ctrlFormsSpacing"], x: "How many", y: "Spacing" },
       { chip: "Size · Spin", needs: true, xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
       { chip: "Lens · Glow", needs: true, xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
     { id: "scenes", label: "Scenes", icon: "slideshow", scenes: true, pads: [] },
@@ -55,6 +57,7 @@
       : f.pads;
   const colId = (p) => `ctrlPalette${selPal}${p.color}`;
   const mapId = (k) => (k === "Sc" ? "ctrlBackground" : `ctrlPalette${selPal}${k}`);
+  const mapHue = {}; // last hue dragged to, per palette + dot: pure white / black / grey have no hue of their own
   let mapTarget = "Fg"; // the colour dot being dragged on the map: Fg, Bg or Sc
   let mapMode = "colour"; // "colour" (hue × brightness) or "sc" (saturation × contrast)
   const idsOf = (p) =>
@@ -103,7 +106,7 @@
   const lim = (el) => ({ lo: +el.min, hi: +el.max, st: +el.step || 1 });
   // Whole-number settings with room to move snap to multiples of 5 (the ends of the range stay reachable).
   const SNAP = 5;
-  const snappy = (el) => { const { lo, hi, st } = lim(el); return st % 1 === 0 && hi - lo >= 4 * SNAP; };
+  const snappy = (el) => { const { lo, hi, st } = lim(el); return el.id !== "ctrlFormsCount" && st % 1 === 0 && hi - lo >= 4 * SNAP; }; // a count stays 1 by 1
   function put(el, v, raw) {
     const { lo, hi, st } = lim(el);
     if (!raw && snappy(el)) v = Math.round(v / SNAP) * SNAP;
@@ -150,6 +153,7 @@
     if (p.map) {
       const el = $(mapId(mapTarget));
       if (!el) return;
+      mapHue[(mapTarget === "Sc" ? "" : selPal) + mapTarget] = Math.min(359.9, fx * 360);
       el.value = hslToHex(Math.min(359.9, fx * 360), 1, fy); // full colour; top is white, bottom black
       el.dispatchEvent(new Event("input", { bubbles: true }));
       return;
@@ -246,7 +250,8 @@
     onEl.innerHTML = f.palettes || (f.sets && f.on)
       ? ""
       : f.multi
-      ? `<div class="lv-fxrow">` + f.multi.map((e, k) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}" data-k="${k}">${e.name}<span></span></button>`).join("") + `</div>`
+      ? `<div class="lv-fxrow">` + f.multi.map((e, k) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}" data-k="${k}">${e.name}<span></span></button>`).join("") +
+        (f.extra || []).map((e) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}">${e.name}<span></span></button>`).join("") + `</div>`
       : fo.on
       ? `<button type="button" class="lv-on" id="lvOnBtn" data-for="${fo.on}">${fo.onLabel || fo.label || fo.name}<span></span></button>`
       : "";
@@ -270,7 +275,7 @@
         f.sets.map((t, i) => (setOk(f, t) ? `<button type="button" class="lv-chip" data-s="${i}">${t.chip}</button>` : "")).join("")
       : f.palettes
       ? `<button type="button" class="lv-on lv-duo" id="lvOnBtn" data-for="ctrlEffectDuotone">Duotone<span></span></button>` +
-        [["Fg", "F", "Foreground (highlights)"], ["Bg", "B", "Background (shadows)"], ["Sc", "S", "Screen background"], ["SC", "◐", "Saturation and contrast"]]
+        [["Fg", "F", "Foreground (highlights)"], ["Bg", "B", "Background (shadows)"], ["Sc", "S", "Screen background"], ["SC", ico("contrast", 24), "Saturation and contrast"]]
           .filter(([k]) => palFx() || k === "Sc" || k === "SC")
           .map(([k, t, n]) => `<button type="button" class="lv-chip lv-mc" data-m="${k}" aria-label="${n}" title="${n}">${t}</button>`)
           .join("")
@@ -318,7 +323,9 @@
           }
           const el = $(mapId(d.dataset.k));
           if (!el) return;
-          const [h, , lum] = hexToHsl(el.value);
+          let [h, s, lum] = hexToHsl(el.value);
+          const hk = (d.dataset.k === "Sc" ? "" : selPal) + d.dataset.k;
+          if ((s < 0.05 || lum < 0.04 || lum > 0.96) && mapHue[hk] !== undefined) h = mapHue[hk]; // keep the dot where it was dragged
           d.style.left = `${(h / 360) * 100}%`;
           d.style.top = `${(1 - lum) * 100}%`;
           d.style.setProperty("--c", el.value);
@@ -613,7 +620,7 @@
     const ids = new Set();
     [...(f.pads || []), ...(f.sets || []), ...(f.multi || [])].forEach((p) => (p.xy || p.cs).forEach((id) => ids.add(id)));
     if (f.on) ids.add(f.on);
-    (f.multi || []).forEach((e) => ids.add(e.on));
+    [...(f.multi || []), ...(f.extra || [])].forEach((e) => ids.add(e.on));
     if (f.palettes) {
       for (let n = 1; n <= 4; n++) ["Fg", "Bg", "Enabled"].forEach((k) => ids.add(`ctrlPalette${n}${k}`));
       ["ctrlBackground", "ctrlSaturation", "ctrlContrast", "ctrlPaletteRandomize", "ctrlBlendOverlay", "ctrlOpacity", "ctrlBlendLayers"].forEach((id) => ids.add(id));
