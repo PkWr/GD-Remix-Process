@@ -180,6 +180,7 @@
     `<div id="lvOn"></div>` +
     `<div class="lv-chips" id="lvChips"></div>` +
     `<div class="lv-pads" id="lvPads"></div>` +
+    `<button type="button" class="lv-btn lv-wide" id="lvReset"></button>` +
     `<div id="lvPal"></div>` +
     `<div class="lv-row"><button type="button" class="lv-btn" id="lvPause">Pause</button>` +
     `<button type="button" class="lv-btn" id="lvNext">Next image</button></div>` +
@@ -231,6 +232,7 @@
       : "";
     padsEl.className = "lv-pads" + (padsOf(f).length === 1 ? " one" : "");
     palEl.innerHTML = f.palettes ? paletteHtml() : "";
+    $("lvReset").textContent = `Reset ${f.label}`;
     chipsEl.innerHTML = f.sets
       ? f.sets.map((t, i) => `<button type="button" class="lv-chip" data-s="${i}">${t.chip}</button>`).join("")
       : f.palettes
@@ -543,6 +545,25 @@
         el.value = el.defaultValue;
         el.dispatchEvent(new Event("input", { bubbles: true }));
       } else put(el, +el.defaultValue);
+    });
+    refresh();
+  });
+
+  // Put every setting of the picked function back to its default (on/off switches are left alone).
+  $("lvReset").addEventListener("click", () => {
+    const f = FUNCS.find((x) => x.id === current);
+    const ids = new Set();
+    [...(f.pads || []), ...(f.sets || []), ...(f.multi || [])].forEach((p) => (p.xy || p.cs).forEach((id) => ids.add(id)));
+    if (f.palettes) {
+      for (let n = 1; n <= 4; n++) ["Fg", "Bg"].forEach((k) => ids.add(`ctrlPalette${n}${k}`));
+      ["ctrlBackground", "ctrlSaturation", "ctrlContrast"].forEach((id) => ids.add(id));
+    }
+    ids.forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      el.value = el.defaultValue;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
     });
     refresh();
   });
