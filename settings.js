@@ -715,10 +715,7 @@
       `<div class="cp-head"><div class="cp-title"><h2>${display ? "Controls" : "Remote controls"}</h2>` +
       `<div class="cp-now" id="cpNow">${display ? "starting…" : "mirrors the display page"}</div></div>` +
       (display
-        ? `<button type="button" class="cp-icon" id="cpCamera" aria-label="Camera" title="Live camera" aria-pressed="false" data-icon="videocam"></button>` +
-          `<button type="button" class="cp-icon" id="cpFlip" aria-label="Switch front / back camera" title="Switch front / back camera" data-icon="cameraswitch" hidden></button>` +
-          `<button type="button" class="cp-icon" id="cpQr" aria-label="Phone remote code" title="Phone remote: show / hide the QR code (Q)" aria-pressed="false" data-icon="qr_code_2"></button>` +
-          `<button type="button" class="cp-icon" id="cpInfoHead" aria-label="Info (D)" title="Info (D)" aria-pressed="false" data-icon="info"></button>` +
+        ? `<button type="button" class="cp-icon" id="cpInfoHead" aria-label="Info (D)" title="Info (D)" aria-pressed="false" data-icon="info"></button>` +
           `<button type="button" class="cp-icon" id="cpNext" aria-label="Next image" title="Next image" data-icon="skip_next"></button>` +
           `<button type="button" class="cp-icon" id="cpPause" aria-label="Pause (P)" title="Pause (P)" data-icon="pause"></button>` +
           `<button type="button" class="cp-icon cp-close" id="cpClose" aria-label="Close controls (C)" title="Close (C)" data-icon="close"></button>`
@@ -728,7 +725,15 @@
       (() => {
         const btn = (t) => `<button type="button" data-tab="${t.tab}"><span data-icon="${t.icon}"></span>${esc(t.label)}</button>`;
         return `<div class="cp-tabrow">${LAYOUT.filter((t) => !t.group).map(btn).join("")}</div>` +
-          `<div class="cp-tabrow cp-tabrow-setup">${LAYOUT.filter((t) => t.group).map(btn).join("")}</div>`;
+          `<div class="cp-tabrow cp-tabrow-setup">${LAYOUT.filter((t) => t.group).map(btn).join("")}` +
+          (display
+            ? `<span class="cp-tabtools">` +
+              `<button type="button" class="cp-icon" id="cpCamera" aria-label="Camera" title="Live camera (V)" aria-pressed="false" data-icon="videocam"></button>` +
+              `<button type="button" class="cp-icon" id="cpFlip" aria-label="Switch front / back camera" title="Switch front / back camera" data-icon="cameraswitch" hidden></button>` +
+              `<button type="button" class="cp-icon" id="cpQr" aria-label="Phone remote code" title="Phone remote: show / hide the QR code (Q)" aria-pressed="false" data-icon="qr_code_2"></button>` +
+              `</span>`
+            : "") +
+          `</div>`;
       })() +
       `</nav><div class="cp-body">` +
       LAYOUT.map((t) => `<div class="cp-tab" data-tab="${t.tab}">${t.blocks.map((b) => blockHtml(b, { mode, tab: t.tab })).join("")}</div>`).join("") +

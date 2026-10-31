@@ -218,7 +218,6 @@ body.preview-pan #stage canvas {
 }
 
 #controls .cp-title { flex: 1; min-width: 0; }
-#controls .cp-head .cp-icon { width: 36px; height: 36px; border-radius: 18px; }
 /* On the display the camera lives in the header; its switch stays in the page (hidden) so everything still syncs. */
 #controls:has(#cpCamera) .cp-row:has(#ctrlCamera) { display: none; }
 
@@ -281,6 +280,10 @@ body.preview-pan #stage canvas {
 #controls .cp-tabrow { display: flex; }
 #controls .cp-tabrow-setup { border-top: 1px solid var(--cp-line); }
 #controls .cp-tabrow-setup button { min-height: 40px; flex-direction: row; justify-content: center; gap: 6px; }
+/* Camera, flip and QR code: icon buttons at the end of the setup row. */
+#controls .cp-tabs .cp-tabtools { flex: none; display: flex; align-items: center; gap: 2px; padding: 0 2px; }
+#controls .cp-tabs .cp-tabtools button { flex: none; width: 36px; min-height: 36px; height: 36px; padding: 0; border: 1px solid transparent; border-radius: 18px; align-items: center; justify-content: center; }
+#controls .cp-tabs .cp-tabtools button[aria-pressed="true"] { background: var(--cp-accent-bg); border-color: var(--cp-accent-line); color: var(--cp-accent); box-shadow: none; }
 
 #controls .cp-tabs button[aria-current="page"] {
   color: var(--cp-accent);
