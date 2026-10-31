@@ -20,12 +20,11 @@
       { name: "Halftone", c: "#3fb6ff", on: "ctrlEffectHalftone", cs: ["ctrlHalftoneMin", "ctrlHalftoneMax"], x: "Dot grid", y: "Variation" },
       { name: "ASCII", c: "#7be06a", on: "ctrlEffectAscii", cs: ["ctrlAsciiMin", "ctrlAsciiMax"], x: "Character size", y: "Variation" } ] },
     { id: "colour", label: "Colour", on: "ctrlEffectDuotone", onLabel: "Duotone", palettes: true, pads: [] },
-    { id: "move", label: "Move", pads: [
-      { xy: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed"], x: "Pan", y: "Tilt" },
-      { xy: ["ctrlMoveZoomSpeed", "ctrlStripGap"], x: "Zoom", y: "Strip gap" } ] },
-    { id: "roam", label: "Roam", on: "ctrlRoamOn", pads: [
-      { xy: ["ctrlRoamSpeed", "ctrlRoamSpin"], x: "Travel", y: "Spin" },
-      { xy: ["ctrlRoamSpread", "ctrlRoamSize"], x: "Together ↔ Wandering", y: "Size" } ] },
+    { id: "motion", label: "Motion", on: "ctrlRoamOn", onLabel: "Roam", pads: [
+      { xy: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed"], title: "Move", x: "Pan", y: "Tilt" },
+      { xy: ["ctrlMoveZoomSpeed", "ctrlStripGap"], title: "Move", x: "Zoom", y: "Strip gap" },
+      { xy: ["ctrlRoamSpeed", "ctrlRoamSpin"], title: "Roam", x: "Travel", y: "Spin" },
+      { xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
     { id: "forms", label: "3D forms", on: "ctrlFormsOn", pads: [
       { cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
       { xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
