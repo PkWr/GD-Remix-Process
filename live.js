@@ -23,12 +23,12 @@
     { id: "motion", label: "Motion", icon: "animation", on: "ctrlRoamOn", onLabel: "Roam", sets: [
       { chip: "Pan · Tilt", xy: ["ctrlMovePanSpeed", "ctrlMoveTiltSpeed"], title: "Move", x: "Pan", y: "Tilt" },
       { chip: "Zoom · Gap", xy: ["ctrlMoveZoomSpeed", "ctrlStripGap"], title: "Move", x: "Zoom", y: "Strip gap" },
-      { chip: "Travel · Spin", xy: ["ctrlRoamSpeed", "ctrlRoamSpin"], title: "Roam", x: "Travel", y: "Spin" },
-      { chip: "Spread · Size", xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
+      { chip: "Travel · Spin", needs: true, xy: ["ctrlRoamSpeed", "ctrlRoamSpin"], title: "Roam", x: "Travel", y: "Spin" },
+      { chip: "Spread · Size", needs: true, xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
     { id: "forms", label: "3D forms", icon: "view_in_ar", on: "ctrlFormsOn", sets: [
-      { chip: "Organic · Mix", cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
-      { chip: "Size · Spin", xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
-      { chip: "Lens · Glow", xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
+      { chip: "Organic · Mix", needs: true, cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
+      { chip: "Size · Spin", needs: true, xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
+      { chip: "Lens · Glow", needs: true, xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
     { id: "scenes", label: "Scenes", icon: "slideshow", scenes: true, pads: [] },
     { id: "timing", label: "Timing", icon: "timer", pads: [{ cs: ["ctrlSpeedMin", "ctrlSpeedMax"], x: "Hold time", y: "Variation" }] },
   ];
@@ -36,12 +36,20 @@
   const $ = (id) => document.getElementById(id);
   let selPal = 1; // which palette the colour pads edit
   const setIdx = {}; // per function: which pair of settings its pad edits
+  // Highlight / shadow colours only matter while an effect that uses the palette is on.
+  const palFx = () => ["ctrlEffectDuotone", "ctrlEffectPixelate", "ctrlEffectHalftone", "ctrlEffectAscii"].some((id) => ($(id) || {}).checked);
   let cellIdx = 0; // which of Pixelate / Halftone / ASCII the Cells pad edits
+  // A set marked `needs` is only offered while the function's own switch is on.
+  const setOk = (f, t) => !t.needs || ($(f.on) || {}).checked;
+  const setIndex = (f) => {
+    const i = setIdx[f.id] || 0;
+    return f.sets[i] && setOk(f, f.sets[i]) ? i : f.sets.findIndex((t) => setOk(f, t));
+  };
   const padsOf = (f) =>
     f.multi
       ? [{ multi: true, ...f.multi[cellIdx] }]
       : f.sets
-      ? [f.sets[Math.min(setIdx[f.id] || 0, f.sets.length - 1)]]
+      ? setIndex(f) < 0 ? [] : [f.sets[setIndex(f)]]
       : f.palettes
       ? [...f.pads, { map: true, x: "Hue", y: "Brightness" }]
       : f.pads;
@@ -235,7 +243,9 @@
   function renderPads() {
     const f = FUNCS.find((x) => x.id === current);
     const fo = f.multi ? f.multi[cellIdx] : f;
-    onEl.innerHTML = f.multi
+    onEl.innerHTML = f.palettes || (f.sets && f.on)
+      ? ""
+      : f.multi
       ? `<div class="lv-fxrow">` + f.multi.map((e, k) => `<button type="button" class="lv-on lv-fxsw" data-for="${e.on}" data-k="${k}">${e.name}<span></span></button>`).join("") + `</div>`
       : fo.on
       ? `<button type="button" class="lv-on" id="lvOnBtn" data-for="${fo.on}">${fo.onLabel || fo.label || fo.name}<span></span></button>`
@@ -248,20 +258,24 @@
     subEl.innerHTML = f.palettes
       ? [["map", "Colour map", "gradient"], ["pal", "Palettes", "colors"], ["blend", "Blend overlay", "layers"]].map(([k, n, ic]) => `<button type="button" class="lv-chip lv-subb${k === sub ? " is-on" : ""}" data-sub="${k}" aria-label="${n}" title="${n}">${ico(ic, 24)}</button>`).join("")
       : "";
-    padsEl.hidden = !!f.scenes || sub !== "map";
+    padsEl.hidden = !!f.scenes || sub !== "map" || padsOf(f).length === 0;
     chipsEl.hidden = sub !== "map";
-    onEl.hidden = sub !== "map";
+    onEl.hidden = sub !== "map" || !!f.palettes; // Colour: the Duotone switch sits in the chip row
     $("lvReset").hidden = !!f.scenes;
     $("lvReset").innerHTML = ico("restart_alt", 24);
     $("lvReset").setAttribute("aria-label", `Reset ${f.label}`);
     $("lvReset").title = `Reset ${f.label}`;
     chipsEl.innerHTML = f.sets
-      ? f.sets.map((t, i) => `<button type="button" class="lv-chip" data-s="${i}">${t.chip}</button>`).join("")
+      ? (f.on ? `<button type="button" class="lv-on lv-duo" id="lvOnBtn" data-for="${f.on}">${f.onLabel || f.label}<span></span></button>` : "") +
+        f.sets.map((t, i) => (setOk(f, t) ? `<button type="button" class="lv-chip" data-s="${i}">${t.chip}</button>` : "")).join("")
       : f.palettes
-      ? [["Fg", "Foreground"], ["Bg", "Background"], ["Sc", "Screen"], ["SC", "Saturation · Contrast"]]
-          .map(([k, n]) => `<button type="button" class="lv-chip" data-m="${k}">${n}</button>`)
+      ? `<button type="button" class="lv-on lv-duo" id="lvOnBtn" data-for="ctrlEffectDuotone">Duotone<span></span></button>` +
+        [["Fg", "F", "Foreground (highlights)"], ["Bg", "B", "Background (shadows)"], ["Sc", "S", "Screen background"], ["SC", "◐", "Saturation and contrast"]]
+          .filter(([k]) => palFx() || k === "Sc" || k === "SC")
+          .map(([k, t, n]) => `<button type="button" class="lv-chip lv-mc" data-m="${k}" aria-label="${n}" title="${n}">${t}</button>`)
           .join("")
       : "";
+    if (f.palettes && !palFx() && mapMode === "colour" && mapTarget !== "Sc") mapTarget = "Sc";
     padsEl.innerHTML = padsOf(f)
       .map(
         (p, i) =>
@@ -293,7 +307,7 @@
         pad.classList.toggle("lv-sc", sc);
         pad.querySelectorAll(".lv-md").forEach((d) => {
           const isSC = d.dataset.k === "SC";
-          d.hidden = sc !== isSC;
+          d.hidden = sc !== isSC || (!isSC && d.dataset.k !== "Sc" && !palFx());
           if (isSC) {
             const [s, c] = ["ctrlSaturation", "ctrlContrast"].map($);
             if (s && c) {
@@ -375,7 +389,7 @@
     });
     chipsEl.querySelectorAll(".lv-chip").forEach((c) => {
       if (c.dataset.s !== undefined) {
-        c.classList.toggle("is-on", +c.dataset.s === (setIdx[f.id] || 0));
+        c.classList.toggle("is-on", +c.dataset.s === setIndex(f));
         return;
       }
       const on = mapMode === "sc" ? c.dataset.m === "SC" : c.dataset.m === mapTarget;
@@ -491,6 +505,15 @@
   });
 
   chipsEl.addEventListener("click", (e) => {
+    const duo = e.target.closest("#lvOnBtn");
+    if (duo) {
+      const sw = $(duo.dataset.for);
+      if (!sw) return;
+      sw.checked = !sw.checked;
+      sw.dispatchEvent(new Event("change", { bubbles: true }));
+      renderPads(); // the chips shown depend on what is on
+      return;
+    }
     const c = e.target.closest(".lv-chip");
     if (!c) return;
     if (c.dataset.s !== undefined) {
