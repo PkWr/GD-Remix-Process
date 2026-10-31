@@ -29,6 +29,7 @@
       { chip: "Organic · Mix", cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
       { chip: "Size · Spin", xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
       { chip: "Lens · Glow", xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
+    { id: "scenes", label: "Scenes", icon: "slideshow", scenes: true, pads: [] },
     { id: "timing", label: "Timing", icon: "timer", pads: [{ cs: ["ctrlSpeedMin", "ctrlSpeedMax"], x: "Hold time", y: "Variation" }] },
   ];
 
@@ -182,14 +183,14 @@
   const ico = (n, size = 20) => (window.PhotoRemixSettings ? window.PhotoRemixSettings.iconSvg(n, size) : "");
   root.innerHTML =
     `<div class="lv-top"><button type="button" class="lv-btn lv-tb" id="lvPause"></button>` +
-    `<button type="button" class="lv-btn lv-tb" id="lvNext">${ico("skip_next")}<span>Next image</span></button></div>` +
+    `<button type="button" class="lv-btn lv-tb" id="lvNext" aria-label="Next image" title="Next image">${ico("skip_next", 24)}</button>` +
+    `<button type="button" class="lv-btn lv-tb" id="lvReset"></button></div>` +
     `<div class="lv-funcs" id="lvFuncs"></div>` +
     `<div id="lvOn"></div>` +
     `<div class="lv-chips" id="lvChips"></div>` +
     `<div class="lv-pads" id="lvPads"></div>` +
-    `<button type="button" class="lv-btn lv-wide" id="lvReset"></button>` +
     `<div id="lvPal"></div>` +
-    `<div class="lv-scenes" id="lvScenes"></div>`;
+    `<div class="lv-scenes" id="lvScenes" hidden></div>`;
 
   const funcsEl = $("lvFuncs");
   const onEl = $("lvOn");
@@ -237,7 +238,12 @@
       : "";
     padsEl.className = "lv-pads" + (padsOf(f).length === 1 ? " one" : "");
     palEl.innerHTML = f.palettes ? paletteHtml() : "";
-    $("lvReset").innerHTML = `${ico("restart_alt")}<span>Reset ${f.label}</span>`;
+    $("lvScenes").hidden = !f.scenes; // the Scenes page shows only the scene buttons
+    padsEl.hidden = !!f.scenes;
+    $("lvReset").hidden = !!f.scenes;
+    $("lvReset").innerHTML = ico("restart_alt", 24);
+    $("lvReset").setAttribute("aria-label", `Reset ${f.label}`);
+    $("lvReset").title = `Reset ${f.label}`;
     chipsEl.innerHTML = f.sets
       ? f.sets.map((t, i) => `<button type="button" class="lv-chip" data-s="${i}">${t.chip}</button>`).join("")
       : f.palettes
@@ -395,7 +401,11 @@
     }
     const pause = $("ctrlAutoCycle");
     const pb = $("lvPause");
-    if (pause && pb) pb.innerHTML = pause.checked ? `${ico("pause")}<span>Pause</span>` : `${ico("play_arrow")}<span>Resume</span>`;
+    if (pause && pb) {
+      pb.innerHTML = ico(pause.checked ? "pause" : "play_arrow", 24);
+      pb.setAttribute("aria-label", pause.checked ? "Pause" : "Resume");
+      pb.title = pause.checked ? "Pause" : "Resume";
+    }
     document.querySelectorAll("#lvScenes button").forEach((b) => b.classList.toggle("is-on", b.dataset.name === scenes.active));
   }
 
@@ -403,7 +413,7 @@
     scenes = { names: msg.names || [], active: msg.active || "" };
     $("lvScenes").innerHTML = scenes.names
       .slice(0, 24)
-      .map((n, i) => `<button type="button" class="lv-scene" data-i="${i}" data-name="${n.replace(/"/g, "&quot;")}" title="${n.replace(/"/g, "&quot;")}">${i + 1}</button>`)
+      .map((n, i) => `<button type="button" class="lv-scene" data-i="${i}" data-name="${n.replace(/"/g, "&quot;")}" title="${n.replace(/"/g, "&quot;")}"><b>${i + 1}</b> ${n.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</button>`)
       .join("");
     refresh();
   }

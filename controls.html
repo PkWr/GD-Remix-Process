@@ -86,8 +86,13 @@
   .lv-tv { left: 8px; bottom: 6px; font: 11px/1.2 "SF Mono", Menlo, monospace; color: #ececec; }
   .lv-row { display: flex; gap: 10px; margin-top: 14px; }
   .lv-btn { flex: 1; padding: 13px 0; font: 600 15px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 12px; cursor: pointer; }
-  .lv-scenes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 14px; }
-  .lv-scene { padding: 13px 0; font: 700 15px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
+  .lv-scenes[hidden] { display: none; }
+  .lv-scenes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+  .lv-pads[hidden], .lv-tb[hidden] { display: none; }
+  .lv-scene { display: flex; align-items: baseline; gap: 8px; padding: 13px 12px; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .lv-scene b { color: #8a8d91; font-weight: 700; }
+  .lv-scene.is-on b { color: inherit; }
+  .lv-scene { font: 700 15px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
   .lv-scene.is-on { color: #0b0b0c; background: #ffe100; border-color: #ffe100; }
   #remoteStatus { position: sticky; top: 0; z-index: 10; }
   #remoteStatus.bad { background: #4a1717; color: #ffb4b4; font-weight: 600; }
