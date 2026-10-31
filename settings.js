@@ -331,7 +331,7 @@
       { section: "Stage", displayOnly: true, items: [{ widget: "profile" }] },
       { section: "Tools", displayOnly: true, items: [{ widget: "tools" }] },
     ] },
-    { tab: "show", label: "Show", icon: "slideshow", blocks: [
+    { tab: "show", label: "Show", icon: "slideshow", group: "setup", blocks: [
       { section: "Scenes", displayOnly: true, items: [{ widget: "scenes" }] },
       { section: "Start-up", items: ["ctrlStartUnchanged"] },
       { section: "Output", displayOnly: true, items: [{ widget: "output" }] },
@@ -722,7 +722,11 @@
         : "") +
       `</div>` +
       `<nav class="cp-tabs" aria-label="Control groups">` +
-      LAYOUT.map((t) => `<button type="button" data-tab="${t.tab}"${t.group ? ` data-group="${t.group}"` : ""}><span data-icon="${t.icon}"></span>${esc(t.label)}</button>`).join("") +
+      (() => {
+        const btn = (t) => `<button type="button" data-tab="${t.tab}"><span data-icon="${t.icon}"></span>${esc(t.label)}</button>`;
+        return `<div class="cp-tabrow">${LAYOUT.filter((t) => !t.group).map(btn).join("")}</div>` +
+          `<div class="cp-tabrow cp-tabrow-setup">${LAYOUT.filter((t) => t.group).map(btn).join("")}</div>`;
+      })() +
       `</nav><div class="cp-body">` +
       LAYOUT.map((t) => `<div class="cp-tab" data-tab="${t.tab}">${t.blocks.map((b) => blockHtml(b, { mode, tab: t.tab })).join("")}</div>`).join("") +
       `</div>`;

@@ -273,8 +273,11 @@ body.preview-pan #stage canvas {
 
 #controls .cp-tabs button:hover { color: var(--cp-text); }
 
-/* The setup tabs (Source, Show) sit after a divider, apart from the look tabs. */
-#controls .cp-tabs button[data-group="setup"] { margin-left: 6px; border-left: 1px solid var(--cp-line); }
+/* Two rows: the look tabs on top, the setup tabs (Source, Show) in a slimmer row below. */
+#controls .cp-tabs { flex-direction: column; }
+#controls .cp-tabrow { display: flex; }
+#controls .cp-tabrow-setup { border-top: 1px solid var(--cp-line); }
+#controls .cp-tabrow-setup button { min-height: 40px; flex-direction: row; justify-content: center; gap: 6px; }
 
 #controls .cp-tabs button[aria-current="page"] {
   color: var(--cp-accent);
@@ -670,6 +673,7 @@ body.preview-pan #stage canvas {
   }
 
   #controls .cp-tabs button { min-height: 58px; font-size: 11px; }
+  #controls .cp-tabrow-setup button { min-height: 44px; }
   #controls .cp-tabs button[aria-current="page"] { box-shadow: inset 0 2px 0 var(--cp-accent); }
 
   /* The sheet covers the touch buttons' corner — hide them while it's open. */
