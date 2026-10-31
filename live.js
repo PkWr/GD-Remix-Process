@@ -286,7 +286,7 @@
         (p, i) =>
           p.multi
             ? `<div class="lv-pad lv-cells" data-i="${i}" tabindex="0" role="group" aria-label="Pixelate, halftone and ASCII sizes">` +
-              f.multi.map((e, k) => `<span class="lv-md lv-cd" data-k="${k}" style="--c:${e.c}" title="${e.name}">${ico(e.icon, 22)}</span>`).join("") +
+              f.multi.map((e, k) => `<span class="lv-md lv-cd" data-k="${k}" title="${e.name}">${ico(e.icon, 22)}</span>`).join("") +
               `<span class="lv-tag lv-tx"></span><span class="lv-tag lv-ty">↑ Variation</span><span class="lv-tag lv-tv"></span></div>`
             : p.map
             ? `<div class="lv-pad lv-hue lv-map" data-i="${i}" tabindex="0" role="group" aria-label="Colour map: foreground, background and screen colours">` +
