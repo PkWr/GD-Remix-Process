@@ -3446,7 +3446,7 @@
         panel.classList.toggle("hidden");
       }
       if (e.key === "d" || e.key === "D") toggleInfo();
-      if ((e.key === "q" || e.key === "Q") && !e.metaKey && !e.ctrlKey && !e.altKey) setRemoteQrShown(!remoteQrShown);
+      if ((e.key === "q" || e.key === "Q") && !e.metaKey && !e.ctrlKey && !e.altKey && STAGE.profile !== "phone") setRemoteQrShown(!remoteQrShown);
       if (e.key === "s" || e.key === "S") {
         const lockup = document.getElementById("brandLockup");
         if (lockup) {
@@ -5668,12 +5668,15 @@
     const btns = document.getElementById("remoteBtns");
     const showBtn = document.getElementById("remoteShow");
     const enabled = !!(window.SpotLink && window.SpotLink.enabled) && !pageParams.has("reel");
-    overlay.classList.toggle("shown", enabled && remoteQrShown);
+    const noQr = STAGE.profile === "phone"; // a phone is the remote, not something to scan from
+    overlay.classList.toggle("shown", enabled && remoteQrShown && !noQr);
+    const remoteSec = document.querySelector("#controls .cp-remote");
+    if (remoteSec && remoteSec.closest(".cp-sec")) remoteSec.closest(".cp-sec").hidden = noQr; // the whole Phone remote section
     if (showBtn) showBtn.textContent = remoteQrShown ? "Hide code" : "Show code";
     const qrBtn = document.getElementById("cpQr");
     if (qrBtn) {
-      qrBtn.hidden = !enabled;
-      qrBtn.setAttribute("aria-pressed", String(enabled && remoteQrShown));
+      qrBtn.hidden = !enabled || noQr;
+      qrBtn.setAttribute("aria-pressed", String(enabled && remoteQrShown && !noQr));
     }
     if (!enabled) {
       box.innerHTML = "";
