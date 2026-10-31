@@ -140,7 +140,7 @@
       }
     },
     {
-      "title": "3D knot through a ragged echo",
+      "title": "3D rock through a ragged echo",
       "settings": {
         "EffectNone": 0,
         "EffectDuotone": 0,
@@ -166,7 +166,7 @@
         "FormsSize": 90,
         "FormsTravel": 8,
         "FormsSpin": 55,
-        "FormsShape": "knot",
+        "FormsShape": "rock",
         "FormsWrap": "tube",
         "FormsBehind": "picture",
         "SpeedMin": 2,

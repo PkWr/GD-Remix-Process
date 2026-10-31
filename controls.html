@@ -55,14 +55,13 @@
     color: #9fffa9;
   }
   /* Live / Detailed switch and the Live view's pads */
-  #viewBar { display: flex; max-width: 520px; margin: 0 auto; background: #121315; border-bottom: 1px solid #2a2d31; }
+  #viewBar { position: sticky; top: 0; z-index: 5; display: flex; max-width: 520px; margin: 0 auto; background: #121315; border-bottom: 1px solid #2a2d31; }
   #viewBar button { flex: 1; padding: 11px 0; font: 600 14px system-ui, -apple-system, sans-serif; color: #a3a3a3; background: none; border: 0; cursor: pointer; }
+  #viewBar .lv-ib { flex: none; width: 48px; padding: 0; color: #cfcfcf; }
   #viewBar button[aria-pressed="true"] { color: #ececec; box-shadow: inset 0 -2px 0 #ffe100; }
   #live { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; background: #121315; min-height: 100vh; font-family: system-ui, -apple-system, sans-serif; color: #ececec; }
-  .lv-top { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; margin: -12px -12px 10px; padding: 10px 12px; background: #121315; border-bottom: 1px solid #2a2d31; }
   .lv-tb, #lvReset, .lv-func { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
   .lv-func { gap: 6px; }
-  .lv-top .lv-tb { padding: 11px 0; }
   .lv-btn svg, .lv-func svg { flex: none; }
   .lv-funcs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
   .lv-func { flex: none; position: relative; padding: 10px 14px; font: 600 14px system-ui, sans-serif; color: #ececec; background: #17191c; border: 1px solid #2a2d31; border-radius: 10px; cursor: pointer; }
@@ -151,7 +150,7 @@
 <body>
   <p id="remoteStatus">Looking for the display page…</p>
 
-  <div id="viewBar"><button type="button" data-view="live" aria-pressed="true">Live</button><button type="button" data-view="detail" aria-pressed="false">Detailed</button></div>
+  <div id="viewBar"><button type="button" data-view="live" aria-pressed="true">Live</button><button type="button" data-view="detail" aria-pressed="false">Detailed</button><button type="button" class="lv-ib lv-tb" id="lvPause"></button><button type="button" class="lv-ib lv-tb" id="lvNext" aria-label="Next image" title="Next image"></button><button type="button" class="lv-ib lv-tb" id="lvReset"></button></div>
   <div id="live"></div>
 
   <!-- Built from settings.js — the same list as the display page, so the
