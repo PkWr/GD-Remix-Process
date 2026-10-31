@@ -25,22 +25,22 @@
       { chip: "Zoom · Gap", xy: ["ctrlMoveZoomSpeed", "ctrlStripGap"], title: "Move", x: "Zoom", y: "Strip gap" },
       { chip: "Travel · Spin", xy: ["ctrlRoamSpeed", "ctrlRoamSpin"], title: "Roam", x: "Travel", y: "Spin" },
       { chip: "Spread · Size", xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
-    { id: "forms", label: "3D forms", on: "ctrlFormsOn", pads: [
-      { cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
-      { xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
-      { xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
+    { id: "forms", label: "3D forms", on: "ctrlFormsOn", sets: [
+      { chip: "Organic · Mix", cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
+      { chip: "Size · Spin", xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
+      { chip: "Lens · Glow", xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
     { id: "timing", label: "Timing", pads: [{ cs: ["ctrlSpeedMin", "ctrlSpeedMax"], x: "Hold time", y: "Variation" }] },
   ];
 
   const $ = (id) => document.getElementById(id);
   let selPal = 1; // which palette the colour pads edit
-  let setIdx = 0; // which pair of settings the Motion pad edits
+  const setIdx = {}; // per function: which pair of settings its pad edits
   let cellIdx = 0; // which of Pixelate / Halftone / ASCII the Cells pad edits
   const padsOf = (f) =>
     f.multi
       ? [{ multi: true, ...f.multi[cellIdx] }]
       : f.sets
-      ? [f.sets[setIdx]]
+      ? [f.sets[Math.min(setIdx[f.id] || 0, f.sets.length - 1)]]
       : f.palettes
       ? [...f.pads, { map: true, x: "Hue", y: "Brightness" }]
       : f.pads;
@@ -350,7 +350,7 @@
     });
     chipsEl.querySelectorAll(".lv-chip").forEach((c) => {
       if (c.dataset.s !== undefined) {
-        c.classList.toggle("is-on", +c.dataset.s === setIdx);
+        c.classList.toggle("is-on", +c.dataset.s === (setIdx[f.id] || 0));
         return;
       }
       const on = mapMode === "sc" ? c.dataset.m === "SC" : c.dataset.m === mapTarget;
@@ -458,7 +458,7 @@
     const c = e.target.closest(".lv-chip");
     if (!c) return;
     if (c.dataset.s !== undefined) {
-      setIdx = +c.dataset.s;
+      setIdx[current] = +c.dataset.s;
       renderPads(); // the pad's axis labels change with the pair
       return;
     }
