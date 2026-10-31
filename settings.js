@@ -165,10 +165,12 @@
     // Motion — 3D forms (photos wrapped round 3D shapes, drawn with WebGL)
     { id: "ctrlFormsOn", type: "switch", label: "3D forms on", default: false, param: "formsOn", after: "forms3d" },
     { id: "ctrlFormsShape", type: "select", label: "Shape", default: "form", param: "formsShape", after: "forms3d",
-      options: [["form", "Form — geometric to organic"], ["rock", "Rock"], ["knot", "Knot"], ["vase", "Vase"]] },
+      options: [["form", "Form — geometric to organic"], ["rock", "Rock"]] },
     { id: "ctrlFormsOrganic", type: "range", label: "Geometric ↔ Organic, from", min: 0, max: 100, step: 5, default: 0, int: true, format: "formName", param: "formsOrganic" },
     { id: "ctrlFormsOrganicMax", type: "range", label: "Geometric ↔ Organic, to", min: 0, max: 100, step: 5, default: 55, int: true, format: "formName", param: "formsOrganicMax" },
-    { id: "ctrlFormsDrift", type: "switch", label: "Drift slowly cube ↔ blob", default: false, param: "formsDrift" },
+    { id: "ctrlFormsRock", type: "range", label: "Triangle ↔ Rock, from", min: 0, max: 100, step: 5, default: 0, int: true, format: "rockName", param: "formsRock" },
+    { id: "ctrlFormsRockMax", type: "range", label: "Triangle ↔ Rock, to", min: 0, max: 100, step: 5, default: 70, int: true, format: "rockName", param: "formsRockMax" },
+    { id: "ctrlFormsDrift", type: "switch", label: "Drift slowly across the range", default: false, param: "formsDrift" },
     { id: "ctrlFormsCount", type: "range", label: "How many", min: 1, max: 24, step: 1, default: 6, int: true, format: "int", param: "formsCount", after: "forms3d" },
     { id: "ctrlFormsSpacing", type: "range", label: "Spacing", min: 4, max: 90, step: 1, default: 45, int: true, format: "degrees", param: "formsSpacing",
       help: "Degrees round the room between neighbours — small values overlap" },
@@ -310,7 +312,9 @@
         ] },
         { when: { id: "ctrlFormsOn", is: ["on"] }, items: [
           "ctrlFormsShape",
-          { when: { id: "ctrlFormsShape", is: ["form"] }, items: [{ dual: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], label: "Geometric ↔ Organic" }, { note: "Handles apart: each form lands somewhere between them. Together: all alike. 0 cube · 50 sphere · 100 blob." }, "ctrlFormsDrift"] },
+          { when: { id: "ctrlFormsShape", is: ["form"] }, items: [{ dual: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], label: "Geometric ↔ Organic" }, { note: "Handles apart: each form lands somewhere between them. Together: all alike. 0 cube · 50 sphere · 100 blob." }] },
+          { when: { id: "ctrlFormsShape", is: ["rock"] }, items: [{ dual: ["ctrlFormsRock", "ctrlFormsRockMax"], label: "Triangle ↔ Rock" }, { note: "Flat faces, no curves. Handles apart: each rock lands somewhere between them. Together: all alike. 0 triangle · 100 rock." }] },
+          "ctrlFormsDrift",
           "ctrlFormsCount",
           { when: { id: "ctrlFormsCount", not: ["1"] }, items: ["ctrlFormsSpacing", "ctrlFormsDepth"] },
           "ctrlFormsSize", "ctrlFormsTravel", "ctrlFormsSpin",
@@ -404,6 +408,7 @@
     },
     roamSpread: (v, angle) => (v >= 180 ? "wandering" : v === 0 ? (angle != null ? `together, ${FORMATS.compass(+angle)}` : "together") : v < 45 ? "loose flock" : "scattered"),
     glassName: (v) => (v < 20 ? "lens" : v < 45 ? "glass lens" : v < 70 ? "glass" : v < 90 ? "soft liquid" : "liquid"),
+    rockName: (v) => (v < 12 ? "triangle" : v < 40 ? "chiselled" : v < 70 ? "boulder" : "rock"),
     formName: (v) => (v < 12 ? "cube" : v < 40 ? "rounded box" : v < 60 ? "sphere" : v < 85 ? "soft blob" : "globular"),
     moveH: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "left" : "right"}`),
     moveV: (v) => (v === 0 ? "off" : `${Math.abs(v)}% ${v < 0 ? "down" : "up"}`),
@@ -671,7 +676,8 @@
       if (inputState("ctrlFormsOn") !== "on") return "off";
       const n = +inputState("ctrlFormsCount");
       const shape = inputState("ctrlFormsShape");
-      const what = shape === "form" ? (inputState("ctrlFormsOrganic") === inputState("ctrlFormsOrganicMax") ? FORMATS.formName(+inputState("ctrlFormsOrganic")) : `${FORMATS.formName(+inputState("ctrlFormsOrganic"))} to ${FORMATS.formName(+inputState("ctrlFormsOrganicMax"))}`) : shape;
+      const rng = (lo, hi, name) => (inputState(lo) === inputState(hi) ? FORMATS[name](+inputState(lo)) : `${FORMATS[name](+inputState(lo))} to ${FORMATS[name](+inputState(hi))}`);
+      const what = shape === "form" ? rng("ctrlFormsOrganic", "ctrlFormsOrganicMax", "formName") : rng("ctrlFormsRock", "ctrlFormsRockMax", "rockName");
       const glass = inputState("ctrlFormsSurface") === "glass" ? " · glass" : "";
       return `${n} × ${what}${glass}${inputState("ctrlFormsBehind") === "picture" ? " · over picture" : ""}`;
     },

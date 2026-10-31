@@ -281,9 +281,11 @@ body.preview-pan #stage canvas {
 #controls .cp-tabrow-setup { border-top: 1px solid var(--cp-line); }
 #controls .cp-tabrow-setup button { min-height: 40px; flex-direction: row; justify-content: center; gap: 6px; }
 /* Camera, flip and QR code: icon buttons at the end of the setup row. */
-#controls .cp-tabs .cp-tabtools { flex: none; display: flex; align-items: center; gap: 2px; padding: 0 2px; }
-#controls .cp-tabs .cp-tabtools button { flex: none; width: 36px; min-height: 36px; height: 36px; padding: 0; border: 1px solid transparent; border-radius: 18px; align-items: center; justify-content: center; }
-#controls .cp-tabs .cp-tabtools button[aria-pressed="true"] { background: var(--cp-accent-bg); border-color: var(--cp-accent-line); color: var(--cp-accent); box-shadow: none; }
+#controls .cp-tabs .cp-tabtools { flex: none; display: flex; align-items: stretch; gap: 0; padding: 0 2px; }
+#controls .cp-tabs .cp-tabtools button { flex: none; width: 40px; min-height: 40px; height: auto; padding: 0; border: 0; border-radius: 0; background: none; color: var(--cp-muted); align-items: center; justify-content: center; }
+#controls .cp-tabs .cp-tabtools button:hover { color: var(--cp-text); }
+/* Same on-state as a tab: yellow icon with an underline. */
+#controls .cp-tabs .cp-tabtools button[aria-pressed="true"] { color: var(--cp-accent); box-shadow: inset 0 -2px 0 var(--cp-accent); }
 
 #controls .cp-tabs button[aria-current="page"] {
   color: var(--cp-accent);

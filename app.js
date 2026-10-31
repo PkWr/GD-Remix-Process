@@ -3651,15 +3651,39 @@
       r *= (1.0 + o * 0.42 * n) / (1.0 + o * 0.3);
       return d * r;
     }
+    // Rock: a solid cut from flat planes, never curves. At 0 only four planes, a
+    // triangular pyramid; more planes bite in as the slider rises, until it is a rock.
+    float planeR(vec3 d, vec3 n, float h) {
+      float dn = dot(d, normalize(n));
+      return dn > 0.001 ? h / dn : 1000.0;
+    }
+    vec3 rockAt(vec3 d) {
+      float t = clamp(form, 0.0, 1.0);
+      float r = 1000.0;
+      r = min(r, planeR(d, vec3(-1.0, -1.0, -1.0), 1.0));
+      r = min(r, planeR(d, vec3(-1.0, 1.0, 1.0), 1.0));
+      r = min(r, planeR(d, vec3(1.0, -1.0, 1.0), 1.0));
+      r = min(r, planeR(d, vec3(1.0, 1.0, -1.0), 1.0));
+      for (int i = 0; i < 20; i++) {
+        float k = float(i) + 1.0;
+        float ny = 1.0 - (k - 0.5) / 10.0; // evenly spread directions (golden spiral)
+        vec3 n = vec3(sqrt(1.0 - ny * ny) * cos(k * 2.39996), ny, sqrt(1.0 - ny * ny) * sin(k * 2.39996));
+        float at = 0.08 + 0.84 * fract(k * 0.6180339);
+        float cut = smoothstep(at - 0.1, at + 0.1, t);
+        r = min(r, planeR(d, n, mix(4.0, 0.72 + 0.22 * fract(k * 0.754), cut)));
+      }
+      return d * r * mix(0.36, 0.78, t);
+    }
+    vec3 shape(vec3 d) { return morph == 2 ? rockAt(d) : shapeAt(d); }
     void main() {
       vec3 p = position; vec3 nrm = normalize(normal);
-      if (morph == 1) {
+      if (morph >= 1) {
         vec3 d = normalize(position);
         vec3 up = abs(d.y) > 0.99 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
         vec3 t1 = normalize(cross(d, up)); vec3 t2 = cross(d, t1);
-        p = shapeAt(d);
-        vec3 a = shapeAt(normalize(d + 0.01 * t1)) - p;
-        vec3 b = shapeAt(normalize(d + 0.01 * t2)) - p;
+        p = shape(d);
+        vec3 a = shape(normalize(d + 0.01 * t1)) - p;
+        vec3 b = shape(normalize(d + 0.01 * t2)) - p;
         nrm = normalize(cross(a, b));
         if (dot(nrm, d) < 0.0) nrm = -nrm;
       }
@@ -3729,29 +3753,7 @@
   function formsGeometry(kind) {
     const T = window.THREE;
     if (forms3d.geos[kind]) return forms3d.geos[kind];
-    let g;
-    if (kind === "rock") {
-      g = new T.IcosahedronGeometry(1, 5);
-      const pos = g.attributes.position;
-      const v = new T.Vector3();
-      for (let i = 0; i < pos.count; i++) {
-        v.fromBufferAttribute(pos, i);
-        const n = Math.sin(v.x * 3.6 + v.y * 2.2) * 0.5 + Math.sin(v.y * 6.3 + v.z * 3.9) * 0.3 + Math.sin(v.z * 8.7 + v.x * 7.1) * 0.2;
-        v.multiplyScalar(1 + 0.18 * n);
-        pos.setXYZ(i, v.x, v.y * 0.85, v.z);
-      }
-    } else if (kind === "knot") {
-      g = new T.TorusKnotGeometry(0.8, 0.28, 240, 32, 2, 3);
-    } else if (kind === "vase") {
-      const pts = [];
-      for (let i = 0; i <= 48; i++) {
-        const t = i / 48;
-        pts.push(new T.Vector2(0.25 + 0.38 * Math.sin(t * Math.PI * 1.15 + 0.3) + 0.08 * Math.sin(t * 14), t * 2 - 1));
-      }
-      g = new T.LatheGeometry(pts, 96);
-    } else {
-      g = new T.SphereGeometry(1, 128, 96);
-    }
+    const g = new T.SphereGeometry(1, 128, 96); // both shapes are reshaped in the vertex shader
     g.computeVertexNormals();
     g.computeBoundingBox();
     const c = new T.Vector3();
@@ -3827,7 +3829,7 @@
   function forms3dSync() {
     const T = window.THREE;
     const n = params.formsCount;
-    forms3d.shared.morph.value = params.formsShape === "form" ? 1 : 0;
+    forms3d.shared.morph.value = params.formsShape === "rock" ? 2 : 1; // both shapes are shaped in the vertex shader
     const geo = formsGeometry(params.formsShape);
     while (forms3d.meshes.length < n) {
       const k = forms3d.meshes.length;
@@ -3964,8 +3966,11 @@
     // Geometric ↔ Organic is a range: each form lands somewhere between the
     // handles. Drift slides that window across the whole scale (cube → blob
     // → cube in ~22 s).
-    const oLo = Math.min(params.formsOrganic, params.formsOrganicMax) / 100;
-    const oW = Math.abs(params.formsOrganicMax - params.formsOrganic) / 100;
+    const rockShape = params.formsShape === "rock";
+    const rLo = rockShape ? params.formsRock : params.formsOrganic;
+    const rHi = rockShape ? params.formsRockMax : params.formsOrganicMax;
+    const oLo = Math.min(rLo, rHi) / 100;
+    const oW = Math.abs(rHi - rLo) / 100;
     const organicBase = params.formsDrift ? (0.5 - 0.5 * Math.cos(now / 3500)) * (1 - oW) : oLo;
     const spacing = (params.formsSpacing * Math.PI) / 180;
     const size = params.formsSize / 100;

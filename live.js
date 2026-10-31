@@ -27,7 +27,8 @@
       { chip: "Travel · Spin", needs: true, xy: ["ctrlRoamSpeed", "ctrlRoamSpin"], title: "Roam", x: "Travel", y: "Spin" },
       { chip: "Spread · Size", needs: true, xy: ["ctrlRoamSpread", "ctrlRoamSize"], title: "Roam", x: "Together ↔ Wandering", y: "Size" } ] },
     { id: "forms", label: "3D forms", icon: "view_in_ar", on: "ctrlFormsOn", sets: [
-      { chip: "Organic · Mix", needs: true, cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix" },
+      { chip: "Organic · Mix", needs: true, cs: ["ctrlFormsOrganic", "ctrlFormsOrganicMax"], x: "Geometric ↔ Organic", y: "Mix",
+        alt: { shape: "rock", chip: "Rock · Mix", cs: ["ctrlFormsRock", "ctrlFormsRockMax"], x: "Triangle ↔ Rock" } },
       { chip: "Number · Spacing", needs: true, xy: ["ctrlFormsCount", "ctrlFormsSpacing"], x: "How many", y: "Spacing" },
       { chip: "Size · Spin", needs: true, xy: ["ctrlFormsSize", "ctrlFormsSpin"], x: "Size", y: "Spin" },
       { chip: "Lens · Glow", needs: true, xy: ["ctrlFormsLiquid", "ctrlFormsRim"], x: "Lens ↔ Liquid", y: "Edge glow" } ] },
@@ -42,6 +43,8 @@
   const palFx = () => ["ctrlEffectDuotone", "ctrlEffectPixelate", "ctrlEffectHalftone", "ctrlEffectAscii"].some((id) => ($(id) || {}).checked);
   let cellIdx = 0; // which of Pixelate / Halftone / ASCII the Cells pad edits
   // A set marked `needs` is only offered while the function's own switch is on.
+  const shapeNow = () => ($("ctrlFormsShape") || {}).value;
+  const setOf = (t) => (t.alt && shapeNow() === t.alt.shape ? { ...t, ...t.alt } : t);
   const setOk = (f, t) => !t.needs || ($(f.on) || {}).checked;
   const setIndex = (f) => {
     const i = setIdx[f.id] || 0;
@@ -51,7 +54,7 @@
     f.multi
       ? [{ multi: true, ...f.multi[cellIdx] }]
       : f.sets
-      ? setIndex(f) < 0 ? [] : [f.sets[setIndex(f)]]
+      ? setIndex(f) < 0 ? [] : [setOf(f.sets[setIndex(f)])]
       : f.palettes
       ? [...f.pads, { map: true, x: "Hue", y: "Brightness" }]
       : f.pads;
@@ -272,7 +275,7 @@
     $("lvReset").title = `Reset ${f.label}`;
     chipsEl.innerHTML = f.sets
       ? (f.on ? `<button type="button" class="lv-on lv-duo" id="lvOnBtn" data-for="${f.on}">${f.onLabel || f.label}<span></span></button>` : "") +
-        f.sets.map((t, i) => (setOk(f, t) ? `<button type="button" class="lv-chip" data-s="${i}">${t.chip}</button>` : "")).join("")
+        f.sets.map((t, i) => (setOk(f, t) ? `<button type="button" class="lv-chip" data-s="${i}">${setOf(t).chip}</button>` : "")).join("")
       : f.palettes
       ? `<button type="button" class="lv-on lv-duo" id="lvOnBtn" data-for="ctrlEffectDuotone">Duotone<span></span></button>` +
         [["Fg", "F", "Foreground (highlights)"], ["Bg", "B", "Background (shadows)"], ["Sc", "S", "Screen background"], ["SC", ico("contrast", 24), "Saturation and contrast"]]
@@ -618,7 +621,7 @@
   $("lvReset").addEventListener("click", () => {
     const f = FUNCS.find((x) => x.id === current);
     const ids = new Set();
-    [...(f.pads || []), ...(f.sets || []), ...(f.multi || [])].forEach((p) => (p.xy || p.cs).forEach((id) => ids.add(id)));
+    [...(f.pads || []), ...(f.sets || []), ...(f.multi || [])].forEach((p) => [...(p.xy || p.cs), ...((p.alt && p.alt.cs) || [])].forEach((id) => ids.add(id)));
     if (f.on) ids.add(f.on);
     [...(f.multi || []), ...(f.extra || [])].forEach((e) => ids.add(e.on));
     if (f.palettes) {
