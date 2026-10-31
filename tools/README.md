@@ -12,3 +12,7 @@ Both `build.js` scripts check every setting name and value against `settings.js`
 typo or a renamed setting stops the build rather than producing a broken look.
 
 Needs Node 18+ and Python 3. Checked 29 Oct 2026: all three reproduce the committed files exactly.
+
+## Version number
+
+The start-screen version (index.html, `#spotVersion`) is set from the newest `<h2>vX.Y` at the top of `changelog.html` by `stamp-version.sh` on every commit. To release a new version, add its section to the changelog; do not edit index.html by hand. The hook lives in `.git/hooks/pre-commit` (not in the repo) and runs `tools/stamp-version.sh`, then `git add version.js index.html`.
