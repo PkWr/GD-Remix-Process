@@ -549,19 +549,24 @@
     refresh();
   });
 
-  // Put every setting of the picked function back to its default (on/off switches are left alone).
+  // Put everything the picked function shows back to the app's default values,
+  // switches included (the same defaults the app starts with).
   $("lvReset").addEventListener("click", () => {
     const f = FUNCS.find((x) => x.id === current);
     const ids = new Set();
     [...(f.pads || []), ...(f.sets || []), ...(f.multi || [])].forEach((p) => (p.xy || p.cs).forEach((id) => ids.add(id)));
+    if (f.on) ids.add(f.on);
+    (f.multi || []).forEach((e) => ids.add(e.on));
     if (f.palettes) {
-      for (let n = 1; n <= 4; n++) ["Fg", "Bg"].forEach((k) => ids.add(`ctrlPalette${n}${k}`));
-      ["ctrlBackground", "ctrlSaturation", "ctrlContrast"].forEach((id) => ids.add(id));
+      for (let n = 1; n <= 4; n++) ["Fg", "Bg", "Enabled"].forEach((k) => ids.add(`ctrlPalette${n}${k}`));
+      ["ctrlBackground", "ctrlSaturation", "ctrlContrast", "ctrlPaletteRandomize", "ctrlBlendOverlay", "ctrlOpacity", "ctrlBlendLayers"].forEach((id) => ids.add(id));
+      document.querySelectorAll("[id^='ctrlBlendMode']").forEach((el) => ids.add(el.id));
     }
     ids.forEach((id) => {
       const el = $(id);
       if (!el) return;
-      el.value = el.defaultValue;
+      if (el.type === "checkbox") el.checked = el.defaultChecked;
+      else el.value = el.defaultValue;
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
     });
