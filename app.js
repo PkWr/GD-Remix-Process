@@ -613,9 +613,13 @@
       const data = await res.json();
       const files = data.files || [];
 
+      // 2 Nov 2026: the files.get ?alt=media address began returning Google's
+      // "automated queries" page (no CORS header) for every file, so downloads go
+      // through drive.usercontent.google.com, which serves the original file with
+      // CORS open. The files.list call above is unchanged and still uses the key.
       return files.map(
         (f) =>
-          `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&key=${CONFIG.DRIVE_API_KEY}`
+          `https://drive.usercontent.google.com/download?id=${f.id}&export=download`
       );
     } catch (err) {
       console.warn("[drive] fetch failed, will fall back to seeds:", err);
