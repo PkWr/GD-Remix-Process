@@ -614,12 +614,14 @@
       const files = data.files || [];
 
       // 2 Nov 2026: the files.get ?alt=media address began returning Google's
-      // "automated queries" page (no CORS header) for every file, so downloads go
-      // through drive.usercontent.google.com, which serves the original file with
-      // CORS open. The files.list call above is unchanged and still uses the key.
+      // "automated queries" page (no CORS header) for every file, and the other
+      // Drive download addresses (drive.usercontent.google.com, drive.google.com/
+      // uc and /thumbnail) also fail CORS in the browser. lh3.googleusercontent.com
+      // is the one that serves with CORS open, so canvas can read it; =s3600 caps the
+      // long edge at 3600 px and does not upscale. files.list above is unchanged.
       return files.map(
         (f) =>
-          `https://drive.usercontent.google.com/download?id=${f.id}&export=download`
+          `https://lh3.googleusercontent.com/d/${f.id}=s3600`
       );
     } catch (err) {
       console.warn("[drive] fetch failed, will fall back to seeds:", err);
