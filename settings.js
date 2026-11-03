@@ -577,6 +577,7 @@
           `<a href="controls.html" target="_blank" title="Opens in a new tab on this same device — won't reach a phone or another computer">Remote controls ↗</a>` +
           `<a href="igloo-check.html" target="_blank">Igloo check ↗</a>` +
           `<a href="about.html" target="_blank">About & credits ↗</a>` +
+          `<a href="changelog.html" target="_blank">Changelog ↗</a>` +
           `</p><div class="cp-btns"><button type="button" class="cp-btn" id="cpResetAll" title="Puts every control back to its starting value. Your saved settings and scenes are not touched">Reset all controls</button></div>` +
           `<p class="cp-note" id="statusLine">loading…</p>`
         );
