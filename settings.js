@@ -330,7 +330,7 @@
       ] },
     ] },
     { tab: "show", label: "Show", icon: "slideshow", group: "setup", blocks: [
-      { section: "Scenes", displayOnly: true, items: [{ widget: "scenes" }] },
+      { card: "Scenes", summary: "keys 1–9", displayOnly: true, items: [{ widget: "scenes" }] },
       { section: "Playback", items: ["ctrlAutoCycle", "ctrlApplyNow", "ctrlStartUnchanged"] },
       { section: "Stage", displayOnly: true, items: [{ widget: "profile" }] },
       { section: "Output", displayOnly: true, items: [{ widget: "output" }] },
