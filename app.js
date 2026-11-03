@@ -4992,7 +4992,7 @@
   function wireInfoDrag() {
     const diag = document.getElementById("diagnostics");
     if (!diag) return;
-    const desktop = () => window.matchMedia("(pointer: fine) and (min-width: 601px)").matches;
+    const desktop = () => window.matchMedia("(pointer: fine) and (min-width: 901px)").matches;
     // Each page load starts it back beside Controls; a dragged spot only
     // lasts until the page is reloaded.
     try {
