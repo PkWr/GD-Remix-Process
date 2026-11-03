@@ -5134,19 +5134,23 @@
   // separate storage slot so it never overwrites the user's saved preset.
   function switchProfile(choice) {
     if (choice === currentProfileChoice()) return;
-    const values = gatherControlState();
-    delete values.ctrlCamera; // don't reopen the camera (and its permission prompt) on the new page
-    try {
-      localStorage.setItem(PROFILE_CARRY_KEY, JSON.stringify({ savedAt: Date.now(), values }));
-    } catch (e) {
-      /* settings just won't carry over */
+    // Switching to the Igloo starts from its own opening look, so nothing is carried over.
+    const toIgloo = choice === "igloo" || choice === "igloo-preview";
+    if (!toIgloo) {
+      const values = gatherControlState();
+      delete values.ctrlCamera; // don't reopen the camera (and its permission prompt) on the new page
+      try {
+        localStorage.setItem(PROFILE_CARRY_KEY, JSON.stringify({ savedAt: Date.now(), values }));
+      } catch (e) {
+        /* settings just won't carry over */
+      }
     }
     const url = new URL(location.href);
     ["stage", "preview", "resume", "layout"].forEach((k) => url.searchParams.delete(k));
     const stage = choice === "igloo-preview" ? "igloo" : choice;
     url.searchParams.set("stage", stage); // always explicit — no ?stage now means "match the device"
     if (choice === "igloo-preview") url.searchParams.set("preview", "1");
-    url.searchParams.set("resume", "profile");
+    if (!toIgloo) url.searchParams.set("resume", "profile");
     location.href = url.toString();
   }
 
@@ -5722,7 +5726,7 @@
     const w = vw / vh > aspect ? vh * aspect : vw;
     const scale = w / STAGE.w;
     const h = STAGE.h * scale;
-    el.style.left = `${(vw - w) / 2 + 232 * scale}px`;
+    el.style.left = `${(vw - w) / 2 + 264 * scale}px`;
     el.style.bottom = `${(vh - h) / 2 + 16 * scale}px`;
     el.style.transformOrigin = "left bottom";
     el.style.transform = `scale(${scale})`;
@@ -5999,7 +6003,7 @@
   function applyOpeningLook() {
     // pageParams = the address as the page was opened (a scene link tidies
     // its ?scene away later, so location.search can't be trusted here).
-    if ([...pageParams.keys()].some((k) => k !== "bar" && k !== "stage")) return; // ?bar=off and ?stage=… alone still get it
+    if ([...pageParams.keys()].some((k) => k !== "bar" && k !== "stage" && k !== "preview")) return; // ?bar=off, ?stage=… and ?preview alone still get it
     const values = sceneValuesFromDiff(STAGE_PROFILE_KEY === "igloo" ? IGLOO_OPENING_LOOK : OPENING_LOOK);
     delete values.ctrlLiveMode;
     delete values.ctrlCamera;

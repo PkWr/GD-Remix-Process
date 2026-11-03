@@ -34,12 +34,12 @@ html, body {
    No Live student photos switch on the Igloo. */
 #spotCredit { display: none; }
 body.stage-igloo #spotCredit {
-  display: block; position: fixed; left: 232px; bottom: 16px; z-index: 25; pointer-events: none;
+  display: block; position: fixed; left: 264px; bottom: 16px; z-index: 25; pointer-events: none;
   padding: 10px; border-radius: 14px; text-align: center;
-  background: rgba(0, 0, 0, 0.72); color: #fff;
+  background: rgba(0, 0, 0, 0.72); color: #fff; border: 3px solid var(--spot-yellow);
   font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-#spotCredit .credit-name { margin: 0 0 5px; }
+#spotCredit .credit-name { margin: 0 0 6px; color: var(--spot-yellow); font-size: 16px; }
 #spotCredit .credit-codes { display: flex; gap: 16px; }
 #spotCredit figure { margin: 0; }
 #spotCredit .credit-qr { display: block; width: 180px; background: #fff; border-radius: 6px; }
