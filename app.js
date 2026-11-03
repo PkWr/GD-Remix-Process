@@ -5801,7 +5801,7 @@
         const qr = qrcode(0, "M");
         qr.addData(link);
         qr.make();
-        box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: STAGE.profile === "igloo" ? 1 : 4, scalable: true }); // Igloo: slimmer white border
+        box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: STAGE.profile === "igloo" ? 0 : 4, scalable: true }); // Igloo: the white panel padding is the quiet zone
         box.dataset.link = link; // only once it is drawn, so a failed try is retried
       } catch (e) {
         box.dataset.link = "";
