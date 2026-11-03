@@ -21,6 +21,7 @@ const scenes = tests.map((t) => {
       values[s.id] = { value: String(v) };
     }
   }
+  values.ctrlApplyNow = { checked: true }; // the Igloo starts with Apply changes straight away on; keep scenes consistent
   const code = "j" + Buffer.from(JSON.stringify({ n: t.name, v: t.diff })).toString("base64url");
   return { ...t, values, code };
 });

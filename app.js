@@ -211,8 +211,9 @@
       layouts: ["tiles", "walls"],
       animateIntervalMs: 360,
       // Start-up settings for this stage, on top of the site defaults: Roam off
-      // (changed from on, 2026-11-03). (Control id -> value; applied at boot and by Reset all controls.)
-      defaults: { ctrlRoamOn: false },
+      // (changed from on, 2026-11-03) and Apply changes straight away on (2026-11-03).
+      // (Control id -> value; applied at boot and by Reset all controls.)
+      defaults: { ctrlRoamOn: false, ctrlApplyNow: true },
     },
   };
 
