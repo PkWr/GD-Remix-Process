@@ -6,13 +6,13 @@ Spot is a generative image-processing tool by Patrick Walker. It cycles through 
 
 | | |
 |---|---|
-| App (matches your device) | https://pkwr.github.io/GD-Remix-Process/ |
-| Spot Reel (showreel) | https://pkwr.github.io/GD-Remix-Process/showreel.html |
-| Spot Room (Igloo walls) | https://pkwr.github.io/GD-Remix-Process/?stage=igloo |
-| Igloo preview on a laptop | https://pkwr.github.io/GD-Remix-Process/?stage=igloo&preview |
-| Igloo test page | https://pkwr.github.io/GD-Remix-Process/igloo-tests.html |
-| Igloo check (machine report) | https://pkwr.github.io/GD-Remix-Process/igloo-check.html |
-| About & credits | https://pkwr.github.io/GD-Remix-Process/about.html |
+| App (matches your device) | https://spot.pkwr.co/ |
+| Spot Reel (showreel) | https://spot.pkwr.co/showreel.html |
+| Spot Room (Igloo walls) | https://spot.pkwr.co/?stage=igloo |
+| Igloo preview on a laptop | https://spot.pkwr.co/?stage=igloo&preview |
+| Igloo test page | https://spot.pkwr.co/igloo-tests.html |
+| Igloo check (machine report) | https://spot.pkwr.co/igloo-check.html |
+| About & credits | https://spot.pkwr.co/about.html |
 
 ## Using it
 
