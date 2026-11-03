@@ -36,15 +36,16 @@ html, body {
 body.stage-igloo #spotCredit {
   display: block; position: fixed; left: 264px; bottom: 16px; z-index: 25; pointer-events: none;
   padding: 10px; border-radius: 14px; text-align: center;
-  background: rgba(0, 0, 0, 0.72); color: #fff; border: 3px solid var(--spot-yellow);
+  background: var(--spot-yellow); color: #000;
   font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-#spotCredit .credit-name { margin: 0 0 6px; color: var(--spot-yellow); font-size: 16px; }
-#spotCredit .credit-codes { display: flex; gap: 16px; }
+#spotCredit .credit-name { margin: 0 0 6px; font-size: 16px; }
+#spotCredit .credit-codes { display: flex; gap: 10px; justify-content: center; }
 #spotCredit figure { margin: 0; }
-#spotCredit .credit-qr { display: block; width: 180px; background: #fff; border-radius: 6px; }
+#spotCredit .credit-qr { display: block; width: 90px; }
+#spotCredit .credit-qr svg rect[fill="white"], #spotCredit .credit-qr svg rect[fill="#ffffff"] { fill: transparent; }
 #spotCredit .credit-qr svg { display: block; width: 100%; height: auto; }
-#spotCredit figcaption { margin-top: 5px; }
+#spotCredit figcaption { margin-top: 4px; font-size: 12px; }
 body.stage-igloo .cp-row:has(#ctrlLiveMode) { display: none; }
 #stage #forms3d[hidden] { display: none; }
 #stage.forms-only #canvasA,

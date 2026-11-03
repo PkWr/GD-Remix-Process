@@ -5602,6 +5602,7 @@
           qr.make();
           el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
         });
+        positionCredit();
       })
       .catch(() => {}); // the text credit and addresses still show
   }
@@ -5726,9 +5727,12 @@
     const w = vw / vh > aspect ? vh * aspect : vw;
     const scale = w / STAGE.w;
     const h = STAGE.h * scale;
-    el.style.left = `${(vw - w) / 2 + 264 * scale}px`;
+    // Centred on the middle of wall 3 (stage x = 2.5 walls), clear of the seams
+    // and well away from the remote QR; the exact middle of six walls is a seam.
+    const cx = (vw - w) / 2 + (STAGE.w * 2.5 / 6) * scale;
+    el.style.left = `${cx - el.offsetWidth / 2}px`;
     el.style.bottom = `${(vh - h) / 2 + 16 * scale}px`;
-    el.style.transformOrigin = "left bottom";
+    el.style.transformOrigin = "center bottom";
     el.style.transform = `scale(${scale})`;
   }
 
