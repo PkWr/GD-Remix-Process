@@ -210,9 +210,9 @@
       seams: 6,
       layouts: ["tiles", "walls"],
       animateIntervalMs: 360,
-      // Start-up settings for this stage, on top of the site defaults: Roam on,
-      // 12 images. (Control id -> value; applied at boot and by Reset all controls.)
-      defaults: { ctrlRoamOn: true, ctrlRoamCount: 12 },
+      // Start-up settings for this stage, on top of the site defaults: Roam off
+      // (changed from on, 2026-11-03). (Control id -> value; applied at boot and by Reset all controls.)
+      defaults: { ctrlRoamOn: false },
     },
   };
 
