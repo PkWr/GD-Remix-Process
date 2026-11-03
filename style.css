@@ -39,7 +39,7 @@ body.stage-igloo #spotCredit {
   background: var(--spot-yellow); color: #000;
   font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-#spotCredit .credit-name { margin: 0 0 6px; font-size: 16px; }
+#spotCredit .credit-name { margin: 0 0 6px; font-size: 12px; }
 #spotCredit .credit-codes { display: flex; gap: 10px; justify-content: center; }
 #spotCredit figure { margin: 0; }
 #spotCredit .credit-qr { display: block; width: 90px; }
