@@ -62,7 +62,7 @@
   (function () {
     var q = new URLSearchParams(location.search);
     var tags = ["reel", "scene", "stage", "bar"].filter(function (k) { return q.has(k); });
-    var path = location.pathname + (tags.length ? "?" + tags.join("&") : "");
+    var path = location.host + location.pathname + (tags.length ? "?" + tags.join("&") : "");
     window.goatcounter = { path: function () { return path; } };
   })();
 </script>

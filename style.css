@@ -196,7 +196,8 @@ body.preview-pan #stage canvas {
   border: 1px solid var(--cp-line);
   border-radius: 14px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
   z-index: 30;
   overflow: hidden;
 }
