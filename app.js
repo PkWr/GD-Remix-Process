@@ -5935,11 +5935,24 @@
     FormsSurface: "glass", FormsBehind: "picture",
   };
 
+  // The Igloo stage opens on its own look ("Igloo Starting", decoded from a
+  // share link 2026-11-03): no 2D effect, one big glass form over the picture.
+  const IGLOO_OPENING_LOOK = {
+    EffectNone: 1, EffectDuotone: 0, EffectPixelate: 0, EffectHalftone: 0, EffectAscii: 0,
+    PixelateMin: 48, PixelateMax: 128, PixelateAnimate: 1,
+    HalftoneMin: 18, HalftoneMax: 32,
+    AsciiMin: 18, AsciiMax: 40, AsciiRampRandomize: 1,
+    SpeedMax: 14.5,
+    MovePanSpeed: 33, MoveEnd: "tile",
+    FormsOrganic: 70, FormsOrganicMax: 100, FormsCount: 1, FormsSize: 100, FormsTravel: 100, FormsSpin: 14,
+    FormsSurface: "glass", FormsBehind: "picture",
+  };
+
   function applyOpeningLook() {
     // pageParams = the address as the page was opened (a scene link tidies
     // its ?scene away later, so location.search can't be trusted here).
     if ([...pageParams.keys()].some((k) => k !== "bar" && k !== "stage")) return; // ?bar=off and ?stage=… alone still get it
-    const values = sceneValuesFromDiff(OPENING_LOOK);
+    const values = sceneValuesFromDiff(STAGE_PROFILE_KEY === "igloo" ? IGLOO_OPENING_LOOK : OPENING_LOOK);
     delete values.ctrlLiveMode;
     delete values.ctrlCamera;
     delete values.ctrlAutoCycle;
