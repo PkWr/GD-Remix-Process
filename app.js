@@ -97,6 +97,9 @@
     // Each is one image at one slot size; the tiles layout adds a second
     // size per image, so this bounds memory on big desktop stages.
     NORMALIZED_CACHE_MAX: 60,
+    // ...and a byte budget too: one full-stage canvas on the Igloo is ~48 MB,
+    // so the count alone allowed ~2.9 GB. Oldest evicted first.
+    NORMALIZED_CACHE_MAX_MB: 512,
     // Resolution-aware layouts: a photo is only used in a layout slot if
     // filling that slot (cover-crop) enlarges it by at most this much.
     // 2 = the photo's pixels can be at most doubled. Stops a small portrait
@@ -691,6 +694,13 @@
   // Stores promises, so two tiles asking for the same image at once share
   // one load.
   const normalizedCache = new Map(); // `${src}|${w}x${h}` -> Promise<HTMLCanvasElement>
+  const normalizedBytes = new Map(); // same keys -> w*h*4
+  let normalizedTotal = 0;
+  function normalizedDrop(key) {
+    normalizedCache.delete(key);
+    normalizedTotal -= normalizedBytes.get(key) || 0;
+    normalizedBytes.delete(key);
+  }
 
   function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -756,11 +766,14 @@
     });
     // Don't cache failures — a later cycle should get to retry.
     promise.catch(() => {
-      if (normalizedCache.get(key) === promise) normalizedCache.delete(key);
+      if (normalizedCache.get(key) === promise) normalizedDrop(key);
     });
     normalizedCache.set(key, promise);
-    while (normalizedCache.size > CONFIG.NORMALIZED_CACHE_MAX) {
-      normalizedCache.delete(normalizedCache.keys().next().value);
+    normalizedBytes.set(key, w * h * 4);
+    normalizedTotal += w * h * 4;
+    const budget = CONFIG.NORMALIZED_CACHE_MAX_MB * 1048576;
+    while (normalizedCache.size > 1 && (normalizedCache.size > CONFIG.NORMALIZED_CACHE_MAX || normalizedTotal > budget)) {
+      normalizedDrop(normalizedCache.keys().next().value);
     }
     return promise;
   }
@@ -4474,6 +4487,8 @@
     sizeCanvases();
     forms3dResize();
     normalizedCache.clear();
+    normalizedBytes.clear();
+    normalizedTotal = 0;
     state.recentFrames = [];
     state.lastEffectFrame = null;
     state.lastBlendLayers = [];
@@ -6029,6 +6044,7 @@
       prev = now;
       if (now - last >= 1000) {
         setText("diagFps", `${Math.round((frames * 1000) / (now - last))} fps · slowest frame ${Math.round(worst)} ms`);
+        setText("diagCache", `${normalizedCache.size} images · ${Math.round(normalizedTotal / 1048576)} MB`);
         frames = 0;
         worst = 0;
         last = now;
