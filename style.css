@@ -642,7 +642,7 @@ body.preview-pan #stage canvas {
 }
 
 /* --- phone / tablet / narrow window: bottom sheet -------------------- */
-@media (pointer: coarse), (max-width: 600px) {
+@media (pointer: coarse), (max-width: 900px) {
   #controls {
     top: auto;
     left: 0;
@@ -1216,7 +1216,7 @@ body:not(.panel-open) #diagnostics { right: 16px; }
   #diagnostics { right: auto; left: 16px; width: min(330px, calc(100vw - 32px)); }
 }
 /* Phones / narrow: the Controls bottom sheet — Info sits just above it. */
-@media (pointer: coarse), (max-width: 600px) {
+@media (pointer: coarse), (max-width: 900px) {
   #diagnostics {
     top: auto;
     left: 12px;
@@ -1289,18 +1289,18 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 }
 
 /* Info panel: draggable on desktop (position remembered in this browser). */
-@media (pointer: fine) and (min-width: 601px) {
+@media (pointer: fine) and (min-width: 901px) {
   #diagnostics { pointer-events: auto; cursor: grab; user-select: none; touch-action: none; }
   #diagnostics.dragging { cursor: grabbing; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6); }
 }
 #diagnostics.placed { right: auto !important; bottom: auto !important; }
-@media (pointer: coarse), (max-width: 600px) {
+@media (pointer: coarse), (max-width: 900px) {
   body:not(.panel-open) #diagnostics { bottom: calc(64px + env(safe-area-inset-bottom)); max-height: 50vh; }
 }
 
 /* Phones / narrow windows: no Info panel — the line under "Controls"
    already shows the current effect, palette and hold. */
-@media (pointer: coarse), (max-width: 600px) {
+@media (pointer: coarse), (max-width: 900px) {
   #controls #cpInfoHead { display: none; }
   #diagnostics { display: none !important; }
 }
