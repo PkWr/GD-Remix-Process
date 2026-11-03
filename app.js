@@ -5701,18 +5701,33 @@
   // with it: the stage is shown "contained" in the window (smaller than the
   // window in a preview, 1:1 on the real walls), so the code is sized and
   // placed from the stage's own position, not the window's corner.
+  // Where an Igloo overlay (remote QR, credit) is measured from. Normally the
+  // stage letterboxed in the window. In ?preview the stage is shown at full
+  // window height and slides under the window, so the overlay goes inside
+  // #stage and is sized by window height, so it pans with the walls.
+  function igLayout(el) {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    if (previewPanActive()) {
+      const stage = document.getElementById("stage");
+      if (stage && el.parentElement !== stage) stage.appendChild(el);
+      el.style.position = "absolute";
+      return { scale: vh / STAGE.h, x0: 0, bottom0: 0 };
+    }
+    if (el.parentElement !== document.body) document.body.appendChild(el);
+    el.style.position = "";
+    const aspect = STAGE.w / STAGE.h;
+    const w = vw / vh > aspect ? vh * aspect : vw;
+    const scale = w / STAGE.w;
+    return { scale, x0: (vw - w) / 2, bottom0: (vh - STAGE.h * scale) / 2 };
+  }
+
   function positionRemoteQr() {
     const el = document.getElementById("remoteQrOverlay");
     if (!el || STAGE.profile !== "igloo") return;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const aspect = STAGE.w / STAGE.h;
-    const w = vw / vh > aspect ? vh * aspect : vw;
-    const h = w / aspect;
-    const scale = w / STAGE.w;
-    const margin = 16 * scale;
-    el.style.left = `${(vw - w) / 2 + margin}px`;
-    el.style.bottom = `${(vh - h) / 2 + margin}px`;
+    const { scale, x0, bottom0 } = igLayout(el);
+    el.style.left = `${x0 + 16 * scale}px`;
+    el.style.bottom = `${bottom0 + 16 * scale}px`;
     el.style.transformOrigin = "left bottom";
     el.style.transform = `scale(${scale})`;
   }
@@ -5721,17 +5736,12 @@
   function positionCredit() {
     const el = document.getElementById("spotCredit");
     if (!el || STAGE.profile !== "igloo") return;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const aspect = STAGE.w / STAGE.h;
-    const w = vw / vh > aspect ? vh * aspect : vw;
-    const scale = w / STAGE.w;
-    const h = STAGE.h * scale;
+    const { scale, x0, bottom0 } = igLayout(el);
     // Centred on the middle of wall 3 (stage x = 2.5 walls), clear of the seams
     // and well away from the remote QR; the exact middle of six walls is a seam.
-    const cx = (vw - w) / 2 + (STAGE.w * 2.5 / 6) * scale;
+    const cx = x0 + (STAGE.w * 2.5 / 6) * scale;
     el.style.left = `${cx - el.offsetWidth / 2}px`;
-    el.style.bottom = `${(vh - h) / 2 + 16 * scale}px`;
+    el.style.bottom = `${bottom0 + 16 * scale}px`;
     el.style.transformOrigin = "center bottom";
     el.style.transform = `scale(${scale})`;
   }
