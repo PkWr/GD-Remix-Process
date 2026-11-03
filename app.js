@@ -5712,6 +5712,22 @@
     el.style.transform = `scale(${scale})`;
   }
 
+  // Igloo credit: same stage-pixel scaling as the remote QR, just to its right.
+  function positionCredit() {
+    const el = document.getElementById("spotCredit");
+    if (!el || STAGE.profile !== "igloo") return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const aspect = STAGE.w / STAGE.h;
+    const w = vw / vh > aspect ? vh * aspect : vw;
+    const scale = w / STAGE.w;
+    const h = STAGE.h * scale;
+    el.style.left = `${(vw - w) / 2 + 232 * scale}px`;
+    el.style.bottom = `${(vh - h) / 2 + 16 * scale}px`;
+    el.style.transformOrigin = "left bottom";
+    el.style.transform = `scale(${scale})`;
+  }
+
   function pokeRemoteQr(ms) {
     const el = document.getElementById("remoteQrOverlay");
     if (!el) return;
@@ -6142,6 +6158,9 @@
 
     // Opened from a shared scene link / QR code (?scene=…).
     drawCreditQrs();
+    positionCredit();
+    window.addEventListener("resize", positionCredit);
+    document.addEventListener("fullscreenchange", positionCredit);
     openSharedSceneFromUrl();
     startReel();
     applyOpeningLook();
