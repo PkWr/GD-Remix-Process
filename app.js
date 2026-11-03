@@ -5988,7 +5988,8 @@
   };
 
   // The Igloo stage opens on its own look ("Igloo Starting", decoded from a
-  // share link 2026-11-03): no 2D effect, one big glass form over the picture.
+  // share link 2026-11-03): no 2D effect, 3D forms off (their settings are
+  // kept so switching them on gives the glass look).
   const IGLOO_OPENING_LOOK = {
     EffectNone: 1, EffectDuotone: 0, EffectPixelate: 0, EffectHalftone: 0, EffectAscii: 0,
     PixelateMin: 48, PixelateMax: 128, PixelateAnimate: 1,
