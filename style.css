@@ -28,6 +28,19 @@ html, body {
 /* 3D forms layer sits over the picture; with "Behind: black" the flat
    picture underneath is hidden (it keeps running, just not shown). */
 #stage #forms3d { z-index: 3; }
+
+/* Igloo: always-on credit, bottom left, and no Live student photos switch. */
+#spotCredit { display: none; }
+body.stage-igloo #spotCredit {
+  display: block; position: fixed; left: 24px; bottom: 16px; z-index: 150; pointer-events: none;
+  font-size: 14px; letter-spacing: 0.04em; color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+#spotCredit .credit-codes { display: flex; gap: 16px; margin-top: 8px; }
+#spotCredit figure { margin: 0; text-align: center; font-size: 11px; }
+#spotCredit .credit-qr { display: block; width: clamp(72px, 11vh, 140px); height: clamp(72px, 11vh, 140px); background: #fff; border-radius: 4px; }
+#spotCredit .credit-qr svg { display: block; width: 100%; height: 100%; }
+#spotCredit figcaption { margin-top: 4px; }
+body.stage-igloo .cp-row:has(#ctrlLiveMode) { display: none; }
 #stage #forms3d[hidden] { display: none; }
 #stage.forms-only #canvasA,
 #stage.forms-only #canvasB { visibility: hidden; }

@@ -276,6 +276,7 @@
   // Live stage size — mutated in place by rebuildStage(), read everywhere
   // that used to read STAGE.w/H.
   const STAGE = { profile: STAGE_PROFILE_KEY, ...computeStageSize() };
+  if (STAGE_PROFILE_KEY === "igloo") document.body.classList.add("stage-igloo");
 
   // Converts a slider value ("px on a 1920-tall stage") to real stage px,
   // then applies the per-effect cell budget floor (see CONFIG.MAX_CELLS).
@@ -1729,6 +1730,7 @@
   // doubles as a manual refresh for anything uploaded since boot.
   let sourceSwitchToken = 0;
   async function switchSourceMode(mode) {
+    if (mode === "live" && STAGE_PROFILE_KEY === "igloo") return; // the Igloo never reads the Drive pool: drag a folder in instead
     if (mode === params.sourceMode) return;
     params.sourceMode = mode;
     if (mode !== "mine" && mine.remembered && mine.remembered.active) {
@@ -3295,7 +3297,7 @@
 
     const liveInfo = values.ctrlLiveMode;
     if (liveInfo) {
-      params.sourceMode = liveInfo.checked ? "live" : "demo";
+      params.sourceMode = liveInfo.checked && STAGE_PROFILE_KEY !== "igloo" ? "live" : "demo";
       const liveEl = document.getElementById("ctrlLiveMode");
       if (liveEl) liveEl.checked = liveInfo.checked;
       delete values.ctrlLiveMode;
@@ -5585,6 +5587,21 @@
     return url.toString();
   }
 
+  // Igloo credit: draw the two QR codes in #spotCredit (static, vendor lib).
+  function drawCreditQrs() {
+    if (STAGE_PROFILE_KEY !== "igloo") return;
+    loadQrLib()
+      .then((qrcode) => {
+        document.querySelectorAll("#spotCredit .credit-qr").forEach((el) => {
+          const qr = qrcode(0, "M");
+          qr.addData(el.dataset.url);
+          qr.make();
+          el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+        });
+      })
+      .catch(() => {}); // the text credit and addresses still show
+  }
+
   let qrLibPromise = null;
   function loadQrLib() {
     if (window.qrcode) return Promise.resolve(window.qrcode);
@@ -6124,6 +6141,7 @@
     }
 
     // Opened from a shared scene link / QR code (?scene=…).
+    drawCreditQrs();
     openSharedSceneFromUrl();
     startReel();
     applyOpeningLook();
