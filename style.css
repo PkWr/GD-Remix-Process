@@ -1428,9 +1428,9 @@ body.reel-bar-on #reelCaption { bottom: calc(clamp(16px, 2.6vh, 40px) + 48px); }
 #remoteQrOverlay .q:empty { display: none; }
 #remoteQrOverlay .q svg { display: block; width: 100%; height: auto; }
 #remoteQrOverlay p { margin: 5px 0 0; }
-/* Igloo: same height as the credit panel (155 px), so the two sit level. */
-#remoteQrOverlay.big { box-sizing: border-box; height: 155px; padding: 10px; border-radius: 14px; font-size: 14px; }
-#remoteQrOverlay.big .q { width: 112px; border-radius: 6px; margin: 0 auto; }
+/* Igloo: same height as the credit panel (150 px), so the two sit level. */
+#remoteQrOverlay.big { box-sizing: border-box; height: 150px; padding: 10px; border-radius: 14px; font-size: 14px; }
+#remoteQrOverlay.big .q { width: 107px; border-radius: 6px; margin: 0 auto; }
 
 /* Background colour picker: outlined like the Duotone palette chips (a bordered card with the colour inside). */
 #controls .cp-colour-swatch {
